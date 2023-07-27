@@ -8,6 +8,7 @@ import { companyRoutes } from './http/controllers/company/routes'
 import { bankRoutes } from './http/controllers/bank/routes'
 import { organizationRoutes } from './http/controllers/organization/routes'
 import { userRoutes } from './http/controllers/user/routes'
+import { suggestionRoutes } from './http/controllers/suggestion/routes'
 
 export const app = fastify()
 
@@ -21,3 +22,4 @@ app.register(companyRoutes)
 app.register(bankRoutes)
 app.register(organizationRoutes)
 app.register(userRoutes)
+app.register(suggestionRoutes)

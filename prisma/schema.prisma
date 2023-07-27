@@ -18,12 +18,13 @@ model Organization {
   cpf        String?  @unique
   email      String?  @unique
 
-  User     User[]
-  Expense  Expense[]
-  Gain     Gain[]
-  Category Category[]
-  Company  Company[]
-  Bank     Bank[]
+  User       User[]
+  Expense    Expense[]
+  Gain       Gain[]
+  Category   Category[]
+  Company    Company[]
+  Bank       Bank[]
+  Suggestion Suggestion[]
 
   @@map("organizations")
 }
@@ -170,4 +171,17 @@ model VerificationToken {
   expires    DateTime
 
   @@unique([identifier, token])
+}
+
+model Suggestion {
+  id              String   @id @default(dbgenerated("nanoid(11)"))
+  created_at      DateTime @default(now())
+  amount_by_month Int
+  is_useful       Boolean
+  message         String?
+
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  organizationId String
+
+  @@map("suggestions")
 }
