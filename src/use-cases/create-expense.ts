@@ -103,6 +103,14 @@ export class CreateExpenseUseCase {
       for (let index = 0; index < installmentTotalPayment; index++) {
         const newExpirationDate = addMonths(new Date(expiration_date), index)
         const paidCurrent = index === 0 ? paid : false
+        const isInstallment = type_payment === 'installment'
+
+        const amountWithoutDots = amount / 100
+        const amountPerMonth = (amountWithoutDots / installment_total_payment)
+          .toFixed(2)
+          .replace('.', '')
+
+        const amountInstallment = Number(isInstallment ? amountPerMonth : null)
 
         dataReturn = [
           ...dataReturn,
@@ -110,7 +118,7 @@ export class CreateExpenseUseCase {
             bank_transaction_id: bankTransactionId,
             description,
             category,
-            amount,
+            amount: amountInstallment || amount,
             paid: paidCurrent,
             expiration_date: newExpirationDate,
             purchase_date: purchaseDate,

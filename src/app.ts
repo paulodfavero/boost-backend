@@ -9,12 +9,14 @@ import { bankRoutes } from './http/controllers/bank/routes'
 import { organizationRoutes } from './http/controllers/organization/routes'
 import { userRoutes } from './http/controllers/user/routes'
 import { suggestionRoutes } from './http/controllers/suggestion/routes'
+import { resultsRoutes } from './http/controllers/results/routes'
 
 export const app = fastify()
 
 app.register(cors, {
   // put your options here
 })
+app.register(resultsRoutes)
 app.register(expensesRoutes)
 app.register(gainsRoutes)
 app.register(categoryRoutes)

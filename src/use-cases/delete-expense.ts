@@ -16,11 +16,6 @@ export class DeleteExpenseUseCase {
 
   async execute(data: ExpenseType): Promise<object> {
     const { organizationId, transactionId } = data
-    console.log(
-      '%cdelete-expense.ts line:23 data',
-      'color: #007acc;',
-      transactionId,
-    )
 
     const organization = await this.organizationsRepository.findById(
       organizationId,

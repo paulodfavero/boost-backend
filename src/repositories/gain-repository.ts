@@ -14,7 +14,7 @@ interface GainUpdateRepository {
 }
 
 export interface GainsRepository {
-  searchMany(organizationId: string, date: string): Promise<Gain[]>
+  searchMany(organizationId: string, date?: string, monthStart?: string, monthEnd?: string): Promise<Gain[]>
   createMany(
     data: Prisma.Enumerable<Prisma.GainCreateManyInput>,
   ): Promise<object>

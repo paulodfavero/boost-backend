@@ -1,9 +1,26 @@
 {
-  "extends": [
-    "@rocketseat/eslint-config/node"
-  ],
+  "extends": ["prettier", "plugin:@typescript-eslint/recommended"],
+  "parser": "@typescript-eslint/parser",
+  "plugins": ["@typescript-eslint", "simple-import-sort", "prettier"],
+  "ignorePatterns": ["next.config.js", "*api.d.ts"],
   "rules": {
-    "camelcase": "off",
-    "no-useless-constructor": "off"
-  }
+    "@typescript-eslint/no-explicit-any": "off",
+    "prettier/prettier": ["error", { "endOfLine": "auto" }],
+    "react/no-unescaped-entities": "off",
+    "no-unused-vars": "off",
+    "@typescript-eslint/no-unused-vars": "error",
+    "simple-import-sort/imports": "error",
+    "simple-import-sort/exports": "error",
+    "import/first": "error",
+    "import/newline-after-import": "error",
+    "import/no-duplicates": "error",
+    "@typescript-eslint/naming-convention": [
+      "error",
+      {
+        "selector": ["typeAlias"],
+        "format": ["StrictPascalCase"]
+      }
+    ]
+  },
+  "root": true
 }

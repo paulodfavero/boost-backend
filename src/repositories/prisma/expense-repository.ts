@@ -26,10 +26,11 @@ interface ExpenseUpdateRepository {
   bankId?: string
 }
 
-export class PrismaExpenseRepository implements ExpensesRepository {
-  async searchMany(organizationId: string, date: string) {
-    const startOfTheDay = dayjs(date).startOf('date').toDate()
-    const endOfTheDay = lastDayOfMonth(startOfTheDay)
+export class PrismaExpenseRepository implements ExpensesRepository { 
+  async searchMany(organizationId: string, date?: string, monthStart?: string, monthEnd?: string) {
+
+    const startOfTheDay = date ? dayjs(date).startOf('date').toDate() : dayjs(monthStart).startOf('date').toDate();
+    const endOfTheDay = date ? lastDayOfMonth(startOfTheDay) : lastDayOfMonth(dayjs(monthEnd).startOf('date').toDate());
 
     const expenses = await prisma.expense.findMany({
       where: {

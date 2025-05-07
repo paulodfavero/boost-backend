@@ -19,9 +19,11 @@ interface GainUpdateRepository {
 }
 
 export class PrismaGainRepository implements GainsRepository {
-  async searchMany(organizationId: string, date: string) {
-    const startOfTheDay = dayjs(date).startOf('date').toDate()
-    const endOfTheDay = lastDayOfMonth(startOfTheDay)
+  async searchMany(organizationId: string, date?: string, monthStart?: string, monthEnd?: string) {
+
+    const startOfTheDay = date ? dayjs(date).startOf('date').toDate() : dayjs(monthStart).startOf('date').toDate();
+    const endOfTheDay = date ? lastDayOfMonth(startOfTheDay) : lastDayOfMonth(dayjs(monthEnd).startOf('date').toDate());    
+
 
     const gains = await prisma.gain.findMany({
       where: {
@@ -31,7 +33,7 @@ export class PrismaGainRepository implements GainsRepository {
         expiration_date: {
           gte: startOfTheDay,
           lte: endOfTheDay,
-        },
+       },
       },
       orderBy: {
         created_at: 'desc',
