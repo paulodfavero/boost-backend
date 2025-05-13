@@ -25,12 +25,21 @@ export async function create(request: FastifyRequest, reply: FastifyReply) {
   const { organizationId } = createCheckInParamsSchema.parse(request.params)
 
   const reqBody = createGymBodySchema.parse(request.body)
-  const createGainUseCase = makeCreateGainUseCase()
 
-  const data = await createGainUseCase.execute({
-    organizationId,
-    reqBody,
-  })
+  try {
+    const createGainUseCase = makeCreateGainUseCase()
+    const data = await createGainUseCase.execute({
+      organizationId,
+      reqBody,
+    })
 
-  return reply.status(201).send(data)
+    return reply.status(201).send(data)
+  } catch (err) {
+    // if (err instanceof UserAlreadyExistsError) {
+    return reply.status(409).send({ message: err })
+    // }
+    // throw err
+  }
+
+  
 }

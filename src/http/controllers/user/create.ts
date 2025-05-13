@@ -24,7 +24,7 @@ export async function create(request: FastifyRequest, reply: FastifyReply) {
     const data = await createUserUseCase.execute({
       name,
       email,
-      image,
+      image: image || '',
       organizationId,
     })
     return reply.status(201).send(data)

@@ -77,15 +77,14 @@ export class CreateGainUseCase {
         const amountPerMonth = (amountWithoutDots / installment_total_payment)
           .toFixed(2)
           .replace('.', '')
-        //
-        const amountInstallment = isInstallment ? amountPerMonth : null
 
+        const amountInstallment = isInstallment ? amountPerMonth : null
         dataReturn = [
           ...dataReturn,
           {
             description,
             category,
-            amount: amountInstallment || amount,
+            amount: Number(amountInstallment) || amount,
             paid: paidCurrent,
             installment_current: index + 1,
             expiration_date: newExpirationDate,
