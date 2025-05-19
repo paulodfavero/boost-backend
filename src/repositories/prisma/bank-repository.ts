@@ -1,5 +1,5 @@
 import { prisma } from '@/lib/prisma'
-import { BanksRepository } from '../bank-repository'
+import { BanksRepository, BanksTypeAccountRepository, CreateBankTypeAccountUseCaseResponse } from '../bank-repository'
 import { Prisma } from '@prisma/client'
 
 interface CreateBankUseCaseResponse {
@@ -29,12 +29,52 @@ export class PrismaBanksRepository implements BanksRepository {
 
     return banks
   }
+  async findByItemId(query: string) {
+    const bank = await prisma.bank.findUnique({
+      where: {
+        item_id: query,
+      },      
+    })
+    return bank
+  }
+
+  async findById(id: string) {
+    console.log('%csrc/repositories/prisma/bank-repository.ts:52 id', 'color: #007acc;', id);
+    const bankTypeAccount = await prisma.bank.findUnique({
+      where: {
+        id,
+      },
+    })
+
+    return bankTypeAccount
+  }
 
   async create(data: CreateBankUseCaseResponse) {
     const bank = await prisma.bank.create({
       data,
-    })
+    } as any)
 
     return bank
+  }
+}
+export class PrismaBankTypeAccountRepository implements BanksTypeAccountRepository {
+  async findById(id: string) {
+    console.log('%csrc/repositories/prisma/bank-repository.ts:52 id', 'color: #007acc;', id);
+    const bankTypeAccount = await prisma.bankTypeAccount.findUnique({
+      where: {
+        id,
+      },
+    })
+
+    return bankTypeAccount
+  }
+
+  async create(data: CreateBankTypeAccountUseCaseResponse) {
+    data.bankItemId = data.item_id
+    const bankTypeAccount = await prisma.bankTypeAccount.create({
+      data,
+    } as any)
+
+    return bankTypeAccount
   }
 }

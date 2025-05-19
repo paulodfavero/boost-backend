@@ -26,6 +26,7 @@ interface ExpenseRepository {
   paid: boolean
   merchant: MerchantType
   bankId?: string
+  bankTypeAccountId?: string
 }
 
 interface ExpenseType {
@@ -48,7 +49,7 @@ export class CreateExpenseUseCase {
     )
     if (!organization) throw new OrganizationNotFound()
 
-    transactions.map((transaction: ExpenseRepository) => {
+    transactions.map((transaction: ExpenseRepository) => { 
       const {
         bankTransactionId,
         description,
@@ -62,6 +63,7 @@ export class CreateExpenseUseCase {
         typePayment,
         installmentCurrent,
         installmentTotalPayment,
+        bankTypeAccountId,
         // merchant,
         bankId,
       } = transaction
@@ -88,6 +90,7 @@ export class CreateExpenseUseCase {
             installment_current,
             installment_total_payment,
             organizationId,
+            bankTypeAccountId,
             description,
             category,
             amount,
@@ -128,6 +131,7 @@ export class CreateExpenseUseCase {
             installment_current: index + 1,
             installment_total_payment,
             group_installment_id: groupInstallmentId,
+            bankTypeAccountId,
             organizationId,
             bankId,
           },
@@ -137,11 +141,6 @@ export class CreateExpenseUseCase {
       return dataReturn
     })
 
-    console.log(
-      '%ccreate-expense.ts line:90 dataReturn',
-      'color: #007acc;',
-      dataReturn,
-    )
     // return false
     const expense = await this.expensesRepository.createMany(dataReturn)
     return expense

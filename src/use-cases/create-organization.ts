@@ -25,7 +25,7 @@ export class CreateOrganizationUseCase {
     if (hasOrganization) {
       const { name, email, id: organizationId } = hasOrganization
       return {
-        created: true,
+        created: true, 
         name,
         email,
         image,

@@ -1,0 +1,3 @@
+-- AlterTable
+ALTER TABLE "bankTypeAccount" ALTER COLUMN "balance" SET DATA TYPE DOUBLE PRECISION,
+ALTER COLUMN "tax_number" DROP NOT NULL;

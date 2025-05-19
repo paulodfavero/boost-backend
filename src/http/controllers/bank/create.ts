@@ -1,7 +1,10 @@
 import { FastifyReply, FastifyRequest } from 'fastify'
 import { z } from 'zod'
 
-import { makeCreateBankUseCase } from '@/use-cases/factories/make-create-bank-use-case'
+import { 
+  makeCreateBankUseCase, 
+  makeCreateBankTypeAccountUseCase 
+} from '@/use-cases/factories/make-create-bank-use-case'
 
 export async function create(request: FastifyRequest, reply: FastifyReply) {
   const createBankParamsSchema = z.object({
@@ -43,11 +46,77 @@ export async function create(request: FastifyRequest, reply: FastifyReply) {
     type,
     imageUrl,
     hasMFA,
-    products,
+    products: products ? products : [],
     status,
     lastUpdatedAt,
     organizationId,
   })
 
   return reply.status(201).send(data)
+}
+
+export async function createBankTypeAccount(request: FastifyRequest, reply: FastifyReply) {
+  const headers = await request.headers
+  const itemId = headers.itemid
+
+  const createBankTypeAccountParamsSchema = z.object({
+    organizationId: z.string(),    
+  })
+
+  const createBankAccountTypeBodySchema = z.object({
+    type: z.string(),
+    subtype: z.string(),
+    name: z.string(),
+    accountId: z.string(),
+    marketingName: z.string(),
+    owner: z.string(),
+    balance: z.number(),
+    currencyCode: z.string(),
+    number: z.string(),
+    bankData: z.string().nullable(),
+    creditData: z.string().nullable(),
+    taxNumber: z.string().nullable(),
+  })
+  const { organizationId } = await createBankTypeAccountParamsSchema.parse(request.params)
+  const {
+    type,
+    subtype,
+    name,
+    accountId,
+    marketingName,
+    owner,
+    balance,
+    currencyCode,
+    number,
+    bankData,
+    creditData,
+    taxNumber,
+  } = createBankAccountTypeBodySchema.parse(request.body)
+
+  const createBankTypeAccountUseCase = makeCreateBankTypeAccountUseCase()
+
+  try {
+    const data = await createBankTypeAccountUseCase.execute({
+      type,
+      subtype,
+      name,
+      accountId,
+      marketingName,
+      owner,
+      balance,
+      currencyCode,
+      itemId,
+      number,
+      bankData: bankData || '',
+      creditData: creditData || '',
+      taxNumber: taxNumber || '',
+      organizationId
+    } as any)
+
+    return reply.status(201).send(data)
+  } catch (error: any) {
+    const errorStatus = error?.statusCode || 500
+    
+    return reply.status(errorStatus).send(error)
+  }
 }

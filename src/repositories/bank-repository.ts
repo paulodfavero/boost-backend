@@ -1,4 +1,4 @@
-import { Bank, Prisma } from '@prisma/client'
+import { Bank, Prisma, BankTypeAccount } from '@prisma/client'
 interface CreateBankUseCaseResponse {
   itemId: string
   name: string
@@ -12,7 +12,30 @@ interface CreateBankUseCaseResponse {
   lastUpdatedAt: string | Date
   organizationId: string
 }
+export interface CreateBankTypeAccountUseCaseResponse {
+  type: string
+  subtype: string
+  name: string
+  account_id: string
+  owner: string
+  marketing_name: string
+  balance: number
+  currency_code: string
+  item_id: string
+  number: string
+  lastUpdatedAt?: Date
+  bank_data?: string
+  credit_data?: string
+  tax_number?: string
+  bankItemId?: string
+}
 export interface BanksRepository {
+  findByItemId(query: string): unknown
+  findById(id: string): unknown
   searchMany(query: string): Promise<Bank[]>
   create(data: CreateBankUseCaseResponse): Promise<Bank>
+}
+export interface BanksTypeAccountRepository {
+  findById(id: string): unknown
+  create(data: CreateBankTypeAccountUseCaseResponse): Promise<BankTypeAccount>
 }

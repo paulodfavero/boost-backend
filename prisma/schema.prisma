@@ -18,13 +18,14 @@ model Organization {
   cpf        String?  @unique
   email      String?  @unique
 
-  User       User[]
-  Expense    Expense[]
-  Gain       Gain[]
-  Category   Category[]
-  Company    Company[]
-  Bank       Bank[]
-  Suggestion Suggestion[]
+  User            User[]
+  Expense         Expense[]
+  Gain            Gain[]
+  Category        Category[]
+  Company         Company[]
+  Bank            Bank[]
+  BankTypeAccount BankTypeAccount[]
+  Suggestion      Suggestion[]
 
   @@map("organizations")
 }
@@ -49,16 +50,21 @@ model Expense {
   organization   Organization @relation(fields: [organizationId], references: [id])
   organizationId String
 
-  bank   Bank?   @relation(fields: [bankId], references: [id])
-  bankId String?
+  bank              Bank?            @relation(fields: [bankId], references: [id])
+  bankId            String?
+  bankTypeAccount   BankTypeAccount? @relation(fields: [bankTypeAccountId], references: [id])
+  bankTypeAccountId String?
 
   @@map("expenses")
 }
 
 model Gain {
-  id                        String   @id @default(dbgenerated("nanoid(11)"))
-  created_at                DateTime @default(now())
+  id                        String    @id @default(dbgenerated("nanoid(11)"))
+  created_at                DateTime  @default(now())
   expiration_date           DateTime
+  purchase_date             DateTime?
+  balance_close_date        DateTime? //DATE CLOSE BALANCE CREDIT CARD
+  bank_transaction_id       String?   @unique //ID of transaction that came from Pluggy
   description               String
   company                   String
   category                  String?
@@ -66,11 +72,16 @@ model Gain {
   type_payment              String
   installment_current       Int?
   installment_total_payment Int?
-  paid                      Boolean  @default(false)
+  paid                      Boolean   @default(false)
   group_installment_id      String?
 
   organization   Organization @relation(fields: [organizationId], references: [id])
   organizationId String
+
+  bank              Bank?            @relation(fields: [bankId], references: [id])
+  bankId            String?
+  bankTypeAccount   BankTypeAccount? @relation(fields: [bankTypeAccountId], references: [id])
+  bankTypeAccountId String?
 
   @@map("gains")
 }
@@ -117,9 +128,40 @@ model Bank {
   organization   Organization @relation(fields: [organizationId], references: [id])
   organizationId String
 
-  Expense Expense[]
+  bankTypeAccount BankTypeAccount[]
+  expense         Expense[]
+  Gain            Gain[]
 
   @@map("banks")
+}
+
+model BankTypeAccount {
+  id              String    @id @default(dbgenerated("nanoid(11)"))
+  created_at      DateTime  @default(now())
+  type            String
+  subtype         String
+  name            String
+  marketing_name  String
+  owner           String
+  balance         Float
+  currency_code   String
+  tax_number      String?
+  account_id      String
+  item_id         String
+  number          String
+  last_updated_at DateTime?
+  bank_data       String?
+  credit_data     String?
+
+  bank       Bank   @relation(fields: [bankItemId], references: [item_id])
+  bankItemId String
+
+  expense        Expense[]
+  organization   Organization? @relation(fields: [organizationId], references: [id])
+  organizationId String?
+  Gain           Gain[]
+
+  @@map("bankTypeAccount")
 }
 
 model User {

@@ -1,6 +1,7 @@
 import { GainsRepository } from '@/repositories/gain-repository'
 import { ExpensesRepository } from '@/repositories/expense-repository'
 import { addMonths, format, subMonths } from 'date-fns'
+import { BanksRepository, BanksTypeAccountRepository } from '@/repositories/bank-repository'
 
 interface SearchGainsUseCaseRequest {
   organizationId: string
@@ -11,6 +12,8 @@ export class SearchGainUseCase {
   constructor(
     private GainsRepository: GainsRepository,
     private ExpensesRepository: ExpensesRepository,
+    private BankRepository: BanksRepository,
+    private BankTypeAccountRepository: BanksTypeAccountRepository,
   ) {}
 
   async execute({
@@ -90,10 +93,12 @@ export class SearchGainUseCase {
       return true
     })
 
-    const gains = gainsFormated.map(
-      ({
+    const gains = await Promise.all(gainsFormated.map(
+      async ({
         id,
         expiration_date,
+        purchase_date,
+        balance_close_date,
         description,
         category,
         company,
@@ -101,13 +106,27 @@ export class SearchGainUseCase {
         type_payment,
         installment_current,
         installment_total_payment,
+        group_installment_id,
         paid,
+        bankId,
+        bankTypeAccountId
       }) => {
         totalGains += amount
         if (paid) receivedGains += amount
+
+        const bankTypeAccount = bankTypeAccountId ? 
+          await this.BankTypeAccountRepository.findById(bankTypeAccountId) : 
+          null
+        
+        const bank = bankId ? 
+          await this.BankRepository.findById(bankId) : 
+          null
+
         return {
           id,
           expirationDate: expiration_date,
+          purchaseDate: purchase_date,
+          balanceCloseDate: balance_close_date,
           description,
           company,
           category,
@@ -115,10 +134,13 @@ export class SearchGainUseCase {
           typePayment: type_payment,
           installmentCurrent: installment_current,
           installmentTotalPayment: installment_total_payment,
+          groupInstallmentId: group_installment_id,
           paid,
+          bank,
+          bankTypeAccount
         }
       },
-    )
+    ))
 
     return {
       result: [...gains],

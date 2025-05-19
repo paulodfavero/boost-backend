@@ -1,5 +1,5 @@
-import { PrismaBanksRepository } from '@/repositories/prisma/bank-repository'
-import { CreateBankUseCase } from '../create-bank'
+import { PrismaBanksRepository, PrismaBankTypeAccountRepository } from '@/repositories/prisma/bank-repository'
+import { CreateBankTypeAccountUseCase, CreateBankUseCase } from '../create-bank'
 import { PrismaOrganizationsRepository } from '@/repositories/prisma/organization-repository'
 
 export function makeCreateBankUseCase() {
@@ -7,6 +7,16 @@ export function makeCreateBankUseCase() {
   const organizationRepository = new PrismaOrganizationsRepository()
 
   const useCase = new CreateBankUseCase(bankRepository, organizationRepository)
+
+  return useCase
+}
+
+export function makeCreateBankTypeAccountUseCase() {
+  const bankTypeAccountRepository = new PrismaBankTypeAccountRepository()
+  const bankRepository = new PrismaBanksRepository()
+  const organizationRepository = new PrismaOrganizationsRepository()
+  
+  const useCase = new CreateBankTypeAccountUseCase(bankTypeAccountRepository, bankRepository, organizationRepository)
 
   return useCase
 }

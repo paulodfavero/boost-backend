@@ -1,6 +1,7 @@
 import { GainsRepository } from '@/repositories/gain-repository'
 import { ExpensesRepository } from '@/repositories/expense-repository'
 import { addMonths, format, subMonths } from 'date-fns'
+import { BanksRepository, BanksTypeAccountRepository } from '@/repositories/bank-repository'
 
 interface SearchExpensesUseCaseRequest {
   organizationId: string
@@ -11,6 +12,8 @@ export class SearchExpenseUseCase {
   constructor(
     private ExpensesRepository: ExpensesRepository,
     private GainsRepository: GainsRepository,
+    private BankRepository: BanksRepository, 
+    private BankTypeAccountRepository: BanksTypeAccountRepository,
   ) {}
 
   async execute({
@@ -60,7 +63,7 @@ export class SearchExpenseUseCase {
     const nextGain = await this.GainsRepository.searchMany(
       organizationId,
       nextMonth,
-    )
+    )    
 
     previousExpense.map(({ amount, paid }) => {
       previousMonthTotalExpenses += amount
@@ -90,8 +93,8 @@ export class SearchExpenseUseCase {
       return true
     })
 
-    const expenses = expensesFormated.map(
-      ({
+    const expenses = await Promise.all(expensesFormated.map(
+      async ({
         id,
         expiration_date,
         purchase_date,
@@ -105,9 +108,20 @@ export class SearchExpenseUseCase {
         installment_total_payment,
         group_installment_id,
         paid,
+        bankId,
+        bankTypeAccountId
       }) => {
         totalExpenses += amount
         if (paid) receivedExpenses += amount
+
+        const bankTypeAccount = bankTypeAccountId ? 
+          await this.BankTypeAccountRepository.findById(bankTypeAccountId) : 
+          null
+
+        const bank = bankId ? 
+          await this.BankRepository.findById(bankId) : 
+          null
+
         return {
           id,
           expirationDate: expiration_date,
@@ -122,9 +136,11 @@ export class SearchExpenseUseCase {
           installmentTotalPayment: installment_total_payment,
           groupInstallmentId: group_installment_id,
           paid,
+          bank,
+          bankTypeAccount
         }
       },
-    )
+    ))
 
     return {
       result: [...expenses],
