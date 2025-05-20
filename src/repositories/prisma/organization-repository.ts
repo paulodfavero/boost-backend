@@ -2,6 +2,7 @@ import { prisma } from '@/lib/prisma'
 import { Prisma } from '@prisma/client'
 
 import { OrganizationsRepository } from '../organization-repository'
+import { OrganizationType } from '@/use-cases/update-organization'
 
 export class PrismaOrganizationsRepository implements OrganizationsRepository {
   async create(data: Prisma.OrganizationCreateInput) {
@@ -26,6 +27,18 @@ export class PrismaOrganizationsRepository implements OrganizationsRepository {
     const organization = await prisma.organization.findUnique({
       where: {
         email,
+      },
+    })
+
+    return organization
+  }
+  async update(data: {organizationId: string, stripeCustomerId: string}) {
+    const organization = await prisma.organization.update({
+      where: {
+        id: data.organizationId,
+      },
+      data: {
+        stripe_customer_id: data.stripeCustomerId
       },
     })
 
