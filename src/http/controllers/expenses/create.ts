@@ -18,6 +18,8 @@ export async function create(request: FastifyRequest, reply: FastifyReply) {
       category: z.string().nullish(),
       amount: z.number(),
       typePayment: z.string(),
+      operationType: z.string().nullish(),
+      paymentData: z.string().nullish(),
       paid: z.boolean(),
       installmentCurrent: z.number().nullish(),
       installmentTotalPayment: z.number().nullish(),

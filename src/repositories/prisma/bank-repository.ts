@@ -58,8 +58,16 @@ export class PrismaBanksRepository implements BanksRepository {
   }
 }
 export class PrismaBankTypeAccountRepository implements BanksTypeAccountRepository {
+  async findByAccountId(accountId: string) {
+    const bankTypeAccount = await prisma.bankTypeAccount.findUnique({
+      where: {
+        account_id: accountId,
+      },
+    })
+
+    return bankTypeAccount
+  }
   async findById(id: string) {
-    console.log('%csrc/repositories/prisma/bank-repository.ts:52 id', 'color: #007acc;', id);
     const bankTypeAccount = await prisma.bankTypeAccount.findUnique({
       where: {
         id,

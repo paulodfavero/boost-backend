@@ -22,7 +22,7 @@ export interface CreateBankTypeAccountUseCase {
   name: string
   accountId: string
   owner: string
-  marketingName: string
+  marketingName?: string
   balance: number
   currencyCode: string
   itemId: string
@@ -114,29 +114,38 @@ export class CreateBankTypeAccountUseCase {
     const bank = await this.bankRepository.findByItemId(
       itemId,
     )
+    if (!bank) throw new BankNotFound()
+
     const organization = await this.organizationsRepository.findById(
       organizationId,
     )
     if (!organization) throw new OrganizationNotFound()
-    if (!bank) throw new BankNotFound()
 
-    const response = await this.bankTypeAccountRepository.create({
-      type,
-      subtype,
-      name,
-      account_id: accountId,
-      owner,
-      marketing_name: marketingName,
-      item_id: itemId,
-      balance,
-      currency_code: currencyCode,
-      number,
-      bank_data: bankData,
-      credit_data: creditData,
-      tax_number: taxNumber,
-    })
+    const isBankTypeCreated: any = await this.bankTypeAccountRepository.findByAccountId(
+      accountId,
+    )
 
-    const { id } = response
+    let id = isBankTypeCreated?.id;
+
+    if (!isBankTypeCreated) {
+      const response = await this.bankTypeAccountRepository.create({
+        type,
+        subtype,
+        name,
+        account_id: accountId,
+        owner,
+        marketing_name: marketingName,
+        item_id: itemId,
+        balance,
+        currency_code: currencyCode,
+        number,
+        bank_data: bankData,
+        credit_data: creditData,
+        tax_number: taxNumber,
+      })
+      id = response.id
+    }
+
     return {
       id,
       itemId,

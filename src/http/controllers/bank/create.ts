@@ -68,7 +68,7 @@ export async function createBankTypeAccount(request: FastifyRequest, reply: Fast
     subtype: z.string(),
     name: z.string(),
     accountId: z.string(),
-    marketingName: z.string(),
+    marketingName: z.string().nullable(),
     owner: z.string(),
     balance: z.number(),
     currencyCode: z.string(),
@@ -116,7 +116,7 @@ export async function createBankTypeAccount(request: FastifyRequest, reply: Fast
     return reply.status(201).send(data)
   } catch (error: any) {
     const errorStatus = error?.statusCode || 500
-    
+    console.log('%csrc/http/controllers/bank/create.ts:119 error', 'color: #007acc;', error);
     return reply.status(errorStatus).send(error)
   }
 }

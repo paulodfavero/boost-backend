@@ -7,6 +7,8 @@ interface ExpenseUpdateRepository {
   category?: string
   amount?: number
   typePayment?: string
+  operationType?: string
+  paymentData?: string
   installmentCurrent?: number | null
   installmentTotalPayment?: number | null
   groupInstallmentId?: string

@@ -21,6 +21,8 @@ interface ExpenseRepository {
   category: string
   amount: number
   typePayment: string
+  operationType?: string
+  paymentData?: string
   installmentCurrent?: number | null
   installmentTotalPayment?: number | null
   paid: boolean
@@ -61,6 +63,8 @@ export class CreateExpenseUseCase {
         balanceCloseDate,
         company,
         typePayment,
+        operationType,
+        paymentData,
         installmentCurrent,
         installmentTotalPayment,
         bankTypeAccountId,
@@ -87,6 +91,8 @@ export class CreateExpenseUseCase {
             balance_close_date: balanceCloseDate,
             company: companyTransaction || company,
             type_payment,
+            operation_type: operationType,
+            payment_data: paymentData,
             installment_current,
             installment_total_payment,
             organizationId,
@@ -128,6 +134,8 @@ export class CreateExpenseUseCase {
             balance_close_date: balanceCloseDate,
             company,
             type_payment,
+            operation_type: operationType,
+            payment_data: paymentData,
             installment_current: index + 1,
             installment_total_payment,
             group_installment_id: groupInstallmentId,

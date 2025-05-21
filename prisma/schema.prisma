@@ -43,6 +43,8 @@ model Expense {
   category                  String?
   amount                    Int
   type_payment              String
+  operation_type            String?
+  payment_data              String?
   installment_current       Int?
   installment_total_payment Int?
   paid                      Boolean   @default(false)
@@ -71,6 +73,8 @@ model Gain {
   category                  String?
   amount                    Int
   type_payment              String
+  operation_type            String?
+  payment_data              String?
   installment_current       Int?
   installment_total_payment Int?
   paid                      Boolean   @default(false)
@@ -142,12 +146,12 @@ model BankTypeAccount {
   type            String
   subtype         String
   name            String
-  marketing_name  String
+  marketing_name  String?
   owner           String
   balance         Float
   currency_code   String
   tax_number      String?
-  account_id      String
+  account_id      String    @unique
   item_id         String
   number          String
   last_updated_at DateTime?

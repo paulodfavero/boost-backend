@@ -18,7 +18,7 @@ export interface CreateBankTypeAccountUseCaseResponse {
   name: string
   account_id: string
   owner: string
-  marketing_name: string
+  marketing_name?: string
   balance: number
   currency_code: string
   item_id: string
@@ -36,6 +36,7 @@ export interface BanksRepository {
   create(data: CreateBankUseCaseResponse): Promise<Bank>
 }
 export interface BanksTypeAccountRepository {
+  findByAccountId(accountId: string): unknown
   findById(id: string): unknown
   create(data: CreateBankTypeAccountUseCaseResponse): Promise<BankTypeAccount>
 }
