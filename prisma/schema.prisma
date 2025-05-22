@@ -27,6 +27,7 @@ model Organization {
   Bank            Bank[]
   BankTypeAccount BankTypeAccount[]
   Suggestion      Suggestion[]
+  Credit          Credit[]
 
   @@map("organizations")
 }
@@ -91,6 +92,36 @@ model Gain {
   @@map("gains")
 }
 
+model Credit {
+  id                        String    @id @default(dbgenerated("nanoid(11)"))
+  created_at                DateTime  @default(now())
+  expiration_date           DateTime
+  purchase_date             DateTime?
+  balance_close_date        DateTime? //DATE CLOSE BALANCE CREDIT CARD
+  bank_transaction_id       String?   @unique //ID of transaction that came from Pluggy
+  description               String
+  company                   String
+  category                  String?
+  amount                    Int
+  type_payment              String
+  operation_type            String?
+  payment_data              String?
+  installment_current       Int?
+  installment_total_payment Int?
+  paid                      Boolean   @default(false)
+  group_installment_id      String?
+
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  organizationId String
+
+  bank              Bank?            @relation(fields: [bankId], references: [id])
+  bankId            String?
+  bankTypeAccount   BankTypeAccount? @relation(fields: [bankTypeAccountId], references: [id])
+  bankTypeAccountId String?
+
+  @@map("credits")
+}
+
 model Category {
   id         String   @id @default(dbgenerated("nanoid(11)"))
   created_at DateTime @default(now())
@@ -136,6 +167,7 @@ model Bank {
   bankTypeAccount BankTypeAccount[]
   expense         Expense[]
   Gain            Gain[]
+  Credit          Credit[]
 
   @@map("banks")
 }
@@ -165,6 +197,7 @@ model BankTypeAccount {
   organization   Organization? @relation(fields: [organizationId], references: [id])
   organizationId String?
   Gain           Gain[]
+  Credit         Credit[]
 
   @@map("bankTypeAccount")
 }
