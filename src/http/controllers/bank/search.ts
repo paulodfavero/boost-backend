@@ -29,3 +29,16 @@ export async function searchBankTypeAccount(request: FastifyRequest, reply: Fast
 
   return reply.status(200).send(data)
 }
+export async function searchBankTypeAccountOrganizationId(request: FastifyRequest, reply: FastifyReply) {
+  const searchBanksQuerySchema = z.object({
+    organiaztionId: z.string(),
+  })
+  const { organiaztionId } = searchBanksQuerySchema.parse(request.params)
+  const searchBankUseCase = makeSearchBankTypeAccountUseCase()
+
+  const data = await searchBankUseCase.execute({
+    query: organiaztionId,
+  })
+
+  return reply.status(200).send(data)
+}

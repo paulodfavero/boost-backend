@@ -47,7 +47,7 @@ export class PrismaBanksRepository implements BanksRepository {
     })
 
     return bankTypeAccount
-  }
+  }  
 
   async create(data: CreateBankUseCaseResponse) {
     const bank = await prisma.bank.create({
@@ -63,6 +63,15 @@ export class PrismaBankTypeAccountRepository implements BanksTypeAccountReposito
       where: {
         account_id: accountId,
       },
+    })
+
+    return bankTypeAccount
+  }
+  async findByOrganizationId(organizationId: string) {
+    const bankTypeAccount = await prisma.bankTypeAccount.findMany({
+      where: {
+        organizationId,
+      }
     })
 
     return bankTypeAccount

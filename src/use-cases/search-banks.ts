@@ -51,9 +51,7 @@ export class SearchBankUseCase {
 }
 export class SearchBankTypeAccountUseCase {
   constructor(private banksTypeAccountRepository: BanksTypeAccountRepository) {}
-
   async execute({ query }: SearchBankTypeAccountUseCaseRequest): Promise<object> {
-    console.log('%csrc/use-cases/search-banks.ts:55 query', 'color: #007acc;', query);
     const bankTypeAccount = await this.banksTypeAccountRepository.findById(query)
 
     return { bankTypeAccount }

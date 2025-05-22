@@ -1,7 +1,7 @@
 import { FastifyReply, FastifyRequest } from 'fastify'
 import { z } from 'zod'
 
-import { makeUpdateGainUseCase } from '@/use-cases/factories/make-update-gain-use-case'
+import { makeUpdateCreditUseCase } from '@/use-cases/factories/make-update-credit-use-case'
 
 export async function update(request: FastifyRequest, reply: FastifyReply) {
   const updateCheckInParamsSchema = z.object({
@@ -24,9 +24,9 @@ export async function update(request: FastifyRequest, reply: FastifyReply) {
   const { organizationId } = updateCheckInParamsSchema.parse(request.params)
 
   const reqBody = updateGymBodySchema.parse(request.body)
-  const updateGainUseCase = makeUpdateGainUseCase()
+  const updateCreditUseCase = makeUpdateCreditUseCase()
 
-  const data = await updateGainUseCase.execute({
+  const data = await updateCreditUseCase.execute({
     organizationId,
     reqBody,
   })

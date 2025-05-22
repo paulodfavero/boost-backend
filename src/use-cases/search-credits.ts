@@ -14,7 +14,7 @@ export class SearchCreditUseCase {
     private ExpensesRepository: ExpensesRepository,
     private BankRepository: BanksRepository,
     private BankTypeAccountRepository: BanksTypeAccountRepository,
-  ) {}
+  ) { }
 
   async execute({
     organizationId,
@@ -114,12 +114,12 @@ export class SearchCreditUseCase {
         totalCredits += amount
         if (paid) receivedCredits += amount
 
-        const bankTypeAccount = bankTypeAccountId ? 
-          await this.BankTypeAccountRepository.findById(bankTypeAccountId) : 
+        const bankTypeAccount = bankTypeAccountId ?
+          await this.BankTypeAccountRepository.findById(bankTypeAccountId) :
           null
-        
-        const bank = bankId ? 
-          await this.BankRepository.findById(bankId) : 
+
+        const bank = bankId ?
+          await this.BankRepository.findById(bankId) :
           null
 
         return {
@@ -166,5 +166,21 @@ export class SearchCreditUseCase {
         totalExpenses: nextMonthTotalExpenses,
       },
     }
+  }
+}
+export class SearchCreditCardListUseCase {
+  constructor(
+    private BankTypeAccountRepository: BanksTypeAccountRepository,
+  ) { }
+
+  async execute({
+    organizationId,
+  }: SearchCreditsUseCaseRequest): Promise<object> {
+
+    const creditsFormated= await this.BankTypeAccountRepository.findByOrganizationId(
+      organizationId,
+    ) as any[]
+    const creditCardList =  creditsFormated.filter((card: any) => card.type === 'CREDIT')
+    return creditCardList 
   }
 }

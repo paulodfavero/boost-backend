@@ -25,6 +25,7 @@ export interface CreateBankTypeAccountUseCaseResponse {
   number: string
   lastUpdatedAt?: Date
   bank_data?: string
+  organizationId: string
   credit_data?: string
   tax_number?: string
   bankItemId?: string
@@ -38,5 +39,6 @@ export interface BanksRepository {
 export interface BanksTypeAccountRepository {
   findByAccountId(accountId: string): unknown
   findById(id: string): unknown
+  findByOrganizationId(organizationId: string): unknown
   create(data: CreateBankTypeAccountUseCaseResponse): Promise<BankTypeAccount>
 }

@@ -10,7 +10,6 @@ export function makeSearchBankUseCase() {
 }
 export function makeSearchBankTypeAccountUseCase() {
   const bankTypeAccountRepository = new PrismaBankTypeAccountRepository()
-
   const useCase = new SearchBankTypeAccountUseCase(bankTypeAccountRepository)
 
   return useCase

@@ -72,4 +72,20 @@ export class PrismaCreditRepository implements CreditsRepository {
 
     return credit
   }
+
+  async searchCardList(organizationId: string) { 
+
+    const credits = await prisma.credit.findMany({
+      where: {
+        organizationId: {
+          contains: organizationId,
+        },        
+      },
+      orderBy: {
+        created_at: 'desc',
+      },
+    })
+
+    return credits
+  }
 }

@@ -140,6 +140,7 @@ export class CreateBankTypeAccountUseCase {
         currency_code: currencyCode,
         number,
         bank_data: bankData,
+        organizationId,
         credit_data: creditData,
         tax_number: taxNumber,
       })
@@ -160,6 +161,7 @@ export class CreateBankTypeAccountUseCase {
       number,
       bankData: bankData ?? '',
       creditData: creditData ?? '',
+      organizationId,
       taxNumber,
     }
   }

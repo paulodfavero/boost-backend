@@ -17,6 +17,7 @@ interface CreditUpdateRepository {
 
 export interface CreditsRepository {
   searchMany(organizationId: string, date?: string, monthStart?: string, monthEnd?: string): Promise<Credit[]>
+  searchCardList(organizationId: string): Promise<Credit[]>
   createMany(
     data: Prisma.Enumerable<Prisma.CreditCreateManyInput>,
   ): Promise<object>
