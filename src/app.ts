@@ -20,7 +20,7 @@ const MAX_REQUESTS = 100 // máximo de requisições por janela de tempo
 const requestCounts = new Map<string, { count: number; resetTime: number }>()
 
 // Função para limpar requisições antigas
-if (!isDevelopment) {
+if (isDevelopment) {
   setInterval(() => {
     const now = Date.now()
     for (const [key, value] of requestCounts.entries()) {
@@ -39,7 +39,7 @@ app.addHook('onRequest', async (request: FastifyRequest, reply: FastifyReply) =>
   const ip = request.ip
 
   // Rate limiting apenas em produção
-  if (!isDevelopment) {
+  if (isDevelopment) {
     const now = Date.now()
     const requestData = requestCounts.get(ip) || { count: 0, resetTime: now + RATE_LIMIT_WINDOW }
     
