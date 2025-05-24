@@ -56,6 +56,15 @@ export class PrismaBanksRepository implements BanksRepository {
 
     return bank
   }
+  async delete(bankId: string) {
+    const credit = await prisma.bank.delete({
+      where: {
+        id: bankId,
+      },
+    })
+
+    return credit
+  }
 }
 export class PrismaBankTypeAccountRepository implements BanksTypeAccountRepository {
   async findByAccountId(accountId: string) {
@@ -94,4 +103,15 @@ export class PrismaBankTypeAccountRepository implements BanksTypeAccountReposito
 
     return bankTypeAccount
   }
+  async deleteMany(bankItemId: string) {
+    const gain = await prisma.bankTypeAccount.deleteMany({
+      where: {
+        item_id: bankItemId,
+      },
+    })
+
+    return gain
+  }
+
+ 
 }

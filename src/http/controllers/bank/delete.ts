@@ -1,9 +1,9 @@
 import { FastifyReply, FastifyRequest } from 'fastify'
 import { z } from 'zod'
 
-import { makeDeleteCreditUseCase } from '@/use-cases/factories/make-delete-credit-use-case'
+import { makeDeleteBankUseCase } from '@/use-cases/factories/make-delete-bank-use-case'
 
-export async function deleteTransaction(
+export async function deleteBank(
   request: FastifyRequest,
   reply: FastifyReply,
 ) {
@@ -11,16 +11,16 @@ export async function deleteTransaction(
     organizationId: z.string(),
   })
   const deleteBodySchema = z.object({
-    id: z.string(),
+    bankId: z.string(),
   })
-
+  
   const { organizationId } = deleteCheckInParamsSchema.parse(request.params)
-  const { id: transactionId } = deleteBodySchema.parse(request.body)
+  const { bankId } = deleteBodySchema.parse(request.body)
 
-  const deleteCreditUseCase = makeDeleteCreditUseCase()
-  const data = await deleteCreditUseCase.execute({
+  const deleteBankUseCase = makeDeleteBankUseCase()
+  const data = await deleteBankUseCase.execute({
     organizationId,
-    transactionId,
+    bankId,
   })
 
   return reply.status(201).send(data)

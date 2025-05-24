@@ -15,7 +15,10 @@ import { creditsRoutes } from './http/controllers/credit/routes'
 export const app = fastify()
 
 app.register(cors, {
-  // put your options here
+  origin: process.env.SITE_URL,
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'Itemid']
 })
 app.register(resultsRoutes)
 app.register(expensesRoutes)

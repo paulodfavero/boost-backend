@@ -23,4 +23,5 @@ export interface CreditsRepository {
   ): Promise<object>
   update(data: CreditUpdateRepository): Promise<object>
   delete(transactionId: string): Promise<object>
+  deleteMany(bankId: string): Promise<object>
 }

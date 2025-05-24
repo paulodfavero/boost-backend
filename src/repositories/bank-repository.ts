@@ -35,10 +35,12 @@ export interface BanksRepository {
   findById(id: string): unknown
   searchMany(query: string): Promise<Bank[]>
   create(data: CreateBankUseCaseResponse): Promise<Bank>
+  delete(bankId: string): Promise<object>
 }
 export interface BanksTypeAccountRepository {
   findByAccountId(accountId: string): unknown
   findById(id: string): unknown
   findByOrganizationId(organizationId: string): unknown
   create(data: CreateBankTypeAccountUseCaseResponse): Promise<BankTypeAccount>
+  deleteMany(bankItemId: string): Promise<object>
 }

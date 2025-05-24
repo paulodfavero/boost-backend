@@ -22,4 +22,5 @@ export interface GainsRepository {
   ): Promise<object>
   update(data: GainUpdateRepository): Promise<object>
   delete(transactionId: string): Promise<object>
+  deleteMany(bankId: string): Promise<object>
 }
