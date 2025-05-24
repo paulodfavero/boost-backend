@@ -31,6 +31,7 @@
     "@fastify/rate-limit": "10.3.0",
     "@prisma/client": "4.10.1",
     "bcryptjs": "2.4.3",
+    "tsup": "8.5.0",
     "date-fns": "2.30.0",
     "dayjs": "1.11.7",
     "dotenv": "16.0.3",
