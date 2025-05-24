@@ -74,13 +74,13 @@ export class PrismaCreditRepository implements CreditsRepository {
   }
 
   async deleteMany(bankId: string) {
-    const gain = await prisma.gain.deleteMany({
+    const credit = await prisma.credit.deleteMany({
       where: {
         bankId,
       },
     })
 
-    return gain
+    return credit
   }
 
   async searchCardList(organizationId: string) { 
