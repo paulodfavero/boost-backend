@@ -6,12 +6,16 @@ export async function search(request: FastifyRequest, reply: FastifyReply) {
 
   const searchExpensesQuerySchema = z.object({
     a: z.string(),
+    date: z.string(),
   })
 
-  const { a } = searchExpensesQuerySchema.parse(request.query)
+  const { a, date } = searchExpensesQuerySchema.parse(request.query)
   const searchExpenseUseCase = makeSearchResultUseCase()
 
-  const data = await searchExpenseUseCase.execute({ organizationId: a })
+  const data = await searchExpenseUseCase.execute({ 
+    organizationId: a, 
+    date 
+  })
 
   return reply.status(200).send(data)
 }

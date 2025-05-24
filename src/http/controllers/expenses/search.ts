@@ -7,6 +7,7 @@ export async function search(request: FastifyRequest, reply: FastifyReply) {
     a: z.string(),
     date: z.string(),
   })
+  
   const { a, date } = searchExpensesQuerySchema.parse(request.query)
   const searchExpenseUseCase = makeSearchExpenseUseCase()
 
