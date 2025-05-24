@@ -7,6 +7,5 @@ export function makeCreateCreditUseCase() {
   const organizationRepository = new PrismaOrganizationsRepository()
 
   const useCase = new CreateCreditUseCase(creditRepository, organizationRepository)
-
   return useCase
 }
