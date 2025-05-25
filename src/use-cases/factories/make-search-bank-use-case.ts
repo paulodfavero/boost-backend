@@ -3,7 +3,6 @@ import {
   PrismaBankTypeAccountRepository,
 } from '@/repositories/prisma/bank-repository'
 import {
-  SearchBanksUseCase,
   SearchBankTypeAccountUseCase,
   SearchBankUseCase,
 } from '../search-banks'
@@ -17,7 +16,7 @@ export function makeSearchBankUseCase() {
 }
 export function makeSearchBankOrganizationIdsUseCase() {
   const banksRepository = new PrismaBanksRepository()
-  const useCase = new SearchBanksUseCase(banksRepository)
+  const useCase = new SearchBankUseCase(banksRepository)
 
   return useCase
 }

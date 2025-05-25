@@ -63,15 +63,15 @@ export class SearchBankTypeAccountUseCase {
     return { bankTypeAccount }
   }
 }
-export class SearchBanksUseCase {
-  constructor(private banksRepository: BanksTypeAccountRepository) {}
-  async execute({
-    query,
-  }: SearchBankTypeAccountUseCaseRequest): Promise<object> {
-    const bankTypeAccount = await this.banksRepository.findByOrganizationId(
-      query,
-    )
+// export class SearchBanksUseCase {
+//   constructor(private banksRepository: BanksTypeAccountRepository) {}
+//   async execute({
+//     query,
+//   }: SearchBankTypeAccountUseCaseRequest): Promise<object> {
+//     const bankTypeAccount = await this.banksRepository.findByOrganizationId(
+//       query,
+//     )
 
-    return bankTypeAccount
-  }
-}
+//     return bankTypeAccount
+//   }
+// }
