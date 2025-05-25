@@ -6,6 +6,7 @@ import { addMonths, format, subMonths } from 'date-fns'
 interface SearchExpensesUseCaseRequest {
   organizationId: string
   date: string
+  bankId?: string
 }
 
 export class SearchResultsUseCase {
@@ -17,6 +18,7 @@ export class SearchResultsUseCase {
   async execute({
     organizationId,
     date,
+    bankId,
   }: SearchExpensesUseCaseRequest): Promise<object> {
     const previousMonth = format(subMonths(new Date(date), 6), 'y/MM')
     const nextMonth = format(addMonths(new Date(date), 6), 'y/MM')
@@ -24,12 +26,14 @@ export class SearchResultsUseCase {
     const expensesFormated = await this.ExpensesRepository.searchMany(
       organizationId,
       '',
+      bankId,
       previousMonth,
       nextMonth,
     )
     const currentGain = await this.GainsRepository.searchMany(
       organizationId,
       '',
+      bankId,
       previousMonth,
       nextMonth,
     )

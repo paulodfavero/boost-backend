@@ -6,7 +6,7 @@ export async function search(request: FastifyRequest, reply: FastifyReply) {
   const searchExpensesQuerySchema = z.object({
     a: z.string(),
     date: z.string(),
-    bankId: z.string().nullable(),
+    bankId: z.string().nullish(),
   })
 
   const { a, date, bankId } = searchExpensesQuerySchema.parse(request.query)
@@ -15,7 +15,7 @@ export async function search(request: FastifyRequest, reply: FastifyReply) {
   const data = await searchExpenseUseCase.execute({
     organizationId: a,
     date,
-    bankId: bankId || undefined,
+    bankId: bankId || '',
   })
 
   return reply.status(200).send(data)

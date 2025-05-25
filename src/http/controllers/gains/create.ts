@@ -25,7 +25,7 @@ export async function create(request: FastifyRequest, reply: FastifyReply) {
       installmentTotalPayment: z.number().nullish(),
       bankId: z.string().nullish(),
       bankTypeAccountId: z.string().nullish(),
-      merchant: z 
+      merchant: z
         .object({
           businessName: z.string().nullish(),
           cnpj: z.string().nullish(),
@@ -54,6 +54,4 @@ export async function create(request: FastifyRequest, reply: FastifyReply) {
     // }
     // throw err
   }
-
-  
 }

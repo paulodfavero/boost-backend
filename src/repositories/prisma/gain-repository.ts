@@ -38,9 +38,11 @@ export class PrismaGainRepository implements GainsRepository {
         organizationId: {
           contains: organizationId,
         },
-        bankId: {
-          contains: bankId,
-        },
+        ...(bankId && {
+          bankId: {
+            contains: bankId,
+          },
+        }),
         expiration_date: {
           gte: startOfTheDay,
           lte: endOfTheDay,
