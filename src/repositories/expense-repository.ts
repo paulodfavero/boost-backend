@@ -18,7 +18,13 @@ interface ExpenseUpdateRepository {
 }
 
 export interface ExpensesRepository {
-  searchMany(organizationId: string, date?: string, monthStart?: string, monthEnd?: string): Promise<Expense[]>
+  searchMany(
+    organizationId: string,
+    date?: string,
+    bankId?: string,
+    monthStart?: string,
+    monthEnd?: string,
+  ): Promise<Expense[]>
   createMany(
     data: Prisma.Enumerable<Prisma.ExpenseCreateManyInput>,
   ): Promise<object>

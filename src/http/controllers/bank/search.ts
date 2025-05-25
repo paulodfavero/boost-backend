@@ -1,6 +1,10 @@
 import { FastifyReply, FastifyRequest } from 'fastify'
 import { z } from 'zod'
-import { makeSearchBankTypeAccountUseCase, makeSearchBankUseCase } from '@/use-cases/factories/make-search-bank-use-case'
+import {
+  makeSearchBankOrganizationIdsUseCase,
+  makeSearchBankTypeAccountUseCase,
+  makeSearchBankUseCase,
+} from '@/use-cases/factories/make-search-bank-use-case'
 
 export async function search(request: FastifyRequest, reply: FastifyReply) {
   const searchBanksQuerySchema = z.object({
@@ -16,7 +20,10 @@ export async function search(request: FastifyRequest, reply: FastifyReply) {
 
   return reply.status(200).send(data)
 }
-export async function searchBankTypeAccount(request: FastifyRequest, reply: FastifyReply) {
+export async function searchBankTypeAccount(
+  request: FastifyRequest,
+  reply: FastifyReply,
+) {
   const searchBanksQuerySchema = z.object({
     id: z.string(),
   })
@@ -29,15 +36,36 @@ export async function searchBankTypeAccount(request: FastifyRequest, reply: Fast
 
   return reply.status(200).send(data)
 }
-export async function searchBankTypeAccountOrganizationId(request: FastifyRequest, reply: FastifyReply) {
+export async function searchBankTypeAccountOrganizationId(
+  request: FastifyRequest,
+  reply: FastifyReply,
+) {
   const searchBanksQuerySchema = z.object({
-    organiaztionId: z.string(),
+    organizationId: z.string(),
   })
-  const { organiaztionId } = searchBanksQuerySchema.parse(request.params)
-  const searchBankUseCase = makeSearchBankTypeAccountUseCase()
+  const { organizationId } = searchBanksQuerySchema.parse(request.params)
+
+  const searchBankUseCase = makeSearchBankOrganizationIdsUseCase()
 
   const data = await searchBankUseCase.execute({
-    query: organiaztionId,
+    query: organizationId,
+  })
+
+  return reply.status(200).send(data)
+}
+export async function searchBanksOrganizationId(
+  request: FastifyRequest,
+  reply: FastifyReply,
+) {
+  const searchBanksQuerySchema = z.object({
+    organizationId: z.string(),
+  })
+  const { organizationId } = searchBanksQuerySchema.parse(request.params)
+
+  const searchBankUseCase = makeSearchBankOrganizationIdsUseCase()
+
+  const data = await searchBankUseCase.execute({
+    query: organizationId,
   })
 
   return reply.status(200).send(data)

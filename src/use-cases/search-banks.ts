@@ -1,4 +1,7 @@
-import { BanksRepository, BanksTypeAccountRepository } from '@/repositories/bank-repository'
+import {
+  BanksRepository,
+  BanksTypeAccountRepository,
+} from '@/repositories/bank-repository'
 
 interface SearchBankUseCaseRequest {
   query: string
@@ -11,7 +14,6 @@ export class SearchBankUseCase {
   constructor(private banksRepository: BanksRepository) {}
 
   async execute({ query }: SearchBankUseCaseRequest): Promise<object> {
-    console.log('%csrc/use-cases/search-banks.ts:14 query', 'color: #007acc;', query);
     const banks = await this.banksRepository.searchMany(query)
 
     const bankFormated = banks.map(
@@ -51,9 +53,25 @@ export class SearchBankUseCase {
 }
 export class SearchBankTypeAccountUseCase {
   constructor(private banksTypeAccountRepository: BanksTypeAccountRepository) {}
-  async execute({ query }: SearchBankTypeAccountUseCaseRequest): Promise<object> {
-    const bankTypeAccount = await this.banksTypeAccountRepository.findById(query)
+  async execute({
+    query,
+  }: SearchBankTypeAccountUseCaseRequest): Promise<object> {
+    const bankTypeAccount = await this.banksTypeAccountRepository.findById(
+      query,
+    )
 
     return { bankTypeAccount }
+  }
+}
+export class SearchBanksUseCase {
+  constructor(private banksRepository: BanksTypeAccountRepository) {}
+  async execute({
+    query,
+  }: SearchBankTypeAccountUseCaseRequest): Promise<object> {
+    const bankTypeAccount = await this.banksRepository.findByOrganizationId(
+      query,
+    )
+
+    return bankTypeAccount
   }
 }

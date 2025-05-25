@@ -19,21 +19,32 @@ interface GainUpdateRepository {
 }
 
 export class PrismaGainRepository implements GainsRepository {
-  async searchMany(organizationId: string, date?: string, monthStart?: string, monthEnd?: string) {
-
-    const startOfTheDay = date ? dayjs(date).startOf('date').toDate() : dayjs(monthStart).startOf('date').toDate();
-    const endOfTheDay = date ? lastDayOfMonth(startOfTheDay) : lastDayOfMonth(dayjs(monthEnd).startOf('date').toDate());    
-
+  async searchMany(
+    organizationId: string,
+    date?: string,
+    bankId?: string,
+    monthStart?: string,
+    monthEnd?: string,
+  ) {
+    const startOfTheDay = date
+      ? dayjs(date).startOf('date').toDate()
+      : dayjs(monthStart).startOf('date').toDate()
+    const endOfTheDay = date
+      ? lastDayOfMonth(startOfTheDay)
+      : lastDayOfMonth(dayjs(monthEnd).startOf('date').toDate())
 
     const gains = await prisma.gain.findMany({
       where: {
         organizationId: {
           contains: organizationId,
         },
+        bankId: {
+          contains: bankId,
+        },
         expiration_date: {
           gte: startOfTheDay,
           lte: endOfTheDay,
-       },
+        },
       },
       orderBy: {
         created_at: 'desc',
@@ -72,6 +83,7 @@ export class PrismaGainRepository implements GainsRepository {
 
     return gain
   }
+
   async deleteMany(bankId: string) {
     const gain = await prisma.gain.deleteMany({
       where: {

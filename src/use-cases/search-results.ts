@@ -1,14 +1,11 @@
-import { BanksRepository } from '@/repositories/bank-repository'
 import { ExpensesRepository } from '@/repositories/expense-repository'
-import { OrganizationsRepository } from '@/repositories/organization-repository'
-import { OrganizationNotFound } from './errors/organization-not-found-error'
+
 import { GainsRepository } from '@/repositories/gain-repository'
 import { addMonths, format, subMonths } from 'date-fns'
 
 interface SearchExpensesUseCaseRequest {
   organizationId: string
   date: string
-
 }
 
 export class SearchResultsUseCase {
@@ -16,45 +13,66 @@ export class SearchResultsUseCase {
     private ExpensesRepository: ExpensesRepository,
     private GainsRepository: GainsRepository,
   ) {}
-  
 
-  async execute({ organizationId, date }: SearchExpensesUseCaseRequest): Promise<object> {
-    
+  async execute({
+    organizationId,
+    date,
+  }: SearchExpensesUseCaseRequest): Promise<object> {
     const previousMonth = format(subMonths(new Date(date), 6), 'y/MM')
     const nextMonth = format(addMonths(new Date(date), 6), 'y/MM')
-    
-    const expensesFormated = await this.ExpensesRepository.searchMany(organizationId, '', previousMonth, nextMonth)
-    const currentGain = await this.GainsRepository.searchMany(organizationId, '', previousMonth, nextMonth)
 
-    const filteredByMonthExpenses = expensesFormated.map(transaction => {
-      const month = format(new Date(transaction.expiration_date), 'y/MM')
-      return {
-        ...transaction,
-        month
-      }
-    }).reduce((acc, transaction) => {
-      const month = transaction.month
-      if (!acc[month]) {
-        acc[month] = []
-      }
-      acc[month].push(transaction)
-      return acc
-    }, {} as Record<string, typeof expensesFormated>)
-    
-    const monthlyTotalsExpenses = Object.entries(filteredByMonthExpenses).reduce((acc, [month, transactions]) => {
-      const total = transactions.reduce((sum, transaction) => sum + transaction.amount, 0)
-      const paidTotal = transactions.reduce((sum, transaction) => 
-        transaction.paid ? sum + transaction.amount : sum, 0)
-      
+    const expensesFormated = await this.ExpensesRepository.searchMany(
+      organizationId,
+      '',
+      previousMonth,
+      nextMonth,
+    )
+    const currentGain = await this.GainsRepository.searchMany(
+      organizationId,
+      '',
+      previousMonth,
+      nextMonth,
+    )
+
+    const filteredByMonthExpenses = expensesFormated
+      .map((transaction) => {
+        const month = format(new Date(transaction.expiration_date), 'y/MM')
+        return {
+          ...transaction,
+          month,
+        }
+      })
+      .reduce((acc, transaction) => {
+        const month = transaction.month
+        if (!acc[month]) {
+          acc[month] = []
+        }
+        acc[month].push(transaction)
+        return acc
+      }, {} as Record<string, typeof expensesFormated>)
+
+    const monthlyTotalsExpenses = Object.entries(
+      filteredByMonthExpenses,
+    ).reduce((acc, [month, transactions]) => {
+      const total = transactions.reduce(
+        (sum, transaction) => sum + transaction.amount,
+        0,
+      )
+      const paidTotal = transactions.reduce(
+        (sum, transaction) =>
+          transaction.paid ? sum + transaction.amount : sum,
+        0,
+      )
+
       acc.push({
         month,
         total,
         paidTotal,
-        transactions
+        transactions,
       })
       return acc
-    }, [] as Array<{ month: string, total: number, paidTotal: number, transactions: typeof expensesFormated }>)
-    
+    }, [] as Array<{ month: string; total: number; paidTotal: number; transactions: typeof expensesFormated }>)
+
     // Create a sequence of months between previousMonth and nextMonth
     const monthsSequenceExpenses = []
     const processedMonths = new Set<string>()
@@ -63,58 +81,75 @@ export class SearchResultsUseCase {
 
     while (currentDate <= endDate) {
       const monthKey = format(currentDate, 'y/MM')
-      
+
       if (!processedMonths.has(monthKey)) {
-        const existingMonth = monthlyTotalsExpenses.find(m => m.month === monthKey)
-        
+        const existingMonth = monthlyTotalsExpenses.find(
+          (m) => m.month === monthKey,
+        )
+
         monthsSequenceExpenses.push({
           month: monthKey,
           total: existingMonth?.total ?? 0,
           paidTotal: existingMonth?.paidTotal ?? 0,
-          transactions: existingMonth?.transactions ?? []
+          transactions: existingMonth?.transactions ?? [],
         })
-        
+
         processedMonths.add(monthKey)
       }
       currentDate = addMonths(currentDate, 1)
     }
-    
+
     const sortedMonthsExpenses = monthsSequenceExpenses.sort((a, b) => {
       const [yearA, monthA] = a.month.split('/')
       const [yearB, monthB] = b.month.split('/')
       return yearA.localeCompare(yearB) || monthA.localeCompare(monthB)
     })
 
-
-    const filteredByMonthGains = currentGain.map(transaction => {
-      const month = format(new Date(transaction.expiration_date), 'y/MM')
-      return {
-        ...transaction,
-        month
-      }
-    }).reduce((acc, transaction) => {
-      const month = transaction.month
-      if (!acc[month]) {
-        acc[month] = []
-      }
-      acc[month].push(transaction)
-      return acc
-    }, {} as Record<string, typeof currentGain>)
-    
-    const monthlyTotalsGains = Object.entries(filteredByMonthGains).reduce((acc, [month, transactions]) => {
-      const total = transactions.reduce((sum, transaction) => sum + transaction.amount, 0)
-      const paidTotal = transactions.reduce((sum, transaction) => 
-        transaction.paid ? sum + transaction.amount : sum, 0)
-      
-      acc.push({
-        month,
-        total,
-        paidTotal,
-        transactions
+    const filteredByMonthGains = currentGain
+      .map((transaction) => {
+        const month = format(new Date(transaction.expiration_date), 'y/MM')
+        return {
+          ...transaction,
+          month,
+        }
       })
-      return acc
-    }, [] as Array<{ month: string, total: number, paidTotal: number, transactions: typeof currentGain }>)
-    
+      .reduce((acc, transaction) => {
+        const month = transaction.month
+        if (!acc[month]) {
+          acc[month] = []
+        }
+        acc[month].push(transaction)
+        return acc
+      }, {} as Record<string, typeof currentGain>)
+
+    const monthlyTotalsGains = Object.entries(filteredByMonthGains).reduce(
+      (acc, [month, transactions]) => {
+        const total = transactions.reduce(
+          (sum, transaction) => sum + transaction.amount,
+          0,
+        )
+        const paidTotal = transactions.reduce(
+          (sum, transaction) =>
+            transaction.paid ? sum + transaction.amount : sum,
+          0,
+        )
+
+        acc.push({
+          month,
+          total,
+          paidTotal,
+          transactions,
+        })
+        return acc
+      },
+      [] as Array<{
+        month: string
+        total: number
+        paidTotal: number
+        transactions: typeof currentGain
+      }>,
+    )
+
     // Create a sequence of months between previousMonth and nextMonth
     const monthsSequenceGains = []
     const processedMonthsGains = new Set<string>()
@@ -123,28 +158,30 @@ export class SearchResultsUseCase {
 
     while (currentDateGains <= endDateGains) {
       const monthKey = format(currentDateGains, 'y/MM')
-      
+
       if (!processedMonthsGains.has(monthKey)) {
-        const existingMonth = monthlyTotalsGains.find(m => m.month === monthKey)
-        
+        const existingMonth = monthlyTotalsGains.find(
+          (m) => m.month === monthKey,
+        )
+
         monthsSequenceGains.push({
           month: monthKey,
           total: existingMonth?.total ?? 0,
           paidTotal: existingMonth?.paidTotal ?? 0,
-          transactions: existingMonth?.transactions ?? []
+          transactions: existingMonth?.transactions ?? [],
         })
-        
+
         processedMonthsGains.add(monthKey)
       }
       currentDateGains = addMonths(currentDateGains, 1)
     }
-    
+
     const sortedMonthsGains = monthsSequenceGains.sort((a, b) => {
       const [yearA, monthA] = a.month.split('/')
       const [yearB, monthB] = b.month.split('/')
       return yearA.localeCompare(yearB) || monthA.localeCompare(monthB)
     })
-    
+
     return { expenses: sortedMonthsExpenses, gains: sortedMonthsGains }
   }
 }

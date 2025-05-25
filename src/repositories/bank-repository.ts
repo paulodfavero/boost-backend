@@ -33,6 +33,7 @@ export interface CreateBankTypeAccountUseCaseResponse {
 export interface BanksRepository {
   findByItemId(query: string): unknown
   findById(id: string): unknown
+  findByOrganizationId(organizationId: string): any
   searchMany(query: string): Promise<Bank[]>
   create(data: CreateBankUseCaseResponse): Promise<Bank>
   delete(bankId: string): Promise<object>
@@ -40,7 +41,7 @@ export interface BanksRepository {
 export interface BanksTypeAccountRepository {
   findByAccountId(accountId: string): unknown
   findById(id: string): unknown
-  findByOrganizationId(organizationId: string): unknown
+  findByOrganizationId(organizationId: string): any
   create(data: CreateBankTypeAccountUseCaseResponse): Promise<BankTypeAccount>
   deleteMany(bankItemId: string): Promise<object>
 }

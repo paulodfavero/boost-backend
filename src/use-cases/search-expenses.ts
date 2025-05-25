@@ -1,24 +1,29 @@
 import { GainsRepository } from '@/repositories/gain-repository'
 import { ExpensesRepository } from '@/repositories/expense-repository'
 import { addMonths, format, subMonths } from 'date-fns'
-import { BanksRepository, BanksTypeAccountRepository } from '@/repositories/bank-repository'
+import {
+  BanksRepository,
+  BanksTypeAccountRepository,
+} from '@/repositories/bank-repository'
 
 interface SearchExpensesUseCaseRequest {
   organizationId: string
   date: string
+  bankId?: string
 }
 
 export class SearchExpenseUseCase {
   constructor(
     private ExpensesRepository: ExpensesRepository,
     private GainsRepository: GainsRepository,
-    private BankRepository: BanksRepository, 
+    private BankRepository: BanksRepository,
     private BankTypeAccountRepository: BanksTypeAccountRepository,
   ) {}
 
   async execute({
     organizationId,
     date,
+    bankId,
   }: SearchExpensesUseCaseRequest): Promise<object> {
     let totalGains = 0
     let receivedGains = 0
@@ -43,27 +48,33 @@ export class SearchExpenseUseCase {
     const expensesFormated = await this.ExpensesRepository.searchMany(
       organizationId,
       date,
+      bankId,
     )
     const currentGain = await this.GainsRepository.searchMany(
       organizationId,
       date,
+      bankId,
     )
     const previousExpense = await this.ExpensesRepository.searchMany(
       organizationId,
       previousMonth,
+      bankId,
     )
     const nextExpense = await this.ExpensesRepository.searchMany(
       organizationId,
       nextMonth,
+      bankId,
     )
     const previousGain = await this.GainsRepository.searchMany(
       organizationId,
       previousMonth,
+      bankId,
     )
     const nextGain = await this.GainsRepository.searchMany(
       organizationId,
       nextMonth,
-    )    
+      bankId,
+    )
 
     previousExpense.map(({ amount, paid }) => {
       previousMonthTotalExpenses += amount
@@ -93,54 +104,56 @@ export class SearchExpenseUseCase {
       return true
     })
 
-    const expenses = await Promise.all(expensesFormated.map(
-      async ({
-        id,
-        expiration_date,
-        purchase_date,
-        balance_close_date,
-        description,
-        category,
-        company,
-        amount,
-        type_payment,
-        installment_current,
-        installment_total_payment,
-        group_installment_id,
-        paid,
-        bankId,
-        bankTypeAccountId
-      }) => {
-        totalExpenses += amount
-        if (paid) receivedExpenses += amount
-
-        const bankTypeAccount = bankTypeAccountId ? 
-          await this.BankTypeAccountRepository.findById(bankTypeAccountId) : 
-          null
-
-        const bank = bankId ? 
-          await this.BankRepository.findById(bankId) : 
-          null
-
-        return {
+    const expenses = await Promise.all(
+      expensesFormated.map(
+        async ({
           id,
-          expirationDate: expiration_date,
-          purchaseDate: purchase_date,
-          balanceCloseDate: balance_close_date,
+          expiration_date,
+          purchase_date,
+          balance_close_date,
           description,
-          company,
           category,
+          company,
           amount,
-          typePayment: type_payment,
-          installmentCurrent: installment_current,
-          installmentTotalPayment: installment_total_payment,
-          groupInstallmentId: group_installment_id,
+          type_payment,
+          installment_current,
+          installment_total_payment,
+          group_installment_id,
           paid,
-          bank,
-          bankTypeAccount
-        }
-      },
-    ))
+          bankId,
+          bankTypeAccountId,
+        }) => {
+          totalExpenses += amount
+          if (paid) receivedExpenses += amount
+
+          const bankTypeAccount = bankTypeAccountId
+            ? await this.BankTypeAccountRepository.findById(bankTypeAccountId)
+            : null
+
+          const bank = bankId
+            ? await this.BankRepository.findById(bankId)
+            : null
+
+          return {
+            id,
+            expirationDate: expiration_date,
+            purchaseDate: purchase_date,
+            balanceCloseDate: balance_close_date,
+            description,
+            company,
+            category,
+            amount,
+            typePayment: type_payment,
+            installmentCurrent: installment_current,
+            installmentTotalPayment: installment_total_payment,
+            groupInstallmentId: group_installment_id,
+            paid,
+            bank,
+            bankTypeAccount,
+          }
+        },
+      ),
+    )
 
     return {
       result: [...expenses],

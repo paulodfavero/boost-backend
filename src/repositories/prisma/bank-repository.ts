@@ -1,5 +1,9 @@
 import { prisma } from '@/lib/prisma'
-import { BanksRepository, BanksTypeAccountRepository, CreateBankTypeAccountUseCaseResponse } from '../bank-repository'
+import {
+  BanksRepository,
+  BanksTypeAccountRepository,
+  CreateBankTypeAccountUseCaseResponse,
+} from '../bank-repository'
 import { Prisma } from '@prisma/client'
 
 interface CreateBankUseCaseResponse {
@@ -29,17 +33,17 @@ export class PrismaBanksRepository implements BanksRepository {
 
     return banks
   }
+
   async findByItemId(query: string) {
     const bank = await prisma.bank.findUnique({
       where: {
         item_id: query,
-      },      
+      },
     })
     return bank
   }
 
   async findById(id: string) {
-    console.log('%csrc/repositories/prisma/bank-repository.ts:52 id', 'color: #007acc;', id);
     const bankTypeAccount = await prisma.bank.findUnique({
       where: {
         id,
@@ -47,7 +51,17 @@ export class PrismaBanksRepository implements BanksRepository {
     })
 
     return bankTypeAccount
-  }  
+  }
+
+  async findByOrganizationId(organizationId: string) {
+    const bankTypeAccount = await prisma.bank.findMany({
+      where: {
+        organizationId,
+      },
+    })
+
+    return bankTypeAccount
+  }
 
   async create(data: CreateBankUseCaseResponse) {
     const bank = await prisma.bank.create({
@@ -56,6 +70,7 @@ export class PrismaBanksRepository implements BanksRepository {
 
     return bank
   }
+
   async delete(bankId: string) {
     const credit = await prisma.bank.delete({
       where: {
@@ -66,7 +81,9 @@ export class PrismaBanksRepository implements BanksRepository {
     return credit
   }
 }
-export class PrismaBankTypeAccountRepository implements BanksTypeAccountRepository {
+export class PrismaBankTypeAccountRepository
+  implements BanksTypeAccountRepository
+{
   async findByAccountId(accountId: string) {
     const bankTypeAccount = await prisma.bankTypeAccount.findUnique({
       where: {
@@ -76,15 +93,17 @@ export class PrismaBankTypeAccountRepository implements BanksTypeAccountReposito
 
     return bankTypeAccount
   }
+
   async findByOrganizationId(organizationId: string) {
     const bankTypeAccount = await prisma.bankTypeAccount.findMany({
       where: {
         organizationId,
-      }
+      },
     })
 
     return bankTypeAccount
   }
+
   async findById(id: string) {
     const bankTypeAccount = await prisma.bankTypeAccount.findUnique({
       where: {
@@ -103,6 +122,7 @@ export class PrismaBankTypeAccountRepository implements BanksTypeAccountReposito
 
     return bankTypeAccount
   }
+
   async deleteMany(bankItemId: string) {
     const gain = await prisma.bankTypeAccount.deleteMany({
       where: {
@@ -112,6 +132,4 @@ export class PrismaBankTypeAccountRepository implements BanksTypeAccountReposito
 
     return gain
   }
-
- 
 }

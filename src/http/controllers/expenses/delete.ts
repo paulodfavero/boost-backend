@@ -14,29 +14,8 @@ export async function deleteTransaction(
     id: z.string(),
   })
 
-  // const updateGymBodySchema = z.object({
-  //   id: z.string(),
-  //   expirationDate: z.string().nullish(),
-  //   description: z.string().nullish(),
-  //   company: z.string().nullish(),
-  //   category: z.string().nullish(),
-  //   amount: z.number().nullish(),
-  //   typePayment: z.string().nullish(),
-  //   paid: z.boolean().nullish(),
-  //   installmentCurrent: z.number().nullish(),
-  //   installmentTotalPayment: z.number().nullish(),
-  //   organizationId: z.string().nullish(),
-  // })
-
   const { organizationId } = deleteCheckInParamsSchema.parse(request.params)
   const { id: transactionId } = deleteBodySchema.parse(request.body)
-
-  console.log(
-    '%cdelete.ts line:32 object',
-    'color: #007acc;',
-    organizationId,
-    transactionId,
-  )
 
   const deleteExpenseUseCase = makeDeleteExpenseUseCase()
   const data = await deleteExpenseUseCase.execute({
