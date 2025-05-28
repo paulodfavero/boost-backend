@@ -9,10 +9,12 @@ export async function update(request: FastifyRequest, reply: FastifyReply) {
   })
 
   const updateOrganiaztionBodySchema = z.object({
-    stripeCustomerId: z.string(),    
+    stripeCustomerId: z.string(),
   })
 
-  const { organizationId } = updateOrganizationParamsSchema.parse(request.params)
+  const { organizationId } = updateOrganizationParamsSchema.parse(
+    request.params,
+  )
 
   const reqBody = updateOrganiaztionBodySchema.parse(request.body)
   const updateOrganizationUseCase = makeUpdateOrganizationUseCase()

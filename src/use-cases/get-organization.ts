@@ -4,28 +4,46 @@ import { OrganizationsRepository } from '@/repositories/organization-repository'
 import { OrganizationNotFound } from './errors/organization-not-found-error'
 
 interface GetOrganizationUseCaseRequest {
-  organizationId: string
+  id: string
 }
 interface GetOrganizationUseCaseResponse {
-  organization: Organization
+  createdAt: Date
+  name: string
+  cnpj?: string | null
+  cpf?: string | null
+  email: string | null
+  stripeCustomerId: string | null
 }
+
 export class GetOrganizationUseCase {
   constructor(private organizationsRepository: OrganizationsRepository) {}
 
   async execute({
-    organizationId,
+    id,
   }: GetOrganizationUseCaseRequest): Promise<GetOrganizationUseCaseResponse> {
-    const organization = await this.organizationsRepository.findById(
-      organizationId,
-    )
     console.log(
-      '%cget-organization.ts line:18 organization',
+      '%csrc/use-cases/get-organization.ts:18 id',
+      'color: #007acc;',
+      id,
+    )
+    const organization = (await this.organizationsRepository.findById(
+      id,
+    )) as Organization
+    console.log(
+      '%csrc/use-cases/get-organization.ts:22 organization',
       'color: #007acc;',
       organization,
     )
     if (!organization) {
       throw new OrganizationNotFound()
     }
-    return { organization }
+    return {
+      createdAt: organization.created_at,
+      name: organization.name,
+      cnpj: organization.cnpj,
+      cpf: organization.cpf,
+      email: organization.email,
+      stripeCustomerId: organization.stripe_customer_id,
+    }
   }
 }

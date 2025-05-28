@@ -2,7 +2,6 @@ import { prisma } from '@/lib/prisma'
 import { Prisma } from '@prisma/client'
 
 import { OrganizationsRepository } from '../organization-repository'
-import { OrganizationType } from '@/use-cases/update-organization'
 
 export class PrismaOrganizationsRepository implements OrganizationsRepository {
   async create(data: Prisma.OrganizationCreateInput) {
@@ -14,6 +13,11 @@ export class PrismaOrganizationsRepository implements OrganizationsRepository {
   }
 
   async findById(id: string) {
+    console.log(
+      '%csrc/repositories/prisma/organization-repository.ts:16 id',
+      'color: #007acc;',
+      id,
+    )
     const organization = await prisma.organization.findUnique({
       where: {
         id,
@@ -32,13 +36,14 @@ export class PrismaOrganizationsRepository implements OrganizationsRepository {
 
     return organization
   }
-  async update(data: {organizationId: string, stripeCustomerId: string}) {
+
+  async update(data: { organizationId: string; stripeCustomerId: string }) {
     const organization = await prisma.organization.update({
       where: {
         id: data.organizationId,
       },
       data: {
-        stripe_customer_id: data.stripeCustomerId
+        stripe_customer_id: data.stripeCustomerId,
       },
     })
 
