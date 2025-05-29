@@ -19,11 +19,18 @@ interface CreditUpdateRepository {
 }
 
 export class PrismaCreditRepository implements CreditsRepository {
-  async searchMany(organizationId: string, date?: string, monthStart?: string, monthEnd?: string) {
-
-    const startOfTheDay = date ? dayjs(date).startOf('date').toDate() : dayjs(monthStart).startOf('date').toDate();
-    const endOfTheDay = date ? lastDayOfMonth(startOfTheDay) : lastDayOfMonth(dayjs(monthEnd).startOf('date').toDate());    
-
+  async searchMany(
+    organizationId: string,
+    date?: string,
+    monthStart?: string,
+    monthEnd?: string,
+  ) {
+    const startOfTheDay = date
+      ? dayjs(date).startOf('date').toDate()
+      : dayjs(monthStart).startOf('date').toDate()
+    const endOfTheDay = date
+      ? lastDayOfMonth(startOfTheDay)
+      : lastDayOfMonth(dayjs(monthEnd).startOf('date').toDate())
 
     const credits = await prisma.credit.findMany({
       where: {
@@ -33,7 +40,7 @@ export class PrismaCreditRepository implements CreditsRepository {
         expiration_date: {
           gte: startOfTheDay,
           lte: endOfTheDay,
-       },
+        },
       },
       orderBy: {
         created_at: 'desc',
@@ -83,13 +90,12 @@ export class PrismaCreditRepository implements CreditsRepository {
     return credit
   }
 
-  async searchCardList(organizationId: string) { 
-
+  async searchCardList(organizationId: string) {
     const credits = await prisma.credit.findMany({
       where: {
         organizationId: {
           contains: organizationId,
-        },        
+        },
       },
       orderBy: {
         created_at: 'desc',

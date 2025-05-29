@@ -21,19 +21,10 @@ export class GetOrganizationUseCase {
   async execute({
     id,
   }: GetOrganizationUseCaseRequest): Promise<GetOrganizationUseCaseResponse> {
-    console.log(
-      '%csrc/use-cases/get-organization.ts:18 id',
-      'color: #007acc;',
-      id,
-    )
     const organization = (await this.organizationsRepository.findById(
       id,
     )) as Organization
-    console.log(
-      '%csrc/use-cases/get-organization.ts:22 organization',
-      'color: #007acc;',
-      organization,
-    )
+
     if (!organization) {
       throw new OrganizationNotFound()
     }

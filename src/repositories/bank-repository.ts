@@ -13,6 +13,7 @@ interface CreateBankUseCaseResponse {
   organizationId: string
 }
 export interface CreateBankTypeAccountUseCaseResponse {
+  id?: string
   type: string
   subtype: string
   name: string
@@ -43,5 +44,8 @@ export interface BanksTypeAccountRepository {
   findById(id: string): unknown
   findByOrganizationId(organizationId: string): any
   create(data: CreateBankTypeAccountUseCaseResponse): Promise<BankTypeAccount>
+  updateByAccountId(
+    data: CreateBankTypeAccountUseCaseResponse,
+  ): Promise<BankTypeAccount>
   deleteMany(bankItemId: string): Promise<object>
 }

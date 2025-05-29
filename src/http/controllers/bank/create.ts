@@ -1,9 +1,9 @@
 import { FastifyReply, FastifyRequest } from 'fastify'
 import { z } from 'zod'
 
-import { 
-  makeCreateBankUseCase, 
-  makeCreateBankTypeAccountUseCase 
+import {
+  makeCreateBankUseCase,
+  makeCreateBankTypeAccountUseCase,
 } from '@/use-cases/factories/make-create-bank-use-case'
 
 export async function create(request: FastifyRequest, reply: FastifyReply) {
@@ -46,7 +46,7 @@ export async function create(request: FastifyRequest, reply: FastifyReply) {
     type,
     imageUrl,
     hasMFA,
-    products: products ? products : [],
+    products: products || [],
     status,
     lastUpdatedAt,
     organizationId,
@@ -55,12 +55,15 @@ export async function create(request: FastifyRequest, reply: FastifyReply) {
   return reply.status(201).send(data)
 }
 
-export async function createBankTypeAccount(request: FastifyRequest, reply: FastifyReply) {
+export async function createBankTypeAccount(
+  request: FastifyRequest,
+  reply: FastifyReply,
+) {
   const headers = await request.headers
   const itemId = headers.itemid
 
   const createBankTypeAccountParamsSchema = z.object({
-    organizationId: z.string(),    
+    organizationId: z.string(),
   })
 
   const createBankAccountTypeBodySchema = z.object({
@@ -77,7 +80,9 @@ export async function createBankTypeAccount(request: FastifyRequest, reply: Fast
     creditData: z.string().nullable(),
     taxNumber: z.string().nullable(),
   })
-  const { organizationId } = await createBankTypeAccountParamsSchema.parse(request.params)
+  const { organizationId } = await createBankTypeAccountParamsSchema.parse(
+    request.params,
+  )
   const {
     type,
     subtype,
@@ -110,13 +115,17 @@ export async function createBankTypeAccount(request: FastifyRequest, reply: Fast
       bankData: bankData || '',
       creditData: creditData || '',
       taxNumber: taxNumber || '',
-      organizationId
+      organizationId,
     } as any)
 
     return reply.status(201).send(data)
   } catch (error: any) {
     const errorStatus = error?.statusCode || 500
-    console.log('%csrc/http/controllers/bank/create.ts:119 error', 'color: #007acc;', error);
+    console.log(
+      '%csrc/http/controllers/bank/create.ts:119 error',
+      'color: #007acc;',
+      error,
+    )
     return reply.status(errorStatus).send(error)
   }
 }

@@ -9,11 +9,7 @@ export async function search(request: FastifyRequest, reply: FastifyReply) {
 
   const { id } = searchBanksQuerySchema.parse(request.params)
   const searchOrganizationId = makeGetOrganizationUseCase()
-  console.log(
-    '%csrc/http/controllers/organization/search.ts:12 id',
-    'color: #007acc;',
-    id,
-  )
+
   const data = await searchOrganizationId.execute({
     id,
   })

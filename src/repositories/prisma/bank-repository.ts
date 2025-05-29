@@ -123,6 +123,17 @@ export class PrismaBankTypeAccountRepository
     return bankTypeAccount
   }
 
+  async updateByAccountId(data: CreateBankTypeAccountUseCaseResponse) {
+    const bankTypeAccount = await prisma.bankTypeAccount.update({
+      where: {
+        id: data.id,
+      },
+      data,
+    } as any)
+
+    return bankTypeAccount
+  }
+
   async deleteMany(bankItemId: string) {
     const gain = await prisma.bankTypeAccount.deleteMany({
       where: {

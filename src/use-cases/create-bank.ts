@@ -1,7 +1,13 @@
 import { OrganizationsRepository } from '@/repositories/organization-repository'
-import { BanksRepository, BanksTypeAccountRepository } from '@/repositories/bank-repository'
-import { BankNotFound, OrganizationNotFound } from './errors/organization-not-found-error'
-import { Bank, BankTypeAccount, Prisma } from '@prisma/client'
+import {
+  BanksRepository,
+  BanksTypeAccountRepository,
+} from '@/repositories/bank-repository'
+import {
+  BankNotFound,
+  OrganizationNotFound,
+} from './errors/organization-not-found-error'
+import { Bank, Prisma } from '@prisma/client'
 
 interface CreateBankUseCaseResponse {
   itemId: string
@@ -16,7 +22,7 @@ interface CreateBankUseCaseResponse {
   lastUpdatedAt: string | Date
   organizationId: string
 }
-export interface CreateBankTypeAccountUseCase {
+export interface CreateBankTypeAccountUseCaseProps {
   type: string
   subtype: string
   name: string
@@ -38,7 +44,7 @@ export class CreateBankUseCase {
   constructor(
     private categoriesRepository: BanksRepository,
     private organizationsRepository: OrganizationsRepository,
-  ) { }
+  ) {}
 
   async execute({
     name,
@@ -93,7 +99,7 @@ export class CreateBankTypeAccountUseCase {
     private bankTypeAccountRepository: BanksTypeAccountRepository,
     private bankRepository: BanksRepository,
     private organizationsRepository: OrganizationsRepository,
-  ) { }
+  ) {}
 
   async execute({
     type,
@@ -110,10 +116,8 @@ export class CreateBankTypeAccountUseCase {
     creditData,
     taxNumber,
     organizationId,
-  }: CreateBankTypeAccountUseCase): Promise<any> {
-    const bank = await this.bankRepository.findByItemId(
-      itemId,
-    )
+  }: CreateBankTypeAccountUseCaseProps): Promise<any> {
+    const bank = await this.bankRepository.findByItemId(itemId)
     if (!bank) throw new BankNotFound()
 
     const organization = await this.organizationsRepository.findById(
@@ -121,14 +125,32 @@ export class CreateBankTypeAccountUseCase {
     )
     if (!organization) throw new OrganizationNotFound()
 
-    const isBankTypeCreated: any = await this.bankTypeAccountRepository.findByAccountId(
-      accountId,
-    )
+    const isBankTypeCreated: any =
+      await this.bankTypeAccountRepository.findByAccountId(accountId)
 
-    let id = isBankTypeCreated?.id;
+    let id = isBankTypeCreated?.id
 
     if (!isBankTypeCreated) {
       const response = await this.bankTypeAccountRepository.create({
+        type,
+        subtype,
+        name,
+        account_id: accountId,
+        owner,
+        marketing_name: marketingName,
+        item_id: itemId,
+        balance,
+        currency_code: currencyCode,
+        number,
+        bank_data: bankData,
+        organizationId,
+        credit_data: creditData,
+        tax_number: taxNumber,
+      })
+      id = response.id
+    } else {
+      const response = await this.bankTypeAccountRepository.updateByAccountId({
+        id,
         type,
         subtype,
         name,
