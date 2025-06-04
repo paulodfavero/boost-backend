@@ -11,6 +11,7 @@ import { userRoutes } from './http/controllers/user/routes'
 import { suggestionRoutes } from './http/controllers/suggestion/routes'
 import { resultsRoutes } from './http/controllers/results/routes'
 import { creditsRoutes } from './http/controllers/credit/routes'
+import { env } from './env'
 
 const isDevelopment = process.env.NODE_ENV === 'dev'
 

@@ -10,9 +10,10 @@ export async function create(request: FastifyRequest, reply: FastifyReply) {
     name: z.string(),
     email: z.string(),
     image: z.string().nullish(),
+    password: z.string().nullish(),
   })
 
-  const { name, email, image } = createOrganizationBodySchema.parse(
+  const { name, email, image, password } = createOrganizationBodySchema.parse(
     request.body,
   )
   try {
@@ -22,6 +23,7 @@ export async function create(request: FastifyRequest, reply: FastifyReply) {
     const data = await createOrganizationUseCase.execute({
       name,
       email,
+      password,
       image,
     })
     if (!data) throw new Error()
@@ -30,6 +32,7 @@ export async function create(request: FastifyRequest, reply: FastifyReply) {
     const user = await createUserUseCase.execute({
       name,
       email,
+      password,
       image,
       organizationId,
     })

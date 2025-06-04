@@ -1,12 +1,23 @@
 import { OrganizationsRepository } from '@/repositories/organization-repository'
-import { Organization } from '@prisma/client'
+import bcrypt from 'bcryptjs'
 
 interface CreateOrganizationUseCaseResponse {
   name: string
   email: string
   image?: string
+  password?: string
   // cnpj?: string | undefined
   // cpf?: string | undefined
+}
+
+interface OrganizationResponse {
+  id: string
+  name: string
+  email: string | null
+  image?: string
+  created: boolean
+  organizationId: string
+  hasPassword: boolean
 }
 
 export class CreateOrganizationUseCase {
@@ -17,26 +28,45 @@ export class CreateOrganizationUseCase {
     name,
     email,
     image,
-  }: CreateOrganizationUseCaseResponse): Promise<Organization> {
+    password,
+  }: CreateOrganizationUseCaseResponse): Promise<OrganizationResponse> {
     const hasOrganization = await this.organizationsRepository.findByEmail(
       email,
     )
 
     if (hasOrganization) {
-      const { name, email, id: organizationId } = hasOrganization
+      const { name, email, id: organizationId, password } = hasOrganization
       return {
-        created: true, 
+        id: organizationId,
         name,
         email,
         image,
+        created: true,
         organizationId,
+        hasPassword: !!password,
       }
     }
-    const response = await this.organizationsRepository.create({
+
+    const data: any = {
       name,
       email,
-    })
+    }
 
-    return { name, email, image, organizationId: response.id }
+    if (password) {
+      const hashedPassword = await bcrypt.hash(password, 10)
+      data.password = hashedPassword
+    }
+
+    const response = await this.organizationsRepository.create(data)
+
+    return {
+      id: response.id,
+      name,
+      email,
+      image,
+      created: false,
+      organizationId: response.id,
+      hasPassword: !!password,
+    }
   }
 }

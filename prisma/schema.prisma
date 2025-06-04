@@ -11,23 +11,23 @@ datasource db {
 }
 
 model Organization {
-  id                 String   @id @default(dbgenerated("nanoid(11)"))
-  created_at         DateTime @default(now())
+  id                 String            @id @default(dbgenerated("nanoid(11)"))
+  created_at         DateTime          @default(now())
   name               String
-  cnpj               String?  @unique
-  cpf                String?  @unique
-  email              String?  @unique
+  password           String?
+  cnpj               String?           @unique
+  cpf                String?           @unique
+  email              String?           @unique
   stripe_customer_id String?
-
-  User            User[]
-  Expense         Expense[]
-  Gain            Gain[]
-  Category        Category[]
-  Company         Company[]
-  Bank            Bank[]
-  BankTypeAccount BankTypeAccount[]
-  Suggestion      Suggestion[]
-  Credit          Credit[]
+  User               User[]
+  Expense            Expense[]
+  Gain               Gain[]
+  Category           Category[]
+  Company            Company[]
+  Bank               Bank[]
+  BankTypeAccount    BankTypeAccount[]
+  Suggestion         Suggestion[]
+  Credit             Credit[]
 
   @@map("organizations")
 }

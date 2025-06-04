@@ -13,11 +13,6 @@ export class PrismaOrganizationsRepository implements OrganizationsRepository {
   }
 
   async findById(id: string) {
-    console.log(
-      '%csrc/repositories/prisma/organization-repository.ts:16 id',
-      'color: #007acc;',
-      id,
-    )
     const organization = await prisma.organization.findUnique({
       where: {
         id,

@@ -11,8 +11,8 @@ interface UpdateOrganizationUseCaseResponse {
   stripeCustomerId: string
 }
 export interface OrganizationsRepository {
-  findById(id: string): unknown
-  findByEmail(email: string): unknown
+  findById(id: string): Promise<Organization | null>
+  findByEmail(email: string): Promise<Organization | null>
   create(data: CreateOrganizationUseCaseResponse): Promise<Organization>
-  update(data: UpdateOrganizationUseCaseResponse): Promise<object>
+  update(data: UpdateOrganizationUseCaseResponse): Promise<Organization>
 }
