@@ -41,7 +41,6 @@ export class AuthenticateUseCase {
     if (!doesPasswordMatches) {
       throw new InvalidCredentialsError()
     }
-
     return {
       organization: {
         id: organization.id,
