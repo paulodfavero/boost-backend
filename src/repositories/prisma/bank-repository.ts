@@ -125,6 +125,11 @@ export class PrismaBankTypeAccountRepository
   }
 
   async create(data: CreateBankTypeAccountUseCaseResponse) {
+    console.log(
+      '%csrc/repositories/prisma/bank-repository.ts:128 data',
+      'color: #007acc;',
+      data,
+    )
     const bankTypeAccount = await prisma.bankTypeAccount.create({
       data,
     } as any)
