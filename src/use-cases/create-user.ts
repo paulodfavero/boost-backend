@@ -18,7 +18,6 @@ export class CreateUserUseCase {
 
   async execute(data: CreateUserUseCaseResponse): Promise<User> {
     const reqBody = data
-    console.log('%ccreate-user.ts line:27 reqBody', 'color: #007acc;', reqBody)
     const { name, email, image, organizationId } = reqBody
 
     const organization = await this.organizationsRepository.findById(

@@ -16,7 +16,12 @@ export function makeSearchBankUseCase() {
 }
 export function makeSearchBankOrganizationIdsUseCase() {
   const banksRepository = new PrismaBanksRepository()
-  const useCase = new SearchBankUseCase(banksRepository)
+  const bankTypeAccountRepository = new PrismaBankTypeAccountRepository()
+
+  const useCase = new SearchBankUseCase(
+    banksRepository,
+    bankTypeAccountRepository,
+  )
 
   return useCase
 }

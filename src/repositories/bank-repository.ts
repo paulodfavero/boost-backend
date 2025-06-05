@@ -42,6 +42,7 @@ export interface BanksRepository {
 export interface BanksTypeAccountRepository {
   findByAccountId(accountId: string): unknown
   findById(id: string): unknown
+  findByItemId(itemId: string): unknown
   findByOrganizationId(organizationId: string): any
   create(data: CreateBankTypeAccountUseCaseResponse): Promise<BankTypeAccount>
   updateByAccountId(

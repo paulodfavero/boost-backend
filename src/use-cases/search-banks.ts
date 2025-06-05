@@ -11,41 +11,50 @@ interface SearchBankTypeAccountUseCaseRequest {
 }
 
 export class SearchBankUseCase {
-  constructor(private banksRepository: BanksRepository) {}
+  constructor(
+    private banksRepository: BanksRepository,
+    private banksTypeAccountRepository: BanksTypeAccountRepository,
+  ) {}
 
   async execute({ query }: SearchBankUseCaseRequest): Promise<object> {
     const banks = await this.banksRepository.searchMany(query)
 
-    const bankFormated = banks.map(
-      ({
-        id,
-        item_id,
-        name,
-        primary_color,
-        institution_url,
-        type,
-        image_url,
-        has_mfa,
-        products,
-        status,
-        last_updated_at,
-        organizationId,
-      }) => {
-        return {
+    const bankFormated = await Promise.all(
+      banks.map(
+        async ({
           id,
-          itemId: item_id,
+          item_id,
           name,
-          primaryColor: primary_color,
-          institutionUrl: institution_url,
+          primary_color,
+          institution_url,
           type,
-          imageUrl: image_url,
-          hasMFA: has_mfa,
+          image_url,
+          has_mfa,
           products,
           status,
-          lastUpdatedAt: last_updated_at,
+          last_updated_at,
           organizationId,
-        }
-      },
+        }) => {
+          const bankTypeAccounts =
+            await this.banksTypeAccountRepository.findByItemId(item_id)
+
+          return {
+            id,
+            itemId: item_id,
+            name,
+            primaryColor: primary_color,
+            institutionUrl: institution_url,
+            type,
+            imageUrl: image_url,
+            hasMFA: has_mfa,
+            products,
+            status,
+            lastUpdatedAt: last_updated_at,
+            organizationId,
+            bankTypeAccounts,
+          }
+        },
+      ),
     )
 
     return bankFormated

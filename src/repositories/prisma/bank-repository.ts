@@ -94,6 +94,16 @@ export class PrismaBankTypeAccountRepository
     return bankTypeAccount
   }
 
+  async findByItemId(itemId: string) {
+    const bankTypeAccount = await prisma.bankTypeAccount.findMany({
+      where: {
+        item_id: itemId,
+      },
+    })
+
+    return bankTypeAccount
+  }
+
   async findByOrganizationId(organizationId: string) {
     const bankTypeAccount = await prisma.bankTypeAccount.findMany({
       where: {
