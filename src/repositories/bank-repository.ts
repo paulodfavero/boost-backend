@@ -23,13 +23,13 @@ export interface CreateBankTypeAccountUseCaseResponse {
   balance: number
   currency_code: string
   item_id: string
+  bankId: string
   number: string
   lastUpdatedAt?: Date
   bank_data?: string
   organizationId: string
   credit_data?: string
   tax_number?: string
-  bankItemId?: string
 }
 export interface BanksRepository {
   findByItemId(query: string): unknown

@@ -125,7 +125,6 @@ export class PrismaBankTypeAccountRepository
   }
 
   async create(data: CreateBankTypeAccountUseCaseResponse) {
-    data.bankItemId = data.item_id
     const bankTypeAccount = await prisma.bankTypeAccount.create({
       data,
     } as any)

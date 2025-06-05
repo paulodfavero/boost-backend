@@ -32,6 +32,7 @@ export interface CreateBankTypeAccountUseCaseProps {
   balance: number
   currencyCode: string
   itemId: string
+  bankId: string
   number: string
   lastUpdatedAt?: Date
   bankData?: string
@@ -109,6 +110,7 @@ export class CreateBankTypeAccountUseCase {
     owner,
     marketingName,
     itemId,
+    bankId,
     balance,
     currencyCode,
     number,
@@ -139,6 +141,7 @@ export class CreateBankTypeAccountUseCase {
         owner,
         marketing_name: marketingName,
         item_id: itemId,
+        bankId,
         balance,
         currency_code: currencyCode,
         number,
@@ -158,6 +161,7 @@ export class CreateBankTypeAccountUseCase {
         owner,
         marketing_name: marketingName,
         item_id: itemId,
+        bankId,
         balance,
         currency_code: currencyCode,
         number,
@@ -172,6 +176,7 @@ export class CreateBankTypeAccountUseCase {
     return {
       id,
       itemId,
+      bankId,
       type,
       subtype,
       name,

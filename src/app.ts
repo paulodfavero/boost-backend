@@ -11,7 +11,6 @@ import { userRoutes } from './http/controllers/user/routes'
 import { suggestionRoutes } from './http/controllers/suggestion/routes'
 import { resultsRoutes } from './http/controllers/results/routes'
 import { creditsRoutes } from './http/controllers/credit/routes'
-import { env } from './env'
 
 const isDevelopment = process.env.NODE_ENV === 'dev'
 
@@ -97,7 +96,7 @@ app.register(cors, {
   origin: process.env.SITE_URL,
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'Itemid'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'Itemid', 'BankId'],
 })
 
 app.register(resultsRoutes)

@@ -61,6 +61,7 @@ export async function createBankTypeAccount(
 ) {
   const headers = await request.headers
   const itemId = headers.itemid
+  const bankId = headers.bankid
 
   const createBankTypeAccountParamsSchema = z.object({
     organizationId: z.string(),
@@ -111,6 +112,7 @@ export async function createBankTypeAccount(
       balance,
       currencyCode,
       itemId,
+      bankId,
       number,
       bankData: bankData || '',
       creditData: creditData || '',
