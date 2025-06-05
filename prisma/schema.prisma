@@ -173,8 +173,8 @@ model Bank {
 }
 
 model BankTypeAccount {
-  id              String        @id @default(dbgenerated("nanoid(11)"))
-  created_at      DateTime      @default(now())
+  id              String       @id @default(dbgenerated("nanoid(11)"))
+  created_at      DateTime     @default(now())
   type            String
   subtype         String
   name            String
@@ -183,7 +183,7 @@ model BankTypeAccount {
   balance         Float
   currency_code   String
   tax_number      String?
-  account_id      String        @unique
+  account_id      String       @unique
   item_id         String
   number          String
   last_updated_at DateTime?
@@ -191,10 +191,10 @@ model BankTypeAccount {
   credit_data     String?
   bankId          String? // apenas string opcional, sem relação
   bankItemId      String? // pode ser usado para relação
-  bank            Bank?         @relation(fields: [bankItemId], references: [item_id])
+  bank            Bank?        @relation(fields: [bankItemId], references: [item_id])
   expense         Expense[]
-  organization    Organization? @relation(fields: [organizationId], references: [id])
-  organizationId  String?
+  organization    Organization @relation(fields: [organizationId], references: [id])
+  organizationId  String
   Gain            Gain[]
   Credit          Credit[]
 
