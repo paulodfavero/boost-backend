@@ -177,8 +177,8 @@ model BankTypeAccount {
   bank_data       String?
   account_id      String        @unique
   credit_data     String?
-  bankId          String
-  bank            Bank          @relation(fields: [bankId], references: [id])
+  bankId          String?
+  bank            Bank?         @relation(fields: [bankId], references: [id])
   organization    Organization? @relation(fields: [organizationId], references: [id])
   Credit          Credit[]
   expense         Expense[]
