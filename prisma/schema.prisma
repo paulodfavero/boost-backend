@@ -194,9 +194,10 @@ model BankTypeAccount {
   bank            Bank?        @relation(fields: [bankItemId], references: [item_id])
   expense         Expense[]
   organization    Organization @relation(fields: [organizationId], references: [id])
-  organizationId  String
-  Gain            Gain[]
-  Credit          Credit[]
+
+  organizationId String
+  Gain           Gain[]
+  Credit         Credit[]
 
   @@map("bankTypeAccount")
 }
