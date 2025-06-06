@@ -27,9 +27,18 @@ export interface CreateBankTypeAccountUseCaseResponse {
   number: string
   lastUpdatedAt?: Date
   bank_data?: string
-  organizationId: string
   credit_data?: string
   tax_number?: string
+  bank: {
+    connect: {
+      item_id: string
+    }
+  }
+  organization: {
+    connect: {
+      id: string
+    }
+  }
 }
 export interface BanksRepository {
   findByItemId(query: string): unknown

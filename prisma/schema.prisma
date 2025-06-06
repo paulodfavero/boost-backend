@@ -188,6 +188,7 @@ model BankTypeAccount {
   account_id      String    @unique
   item_id         String
   number          String
+  bankId          String?
   last_updated_at DateTime?
 
   bank_data String?

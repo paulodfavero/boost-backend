@@ -129,27 +129,9 @@ export class CreateBankTypeAccountUseCase {
 
     const isBankTypeCreated: any =
       await this.bankTypeAccountRepository.findByAccountId(accountId)
-    console.log(
-      '%csrc/use-cases/create-bank.ts:132 isBankTypeCreated',
-      'color: #007acc;',
-      isBankTypeCreated,
-    )
+
     let id = isBankTypeCreated?.id
-    console.log(
-      '%csrc/use-cases/create-bank.ts:134 organizationId',
-      'color: #007acc;',
-      organizationId,
-    )
-    console.log(
-      '%csrc/use-cases/create-bank.ts:139 bankId',
-      'color: #007acc;',
-      bankId,
-    )
-    console.log(
-      '%csrc/use-cases/create-bank.ts:140 itemId',
-      'color: #007acc;',
-      itemId,
-    )
+
     if (!isBankTypeCreated) {
       const response = await this.bankTypeAccountRepository.create({
         type,
@@ -164,9 +146,18 @@ export class CreateBankTypeAccountUseCase {
         currency_code: currencyCode,
         number,
         bank_data: bankData,
-        organizationId,
         credit_data: creditData,
         tax_number: taxNumber,
+        bank: {
+          connect: {
+            item_id: itemId,
+          },
+        },
+        organization: {
+          connect: {
+            id: organizationId,
+          },
+        },
       })
       id = response.id
     } else {
@@ -184,9 +175,18 @@ export class CreateBankTypeAccountUseCase {
         currency_code: currencyCode,
         number,
         bank_data: bankData,
-        organizationId,
         credit_data: creditData,
         tax_number: taxNumber,
+        bank: {
+          connect: {
+            item_id: itemId,
+          },
+        },
+        organization: {
+          connect: {
+            id: organizationId,
+          },
+        },
       })
       id = response.id
     }
