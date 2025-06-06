@@ -1,3 +1,20 @@
+-- Create nanoid function
+CREATE OR REPLACE FUNCTION nanoid(size integer DEFAULT 21)
+RETURNS text AS $$
+DECLARE
+  id text := '';
+  i integer := 0;
+  alphabet text := '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
+  alphabet_length integer := length(alphabet);
+BEGIN
+  WHILE i < size LOOP
+    id := id || substr(alphabet, floor(random() * alphabet_length + 1)::integer, 1);
+    i := i + 1;
+  END LOOP;
+  RETURN id;
+END;
+$$ LANGUAGE plpgsql;
+
 -- CreateTable
 CREATE TABLE "organizations" (
     "id" TEXT NOT NULL DEFAULT nanoid(11),
@@ -150,9 +167,8 @@ CREATE TABLE "bankTypeAccount" (
     "last_updated_at" TIMESTAMP(3),
     "bank_data" TEXT,
     "credit_data" TEXT,
-    "bankId" TEXT,
-    "bankItemId" TEXT,
-    "organizationId" TEXT NOT NULL,
+    "bankItemId" TEXT NOT NULL,
+    "organizationId" TEXT,
 
     CONSTRAINT "bankTypeAccount_pkey" PRIMARY KEY ("id")
 );
@@ -293,10 +309,10 @@ ALTER TABLE "companies" ADD CONSTRAINT "companies_organizationId_fkey" FOREIGN K
 ALTER TABLE "banks" ADD CONSTRAINT "banks_organizationId_fkey" FOREIGN KEY ("organizationId") REFERENCES "organizations"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "bankTypeAccount" ADD CONSTRAINT "bankTypeAccount_bankItemId_fkey" FOREIGN KEY ("bankItemId") REFERENCES "banks"("item_id") ON DELETE SET NULL ON UPDATE CASCADE;
+ALTER TABLE "bankTypeAccount" ADD CONSTRAINT "bankTypeAccount_bankItemId_fkey" FOREIGN KEY ("bankItemId") REFERENCES "banks"("item_id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "bankTypeAccount" ADD CONSTRAINT "bankTypeAccount_organizationId_fkey" FOREIGN KEY ("organizationId") REFERENCES "organizations"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "bankTypeAccount" ADD CONSTRAINT "bankTypeAccount_organizationId_fkey" FOREIGN KEY ("organizationId") REFERENCES "organizations"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "users" ADD CONSTRAINT "users_organizationId_fkey" FOREIGN KEY ("organizationId") REFERENCES "organizations"("id") ON DELETE RESTRICT ON UPDATE CASCADE;

@@ -1,6 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -11,13 +8,14 @@ datasource db {
 }
 
 model Organization {
-  id                 String            @id @default(dbgenerated("nanoid(11)"))
-  created_at         DateTime          @default(now())
-  name               String
-  password           String?
-  cnpj               String?           @unique
-  cpf                String?           @unique
-  email              String?           @unique
+  id         String   @id @default(dbgenerated("nanoid(11)"))
+  created_at DateTime @default(now())
+  name       String
+  password   String?
+  cnpj       String?  @unique
+  cpf        String?  @unique
+  email      String?  @unique
+
   stripe_customer_id String?
   User               User[]
   Expense            Expense[]
@@ -49,7 +47,8 @@ model Expense {
   installment_current       Int?
   installment_total_payment Int?
   paid                      Boolean   @default(false)
-  group_installment_id      String?
+
+  group_installment_id String?
 
   organization   Organization @relation(fields: [organizationId], references: [id])
   organizationId String
@@ -79,7 +78,8 @@ model Gain {
   installment_current       Int?
   installment_total_payment Int?
   paid                      Boolean   @default(false)
-  group_installment_id      String?
+
+  group_installment_id String?
 
   organization   Organization @relation(fields: [organizationId], references: [id])
   organizationId String
@@ -148,9 +148,9 @@ model Company {
 }
 
 model Bank {
-  id              String    @id @default(dbgenerated("nanoid(11)"))
-  created_at      DateTime  @default(now())
-  item_id         String    @unique
+  id              String   @id @default(dbgenerated("nanoid(11)"))
+  created_at      DateTime @default(now())
+  item_id         String   @unique
   name            String
   primary_color   String
   institution_url String
@@ -159,22 +159,24 @@ model Bank {
   has_mfa         Boolean
   products        String[]
   status          String
+
   last_updated_at DateTime?
 
   organization   Organization @relation(fields: [organizationId], references: [id])
   organizationId String
 
   bankTypeAccount BankTypeAccount[]
-  expense         Expense[]
-  Gain            Gain[]
-  Credit          Credit[]
+
+  expense Expense[]
+  Gain    Gain[]
+  Credit  Credit[]
 
   @@map("banks")
 }
 
 model BankTypeAccount {
-  id              String       @id @default(dbgenerated("nanoid(11)"))
-  created_at      DateTime     @default(now())
+  id              String    @id @default(dbgenerated("nanoid(11)"))
+  created_at      DateTime  @default(now())
   type            String
   subtype         String
   name            String
@@ -183,19 +185,21 @@ model BankTypeAccount {
   balance         Float
   currency_code   String
   tax_number      String?
-  account_id      String       @unique
+  account_id      String    @unique
   item_id         String
   number          String
   last_updated_at DateTime?
-  bank_data       String?
-  credit_data     String?
-  bankId          String? // apenas string opcional, sem relação
-  bankItemId      String? // pode ser usado para relação
-  bank            Bank?        @relation(fields: [bankItemId], references: [item_id])
-  expense         Expense[]
-  organization    Organization @relation(fields: [organizationId], references: [id])
 
-  organizationId String
+  bank_data String?
+
+  credit_data String?
+
+  bank       Bank   @relation(fields: [bankItemId], references: [item_id])
+  bankItemId String
+
+  expense        Expense[]
+  organization   Organization? @relation(fields: [organizationId], references: [id])
+  organizationId String?
   Gain           Gain[]
   Credit         Credit[]
 
