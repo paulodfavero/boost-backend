@@ -1,3 +1,6 @@
+-- Drop existing function if exists
+DROP FUNCTION IF EXISTS nanoid(integer);
+
 -- Create nanoid function
 CREATE OR REPLACE FUNCTION nanoid(size integer DEFAULT 21)
 RETURNS text AS $$
