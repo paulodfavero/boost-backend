@@ -1,5 +1,5 @@
 -- Drop existing function if exists
-DROP FUNCTION IF EXISTS nanoid(integer);
+DROP FUNCTION IF EXISTS nanoid(integer) CASCADE;
 
 -- Create nanoid function
 CREATE OR REPLACE FUNCTION nanoid(size integer DEFAULT 21)
@@ -316,7 +316,7 @@ ALTER TABLE "banks" ADD CONSTRAINT "banks_organizationId_fkey" FOREIGN KEY ("org
 ALTER TABLE "bankTypeAccount" ADD CONSTRAINT "bankTypeAccount_bankItemId_fkey" FOREIGN KEY ("bankItemId") REFERENCES "banks"("item_id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "bankTypeAccount" ADD CONSTRAINT "bankTypeAccount_organizationId_fkey" FOREIGN KEY ("organizationId") REFERENCES "organizations"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+ALTER TABLE "bankTypeAccount" ADD CONSTRAINT "bankTypeAccount_organizationId_fkey" FOREIGN KEY ("organizationId") REFERENCES "organizations"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "users" ADD CONSTRAINT "users_organizationId_fkey" FOREIGN KEY ("organizationId") REFERENCES "organizations"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
