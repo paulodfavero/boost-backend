@@ -79,6 +79,7 @@ export class CreateBankUseCase {
       organizationId,
     })
     const { id } = response
+
     return {
       id,
       name,
