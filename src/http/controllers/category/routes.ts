@@ -1,3 +1,4 @@
+// import { prisma } from '@/lib/prisma'
 import { FastifyInstance } from 'fastify'
 
 import { search } from './search'
