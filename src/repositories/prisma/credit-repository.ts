@@ -22,7 +22,6 @@ export class PrismaCreditRepository implements CreditsRepository {
   async searchMany(
     organizationId: string,
     date?: string,
-    bankId?: string,
     monthStart?: string,
     monthEnd?: string,
   ) {
@@ -38,11 +37,6 @@ export class PrismaCreditRepository implements CreditsRepository {
         organizationId: {
           contains: organizationId,
         },
-        ...(bankId && {
-          bankId: {
-            contains: bankId,
-          },
-        }),
         expiration_date: {
           gte: startOfTheDay,
           lte: endOfTheDay,
