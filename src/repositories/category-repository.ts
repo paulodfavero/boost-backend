@@ -1,12 +1,6 @@
-import { Category } from '@prisma/client'
-
-export interface CreateCategoryUseCaseResponse {
-  description: string
-  descriptionTranslated: string
-  id: string
-}
+import { Category, Prisma } from '@prisma/client'
 
 export interface CategoriesRepository {
-  searchMany(): Promise<Category[]>
-  createMany(data: CreateCategoryUseCaseResponse[]): Promise<Category>
+  searchMany(query: string): Promise<Category[]>
+  create(data: Prisma.CategoryCreateInput): Promise<Category>
 }

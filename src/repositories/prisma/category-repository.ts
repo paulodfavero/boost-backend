@@ -1,25 +1,23 @@
 import { prisma } from '@/lib/prisma'
-import {
-  CategoriesRepository,
-  CreateCategoryUseCaseResponse,
-} from '../category-repository'
-import { Category } from '@prisma/client'
+import { CategoriesRepository } from '../category-repository'
+import { Prisma } from '@prisma/client'
 
 export class PrismaCategoriesRepository implements CategoriesRepository {
-  async searchMany(): Promise<Category[]> {
-    const categories = await prisma.category.findMany()
+  async searchMany(organizationId: string) {
+    const categories = await prisma.category.findMany({
+      where: {
+        organizationId,
+      },
+    })
+
     return categories
   }
 
-  async createMany(data: CreateCategoryUseCaseResponse[]): Promise<Category> {
-    const category = await prisma.category.createMany({
-      data: data.map((item) => ({
-        id: item.id,
-        description: item.description,
-        descriptionTranslated: item.descriptionTranslated,
-      })),
-      skipDuplicates: true,
+  async create(data: Prisma.CategoryCreateInput) {
+    const category = await prisma.category.create({
+      data,
     })
-    return category as unknown as Category
+
+    return category
   }
 }

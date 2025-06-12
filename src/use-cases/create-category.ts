@@ -1,20 +1,32 @@
+import { OrganizationsRepository } from '@/repositories/organization-repository'
 import { CategoriesRepository } from '@/repositories/category-repository'
+import { OrganizationNotFound } from './errors/organization-not-found-error'
 import { Category } from '@prisma/client'
 
 interface CreateCategoryUseCaseResponse {
-  description: string
-  descriptionTranslated: string
-  id: string
+  name: string
+  organizationId: string
 }
-interface CategoryType {
-  reqBody: CreateCategoryUseCaseResponse[]
-}
-export class CreateCategoryUseCase {
-  constructor(private categoriesRepository: CategoriesRepository) {}
 
-  async execute(data: CategoryType): Promise<Category> {
-    const { reqBody: categories } = data
-    const category = await this.categoriesRepository.createMany(categories)
+export class CreateCategoryUseCase {
+  constructor(
+    private categoriesRepository: CategoriesRepository,
+    private organizationsRepository: OrganizationsRepository,
+  ) {}
+
+  async execute({
+    name,
+    organizationId,
+  }: CreateCategoryUseCaseResponse): Promise<Category> {
+    const organization = await this.organizationsRepository.findById(
+      organizationId,
+    )
+    if (!organization) throw new OrganizationNotFound()
+
+    const category = await this.categoriesRepository.create({
+      name,
+      organizationId,
+    })
 
     return category
   }
