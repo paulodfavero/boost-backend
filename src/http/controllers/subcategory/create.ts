@@ -11,7 +11,6 @@ export async function create(request: FastifyRequest, reply: FastifyReply) {
     categoryId: z.string(),
     parentDescription: z.string(),
   })
-
   const {
     description,
     descriptionTranslated,
