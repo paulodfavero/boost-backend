@@ -11,6 +11,9 @@ import { userRoutes } from './http/controllers/user/routes'
 import { suggestionRoutes } from './http/controllers/suggestion/routes'
 import { resultsRoutes } from './http/controllers/results/routes'
 import { creditsRoutes } from './http/controllers/credit/routes'
+import { goalsRoutes } from './http/controllers/goals/routes'
+import { categoryCreditCardRoutes } from './http/controllers/categoryCreditCard/routes'
+import { subcategoryCreditCardRoutes } from './http/controllers/subcategoryCreditCard/routes'
 
 const isDevelopment = process.env.NODE_ENV === 'dev'
 
@@ -109,3 +112,6 @@ app.register(organizationRoutes)
 app.register(userRoutes)
 app.register(suggestionRoutes)
 app.register(creditsRoutes)
+app.register(goalsRoutes)
+app.register(categoryCreditCardRoutes)
+app.register(subcategoryCreditCardRoutes)

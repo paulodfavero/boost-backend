@@ -26,6 +26,7 @@ model Organization {
   BankTypeAccount    BankTypeAccount[]
   Suggestion         Suggestion[]
   Credit             Credit[]
+  Goals              Goals[]
 
   @@map("organizations")
 }
@@ -131,6 +132,29 @@ model Category {
   organizationId String
 
   @@map("categories")
+}
+
+model CategoryCreditCard {
+  id                    String                  @unique
+  created_at            DateTime                @default(now())
+  description           String
+  descriptionTranslated String
+  SubCategoryCreditCard SubCategoryCreditCard[]
+
+  @@map("categoriesCreditCard")
+}
+
+model SubCategoryCreditCard {
+  id                    String   @unique
+  created_at            DateTime @default(now())
+  description           String
+  descriptionTranslated String
+  parentDescription     String
+
+  categoryCreditCardId String
+  category             CategoryCreditCard @relation(fields: [categoryCreditCardId], references: [id])
+
+  @@map("subCategoriesCreditCard")
 }
 
 model Company {
@@ -269,4 +293,21 @@ model Suggestion {
   organizationId String
 
   @@map("suggestions")
+}
+
+model Goals {
+  id              String       @id @default(dbgenerated("nanoid(11)"))
+  created_at      DateTime     @default(now())
+  updated_at      DateTime?    @default(now())
+  name            String
+  description     String
+  amount          Int
+  currentAmount   Int          @default(0)
+  period          String
+  initiation_date DateTime
+  expiration_date DateTime
+  organizationId  String
+  organization    Organization @relation(fields: [organizationId], references: [id])
+
+  @@map("goals")
 }
