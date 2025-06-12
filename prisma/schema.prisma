@@ -8,35 +8,34 @@ datasource db {
 }
 
 model Organization {
-  id         String   @id @default(dbgenerated("nanoid(11)"))
-  created_at DateTime @default(now())
-  name       String
-  password   String?
-  cnpj       String?  @unique
-  cpf        String?  @unique
-  email      String?  @unique
-
+  id                 String            @id @default(dbgenerated("nanoid(11)"))
+  created_at         DateTime          @default(now())
+  name               String
+  password           String?
+  cnpj               String?           @unique
+  cpf                String?           @unique
+  email              String?           @unique
   stripe_customer_id String?
-  User               User[]
+  BankTypeAccount    BankTypeAccount[]
+  Bank               Bank[]
+  Company            Company[]
+  Credit             Credit[]
   Expense            Expense[]
   Gain               Gain[]
-  Category           Category[]
-  Company            Company[]
-  Bank               Bank[]
-  BankTypeAccount    BankTypeAccount[]
+  Goals              Goals[]
   Suggestion         Suggestion[]
-  Credit             Credit[]
+  User               User[]
 
   @@map("organizations")
 }
 
 model Expense {
-  id                        String    @id @default(dbgenerated("nanoid(11)"))
-  created_at                DateTime  @default(now())
+  id                        String           @id @default(dbgenerated("nanoid(11)"))
+  created_at                DateTime         @default(now())
   expiration_date           DateTime
   purchase_date             DateTime?
-  balance_close_date        DateTime? //DATE CLOSE BALANCE CREDIT CARD
-  bank_transaction_id       String?   @unique //ID of transaction that came from Pluggy
+  balance_close_date        DateTime?
+  bank_transaction_id       String?          @unique
   description               String
   company                   String
   category                  String?
@@ -46,28 +45,25 @@ model Expense {
   payment_data              String?
   installment_current       Int?
   installment_total_payment Int?
-  paid                      Boolean   @default(false)
-
-  group_installment_id String?
-
-  organization   Organization @relation(fields: [organizationId], references: [id])
-  organizationId String
-
-  bank              Bank?            @relation(fields: [bankId], references: [id])
-  bankId            String?
-  bankTypeAccount   BankTypeAccount? @relation(fields: [bankTypeAccountId], references: [id])
-  bankTypeAccountId String?
+  paid                      Boolean          @default(false)
+  group_installment_id      String?
+  organizationId            String
+  bankId                    String?
+  bankTypeAccountId         String?
+  bank                      Bank?            @relation(fields: [bankId], references: [id])
+  bankTypeAccount           BankTypeAccount? @relation(fields: [bankTypeAccountId], references: [id])
+  organization              Organization     @relation(fields: [organizationId], references: [id])
 
   @@map("expenses")
 }
 
 model Gain {
-  id                        String    @id @default(dbgenerated("nanoid(11)"))
-  created_at                DateTime  @default(now())
+  id                        String           @id @default(dbgenerated("nanoid(11)"))
+  created_at                DateTime         @default(now())
   expiration_date           DateTime
   purchase_date             DateTime?
-  balance_close_date        DateTime? //DATE CLOSE BALANCE CREDIT CARD
-  bank_transaction_id       String?   @unique //ID of transaction that came from Pluggy
+  balance_close_date        DateTime?
+  bank_transaction_id       String?          @unique
   description               String
   company                   String
   category                  String?
@@ -77,28 +73,25 @@ model Gain {
   payment_data              String?
   installment_current       Int?
   installment_total_payment Int?
-  paid                      Boolean   @default(false)
-
-  group_installment_id String?
-
-  organization   Organization @relation(fields: [organizationId], references: [id])
-  organizationId String
-
-  bank              Bank?            @relation(fields: [bankId], references: [id])
-  bankId            String?
-  bankTypeAccount   BankTypeAccount? @relation(fields: [bankTypeAccountId], references: [id])
-  bankTypeAccountId String?
+  paid                      Boolean          @default(false)
+  group_installment_id      String?
+  organizationId            String
+  bankId                    String?
+  bankTypeAccountId         String?
+  bank                      Bank?            @relation(fields: [bankId], references: [id])
+  bankTypeAccount           BankTypeAccount? @relation(fields: [bankTypeAccountId], references: [id])
+  organization              Organization     @relation(fields: [organizationId], references: [id])
 
   @@map("gains")
 }
 
 model Credit {
-  id                        String    @id @default(dbgenerated("nanoid(11)"))
-  created_at                DateTime  @default(now())
+  id                        String           @id @default(dbgenerated("nanoid(11)"))
+  created_at                DateTime         @default(now())
   expiration_date           DateTime
   purchase_date             DateTime?
-  balance_close_date        DateTime? //DATE CLOSE BALANCE CREDIT CARD
-  bank_transaction_id       String?   @unique //ID of transaction that came from Pluggy
+  balance_close_date        DateTime?
+  bank_transaction_id       String?          @unique
   description               String
   company                   String
   category                  String?
@@ -108,49 +101,57 @@ model Credit {
   payment_data              String?
   installment_current       Int?
   installment_total_payment Int?
-  paid                      Boolean   @default(false)
+  paid                      Boolean          @default(false)
   group_installment_id      String?
-
-  organization   Organization @relation(fields: [organizationId], references: [id])
-  organizationId String
-
-  bank              Bank?            @relation(fields: [bankId], references: [id])
-  bankId            String?
-  bankTypeAccount   BankTypeAccount? @relation(fields: [bankTypeAccountId], references: [id])
-  bankTypeAccountId String?
+  organizationId            String
+  bankId                    String?
+  bankTypeAccountId         String?
+  bank                      Bank?            @relation(fields: [bankId], references: [id])
+  bankTypeAccount           BankTypeAccount? @relation(fields: [bankTypeAccountId], references: [id])
+  organization              Organization     @relation(fields: [organizationId], references: [id])
 
   @@map("credits")
 }
 
 model Category {
-  id         String   @id @default(dbgenerated("nanoid(11)"))
-  created_at DateTime @default(now())
-  name       String
-
-  organization   Organization @relation(fields: [organizationId], references: [id])
-  organizationId String
+  id                    String        @unique
+  created_at            DateTime      @default(now())
+  description           String
+  descriptionTranslated String
+  SubCategory           SubCategory[]
 
   @@map("categories")
 }
 
-model Company {
-  id            String   @id @default(dbgenerated("nanoid(11)"))
-  created_at    DateTime @default(now())
-  name          String
-  cnpj          String?
-  category      String?
-  business_name String?
+model SubCategory {
+  id                    String   @unique
+  created_at            DateTime @default(now())
+  description           String
+  descriptionTranslated String
+  parentDescription     String
+  categoryId            String
+  category              Category @relation(fields: [categoryId], references: [id])
 
-  organization   Organization @relation(fields: [organizationId], references: [id])
+  @@map("subCategories")
+}
+
+model Company {
+  id             String       @id @default(dbgenerated("nanoid(11)"))
+  created_at     DateTime     @default(now())
+  name           String
+  cnpj           String?
+  category       String?
+  business_name  String?
   organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id])
 
   @@map("companies")
 }
 
 model Bank {
-  id              String   @id @default(dbgenerated("nanoid(11)"))
-  created_at      DateTime @default(now())
-  item_id         String   @unique
+  id              String            @id @default(dbgenerated("nanoid(11)"))
+  created_at      DateTime          @default(now())
+  item_id         String            @unique
   name            String
   primary_color   String
   institution_url String
@@ -159,24 +160,20 @@ model Bank {
   has_mfa         Boolean
   products        String[]
   status          String
-
   last_updated_at DateTime?
-
-  organization   Organization @relation(fields: [organizationId], references: [id])
-  organizationId String
-
+  organizationId  String
   bankTypeAccount BankTypeAccount[]
-
-  expense Expense[]
-  Gain    Gain[]
-  Credit  Credit[]
+  organization    Organization      @relation(fields: [organizationId], references: [id])
+  Credit          Credit[]
+  expense         Expense[]
+  Gain            Gain[]
 
   @@map("banks")
 }
 
 model BankTypeAccount {
-  id              String    @id @default(dbgenerated("nanoid(11)"))
-  created_at      DateTime  @default(now())
+  id              String        @id @default(dbgenerated("nanoid(11)"))
+  created_at      DateTime      @default(now())
   type            String
   subtype         String
   name            String
@@ -185,40 +182,35 @@ model BankTypeAccount {
   balance         Float
   currency_code   String
   tax_number      String?
-  account_id      String    @unique
+  account_id      String        @unique
   item_id         String
   number          String
-  bankId          String?
   last_updated_at DateTime?
-
-  bank_data String?
-
-  credit_data String?
-
-  bank       Bank   @relation(fields: [bankItemId], references: [item_id])
-  bankItemId String
-
-  expense        Expense[]
-  organization   Organization? @relation(fields: [organizationId], references: [id])
-  organizationId String?
-  Gain           Gain[]
-  Credit         Credit[]
+  bank_data       String?
+  credit_data     String?
+  bankItemId      String
+  organizationId  String?
+  bankId          String?
+  bank            Bank          @relation(fields: [bankItemId], references: [item_id])
+  organization    Organization? @relation(fields: [organizationId], references: [id])
+  Credit          Credit[]
+  expense         Expense[]
+  Gain            Gain[]
 
   @@map("bankTypeAccount")
 }
 
 model User {
-  id            String    @id @default(cuid())
-  created_at    DateTime  @default(now())
-  name          String?
-  email         String?   @unique
-  emailVerified DateTime?
-  image         String?
-  accounts      Account[]
-  sessions      Session[]
-
-  organization   Organization @relation(fields: [organizationId], references: [id])
+  id             String       @id @default(cuid())
+  created_at     DateTime     @default(now())
+  name           String?
+  email          String?      @unique
+  emailVerified  DateTime?
+  image          String?
   organizationId String
+  accounts       Account[]
+  sessions       Session[]
+  organization   Organization @relation(fields: [organizationId], references: [id])
 
   @@map("users")
 }
@@ -229,15 +221,14 @@ model Account {
   type              String
   provider          String
   providerAccountId String
-  refresh_token     String? @db.Text
-  access_token      String? @db.Text
+  refresh_token     String?
+  access_token      String?
   expires_at        Int?
   token_type        String?
   scope             String?
-  id_token          String? @db.Text
+  id_token          String?
   session_state     String?
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([provider, providerAccountId])
 }
@@ -259,14 +250,30 @@ model VerificationToken {
 }
 
 model Suggestion {
-  id              String   @id @default(dbgenerated("nanoid(11)"))
-  created_at      DateTime @default(now())
+  id              String       @id @default(dbgenerated("nanoid(11)"))
+  created_at      DateTime     @default(now())
   amount_by_month Int
   is_useful       Boolean
   message         String?
-
-  organization   Organization @relation(fields: [organizationId], references: [id])
-  organizationId String
+  organizationId  String
+  organization    Organization @relation(fields: [organizationId], references: [id])
 
   @@map("suggestions")
+}
+
+model Goals {
+  id              String       @id @default(dbgenerated("nanoid(11)"))
+  created_at      DateTime     @default(now())
+  updated_at      DateTime?    @default(now())
+  name            String
+  description     String
+  amount          Int
+  currentAmount   Int          @default(0)
+  period          String
+  initiation_date DateTime
+  expiration_date DateTime
+  organizationId  String
+  organization    Organization @relation(fields: [organizationId], references: [id])
+
+  @@map("goals")
 }

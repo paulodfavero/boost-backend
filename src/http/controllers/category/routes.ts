@@ -1,10 +1,10 @@
-// import { prisma } from '@/lib/prisma'
 import { FastifyInstance } from 'fastify'
 
-import { search } from './search'
-import { create } from './create'
+import { createMany } from './create'
+
+import { searchMany } from './search'
 
 export async function categoryRoutes(app: FastifyInstance) {
-  app.get('/category', search)
-  app.post('/category/:organizationId', create)
+  app.get('/categories', searchMany)
+  app.post('/categories', createMany)
 }
