@@ -45,6 +45,5 @@ export async function create(request: FastifyRequest, reply: FastifyReply) {
     organizationId,
     reqBody,
   })
-
   return reply.status(201).send(data)
 }
