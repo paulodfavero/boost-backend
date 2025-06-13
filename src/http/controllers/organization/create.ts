@@ -29,14 +29,13 @@ export async function create(request: FastifyRequest, reply: FastifyReply) {
     if (!data) throw new Error()
     const { organizationId, created } = data
     if (created) return reply.status(201).send(data)
-    const user = await createUserUseCase.execute({
+    await createUserUseCase.execute({
       name,
       email,
       password,
       image,
       organizationId,
     })
-    console.log('%ccreate.ts line:39 user', 'color: #007acc;', user)
     return reply.status(201).send(data)
   } catch (err) {
     // if (err instanceof OrganizationAlreadyExistsError) {

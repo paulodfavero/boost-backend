@@ -3,22 +3,21 @@ import { GoalNotFoundError } from './errors/goal-not-found-error'
 
 interface UpdateGoalUseCaseRequest {
   id: string
-  title?: string
+  name?: string
   description?: string
-  targetAmount?: number
-  currentAmount?: number
-  deadline?: string
+  amount?: string
+  period?: string
+  initiationDate?: Date
+  updatedAt?: Date
 }
 
 interface GoalResponse {
   id: string
-  title: string
+  name: string
   description: string
-  targetAmount: number
-  currentAmount: number
-  deadline: string
-  organizationId: string
-  createdAt: Date
+  amount: string
+  period: string
+  initiationDate: Date
   updatedAt: Date
 }
 
@@ -27,11 +26,11 @@ export class UpdateGoalUseCase {
 
   async execute({
     id,
-    title,
+    name,
     description,
-    targetAmount,
-    currentAmount,
-    deadline,
+    amount,
+    period,
+    initiationDate,
   }: UpdateGoalUseCaseRequest): Promise<GoalResponse> {
     const goal = await this.goalsRepository.findById(id)
 
@@ -40,11 +39,11 @@ export class UpdateGoalUseCase {
     }
 
     const updatedGoal = await this.goalsRepository.update(id, {
-      title,
+      name,
       description,
-      targetAmount,
-      currentAmount,
-      deadline,
+      amount,
+      period,
+      initiation_date: initiationDate,
     })
 
     return updatedGoal
