@@ -49,21 +49,21 @@ export const app = fastify()
 //     return reply.status(401).send({ error: 'Token inválido ou ausente' })
 //   }
 // })
-app.addHook('preHandler', async (request, reply) => {
-  const origin = request.headers.origin || request.headers.referer
-  // const apiKey = request.headers['x-api-key']
-  // const expectedApiKey = process.env.API_KEY
-  if (
-    !origin ||
-    (!origin.includes('www.boostfinance.com.br') &&
-      !origin.includes('http://localhost:3000'))
-  ) {
-    return reply.status(403).send({ error: 'Acesso negado' })
-  }
-  // if (!apiKey || apiKey !== expectedApiKey) {
-  // return reply.status(401).send({ error: 'Acesso negado: chave inválida' })
-  // }
-})
+// app.addHook('preHandler', async (request, reply) => {
+//   const origin = request.headers.origin || request.headers.referer
+//   // const apiKey = request.headers['x-api-key']
+//   // const expectedApiKey = process.env.API_KEY
+//   if (
+//     !origin ||
+//     (!origin.includes('www.boostfinance.com.br') &&
+//       !origin.includes('http://localhost:3000'))
+//   ) {
+//     return reply.status(403).send({ error: 'Acesso negado' })
+//   }
+//   // if (!apiKey || apiKey !== expectedApiKey) {
+//   // return reply.status(401).send({ error: 'Acesso negado: chave inválida' })
+//   // }
+// })
 // Hook para verificar rate limit e ferramentas de desenvolvimento
 app.addHook(
   'onRequest',
