@@ -9,11 +9,12 @@ export async function update(request: FastifyRequest, reply: FastifyReply) {
   })
 
   const updateGoalBodySchema = z.object({
-    title: z.string().optional(),
+    name: z.string().optional(),
     description: z.string().optional(),
-    targetAmount: z.number().optional(),
+    amount: z.number().optional(),
     currentAmount: z.number().optional(),
-    deadline: z.string().optional(),
+    period: z.string().optional(),
+    initiationDate: z.string().optional(),
   })
 
   const { goalId } = updateGoalParamsSchema.parse(request.params)

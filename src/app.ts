@@ -1,5 +1,7 @@
 import fastify, { FastifyRequest, FastifyReply } from 'fastify'
 import cors from '@fastify/cors'
+// import jwt from '@fastify/jwt'
+// import { env } from '@/env'
 
 import { expensesRoutes } from '@/http/controllers/expenses/routes'
 import { gainsRoutes } from '@/http/controllers/gains/routes'
@@ -36,6 +38,32 @@ if (isDevelopment) {
 
 export const app = fastify()
 
+// app.register(jwt, {
+//   secret: env.JWT_SECRET,
+// })
+
+// app.addHook('preHandler', async (request, reply) => {
+//   try {
+//     await request.jwtVerify() // se usa fastify-jwt
+//   } catch (err) {
+//     return reply.status(401).send({ error: 'Token inválido ou ausente' })
+//   }
+// })
+app.addHook('preHandler', async (request, reply) => {
+  const origin = request.headers.origin || request.headers.referer
+  // const apiKey = request.headers['x-api-key']
+  // const expectedApiKey = process.env.API_KEY
+  if (
+    !origin ||
+    (!origin.includes('www.boostfinance.com.br') &&
+      !origin.includes('http://localhost:3000'))
+  ) {
+    return reply.status(403).send({ error: 'Acesso negado' })
+  }
+  // if (!apiKey || apiKey !== expectedApiKey) {
+  // return reply.status(401).send({ error: 'Acesso negado: chave inválida' })
+  // }
+})
 // Hook para verificar rate limit e ferramentas de desenvolvimento
 app.addHook(
   'onRequest',

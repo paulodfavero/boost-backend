@@ -5,11 +5,11 @@ export interface Goal {
   amount: number
   currentAmount: number
   period: string
-  initiation_date: string
-  expiration_date: string
-  organizationId: string
-  created_at: Date
-  updated_at: Date
+  initiation_date?: string
+  expiration_date?: string
+  organizationId?: string
+  created_at?: Date
+  updated_at?: Date
 }
 
 export interface CreateGoalData {
