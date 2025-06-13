@@ -1,5 +1,5 @@
 import { PrismaClient } from '@prisma/client'
-import { addMonths } from 'date-fns'
+import { addMonths, addDays } from 'date-fns'
 import {
   GoalsRepository,
   CreateGoalData,
@@ -9,25 +9,27 @@ import {
 export class PrismaGoalsRepository implements GoalsRepository {
   constructor(private prisma: PrismaClient) {}
 
-  private convertPeriodToMonths(period: string): number {
+  private calculateExpirationDate(initiationDate: Date, period: string): Date {
     switch (period.toLowerCase()) {
       case 'day':
-        return 1 / 30 // approximately one month
+        return addDays(initiationDate, 1)
       case 'week':
-        return 1 / 4 // approximately one month
+        return addDays(initiationDate, 7)
       case 'month':
-        return 1
+        return addMonths(initiationDate, 1)
       case 'year':
-        return 12
+        return addMonths(initiationDate, 12)
       default:
-        return 1 // default to one month
+        return addMonths(initiationDate, 1) // default to one month
     }
   }
 
   async create(data: CreateGoalData) {
     const initiationDate = new Date(data.initiation_date)
-    const monthsToAdd = this.convertPeriodToMonths(data.period)
-    const expirationDate = addMonths(initiationDate, monthsToAdd)
+    const expirationDate = this.calculateExpirationDate(
+      initiationDate,
+      data.period,
+    )
 
     const goal = await this.prisma.goals.create({
       data: {
@@ -121,8 +123,7 @@ export class PrismaGoalsRepository implements GoalsRepository {
       ? new Date(data.initiation_date)
       : goal.initiation_date
     const period = data.period || goal.period
-    const monthsToAdd = this.convertPeriodToMonths(period)
-    const expirationDate = addMonths(initiationDate, monthsToAdd)
+    const expirationDate = this.calculateExpirationDate(initiationDate, period)
 
     const updatedGoal = await this.prisma.goals.update({
       where: {
