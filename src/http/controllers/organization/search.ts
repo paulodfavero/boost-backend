@@ -16,3 +16,14 @@ export async function search(request: FastifyRequest, reply: FastifyReply) {
 
   return reply.status(200).send(data)
 }
+
+export async function searchMany(request: FastifyRequest, reply: FastifyReply) {
+  const searchOrganizationsQuerySchema = z.object({
+    date: z.string().optional(),
+  })
+  const { date } = searchOrganizationsQuerySchema.parse(request.query)
+  const searchOrganizationsUseCase =
+    require('@/use-cases/factories/make-search-organizations-use-case').makeSearchOrganizationsUseCase()
+  const data = await searchOrganizationsUseCase.execute({ date })
+  return reply.status(200).send(data)
+}
