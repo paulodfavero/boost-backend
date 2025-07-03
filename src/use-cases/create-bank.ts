@@ -43,7 +43,7 @@ export interface CreateBankTypeAccountUseCaseProps {
 
 export class CreateBankUseCase {
   constructor(
-    private categoriesRepository: BanksRepository,
+    private banksRepository: BanksRepository,
     private organizationsRepository: OrganizationsRepository,
   ) {}
 
@@ -64,20 +64,37 @@ export class CreateBankUseCase {
       organizationId,
     )
     if (!organization) throw new OrganizationNotFound()
-
-    const response = await this.categoriesRepository.create({
-      name,
-      item_id: itemId,
-      primary_color: primaryColor,
-      institution_url: institutionUrl,
-      type,
-      image_url: imageUrl,
-      has_mfa: hasMFA,
-      products,
-      status,
-      last_updated_at: lastUpdatedAt,
-      organizationId,
-    })
+    const hasBankCreated = await this.banksRepository.findByItemId(itemId)
+    let response
+    if (hasBankCreated) {
+      response = await this.banksRepository.update({
+        name,
+        item_id: itemId,
+        primary_color: primaryColor,
+        institution_url: institutionUrl,
+        type,
+        image_url: imageUrl,
+        has_mfa: hasMFA,
+        products,
+        status,
+        last_updated_at: lastUpdatedAt,
+        organizationId,
+      })
+    } else {
+      response = await this.banksRepository.create({
+        name,
+        item_id: itemId,
+        primary_color: primaryColor,
+        institution_url: institutionUrl,
+        type,
+        image_url: imageUrl,
+        has_mfa: hasMFA,
+        products,
+        status,
+        last_updated_at: lastUpdatedAt,
+        organizationId,
+      })
+    }
     const { id } = response
 
     return {
