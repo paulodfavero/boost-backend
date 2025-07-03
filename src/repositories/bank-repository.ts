@@ -45,6 +45,7 @@ export interface BanksRepository {
   findById(id: string): unknown
   findByOrganizationId(organizationId: string): any
   searchMany(query: string): Promise<Bank[]>
+  update(data: CreateBankUseCaseResponse): Promise<Bank>
   create(data: CreateBankUseCaseResponse): Promise<Bank>
   delete(bankId: string): Promise<object>
 }
