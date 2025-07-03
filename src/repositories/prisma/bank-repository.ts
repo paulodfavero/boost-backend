@@ -71,6 +71,17 @@ export class PrismaBanksRepository implements BanksRepository {
     return bank
   }
 
+  async update(data: CreateBankUseCaseResponse) {
+    const bank = await prisma.bank.update({
+      data,
+      where: {
+        item_id: data.item_id,
+      },
+    } as any)
+
+    return bank
+  }
+
   async delete(bankId: string) {
     const credit = await prisma.bank.delete({
       where: {
