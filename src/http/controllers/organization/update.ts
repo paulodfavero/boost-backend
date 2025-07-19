@@ -8,21 +8,20 @@ export async function update(request: FastifyRequest, reply: FastifyReply) {
     organizationId: z.string(),
   })
 
-  const updateOrganiaztionBodySchema = z.object({
-    stripeCustomerId: z.string(),
-  })
+  // Permite qualquer campo no body
+  const updateOrganizationBodySchema = z.record(z.any())
 
   const { organizationId } = updateOrganizationParamsSchema.parse(
     request.params,
   )
 
-  const reqBody = updateOrganiaztionBodySchema.parse(request.body)
+  const data = updateOrganizationBodySchema.parse(request.body)
   const updateOrganizationUseCase = makeUpdateOrganizationUseCase()
 
-  const data = await updateOrganizationUseCase.execute({
+  const result = await updateOrganizationUseCase.execute({
     organizationId,
-    reqBody,
+    data,
   })
 
-  return reply.status(201).send(data)
+  return reply.status(201).send(result)
 }
