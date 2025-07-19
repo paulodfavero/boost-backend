@@ -10,7 +10,7 @@ datasource db {
 model Organization {
   id         String    @id @default(dbgenerated("nanoid(11)"))
   created_at DateTime  @default(now())
-  updated_at DateTime? @default(now())
+  updated_at DateTime?
   name       String
   password   String?
   cnpj       String?   @unique
