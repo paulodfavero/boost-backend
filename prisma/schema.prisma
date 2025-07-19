@@ -8,13 +8,14 @@ datasource db {
 }
 
 model Organization {
-  id         String   @id @default(dbgenerated("nanoid(11)"))
-  created_at DateTime @default(now())
+  id         String    @id @default(dbgenerated("nanoid(11)"))
+  created_at DateTime  @default(now())
+  updated_at DateTime? @default(now())
   name       String
   password   String?
-  cnpj       String?  @unique
-  cpf        String?  @unique
-  email      String?  @unique
+  cnpj       String?   @unique
+  cpf        String?   @unique
+  email      String?   @unique
 
   stripe_customer_id String?
   User               User[]

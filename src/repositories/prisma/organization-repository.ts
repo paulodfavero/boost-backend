@@ -33,13 +33,19 @@ export class PrismaOrganizationsRepository implements OrganizationsRepository {
     return organization
   }
 
-  async update(data: { organizationId: string; stripeCustomerId: string }) {
+  async update(data: {
+    organizationId: string
+    data: Partial<
+      Omit<import('@prisma/client').Organization, 'id' | 'created_at'>
+    >
+  }) {
     const organization = await prisma.organization.update({
       where: {
         id: data.organizationId,
       },
       data: {
-        stripe_customer_id: data.stripeCustomerId,
+        ...data.data,
+        updated_at: new Date(),
       },
     })
 

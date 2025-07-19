@@ -51,7 +51,7 @@ export class CreateExpenseUseCase {
     )
     if (!organization) throw new OrganizationNotFound()
 
-    transactions.map((transaction: ExpenseRepository) => { 
+    transactions.map((transaction: ExpenseRepository) => {
       const {
         bankTransactionId,
         description,

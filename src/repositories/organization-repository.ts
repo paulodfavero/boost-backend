@@ -6,9 +6,10 @@ interface CreateOrganizationUseCaseResponse {
   // cnpj: string
   // cpf: string
 }
-interface UpdateOrganizationUseCaseResponse {
+// Atualizado para aceitar qualquer campo da Organization, exceto o id
+export interface UpdateOrganizationUseCaseResponse {
   organizationId: string
-  stripeCustomerId: string
+  data: Partial<Omit<Organization, 'id' | 'created_at'>>
 }
 export interface OrganizationsRepository {
   findById(id: string): Promise<Organization | null>
