@@ -8,7 +8,6 @@ interface GetOrganizationUseCaseRequest {
 }
 interface GetOrganizationUseCaseResponse {
   createdAt: Date
-  updatedAt?: Date | null
   name: string
   cnpj?: string | null
   cpf?: string | null
@@ -31,7 +30,6 @@ export class GetOrganizationUseCase {
     }
     return {
       createdAt: organization.created_at,
-      updatedAt: organization.updated_at,
       name: organization.name,
       cnpj: organization.cnpj,
       cpf: organization.cpf,
