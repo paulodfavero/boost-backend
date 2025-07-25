@@ -177,6 +177,7 @@ model Bank {
   created_at      DateTime @default(now())
   item_id         String   @unique
   name            String
+  name_alias      String?
   primary_color   String
   institution_url String
   type            String
@@ -205,6 +206,7 @@ model BankTypeAccount {
   type            String
   subtype         String
   name            String
+  name_alias      String?
   marketing_name  String?
   owner           String
   balance         Float
