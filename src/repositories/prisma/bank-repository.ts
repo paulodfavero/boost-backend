@@ -91,6 +91,19 @@ export class PrismaBanksRepository implements BanksRepository {
 
     return credit
   }
+
+  async updateNameAlias(data: { bankId: string; nameAlias?: string }) {
+    const bank = await prisma.bank.update({
+      where: {
+        id: data.bankId,
+      },
+      data: {
+        name_alias: data.nameAlias,
+      } as any,
+    })
+
+    return bank
+  }
 }
 export class PrismaBankTypeAccountRepository
   implements BanksTypeAccountRepository
@@ -167,5 +180,21 @@ export class PrismaBankTypeAccountRepository
     })
 
     return gain
+  }
+
+  async updateNameAlias(data: {
+    bankTypeAccountId: string
+    nameAlias?: string
+  }) {
+    const bankTypeAccount = await prisma.bankTypeAccount.update({
+      where: {
+        id: data.bankTypeAccountId,
+      },
+      data: {
+        name_alias: data.nameAlias,
+      } as any,
+    })
+
+    return bankTypeAccount
   }
 }
