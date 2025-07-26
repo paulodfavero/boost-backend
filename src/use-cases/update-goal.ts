@@ -5,20 +5,23 @@ interface UpdateGoalUseCaseRequest {
   id: string
   name?: string
   description?: string
-  amount?: string
-  period?: string
-  initiationDate?: Date
-  updatedAt?: Date
+  amount?: number
+  currentAmount?: number
+  initiation_date?: string
+  expiration_date?: string
 }
 
 interface GoalResponse {
   id: string
   name: string
   description: string
-  amount: string
-  period: string
-  initiationDate: Date
-  updatedAt: Date
+  amount: number
+  currentAmount: number
+  initiation_date?: string
+  expiration_date?: string
+  organizationId?: string
+  created_at?: Date
+  updated_at?: Date
 }
 
 export class UpdateGoalUseCase {
@@ -29,8 +32,9 @@ export class UpdateGoalUseCase {
     name,
     description,
     amount,
-    period,
-    initiationDate,
+    currentAmount,
+    initiation_date,
+    expiration_date,
   }: UpdateGoalUseCaseRequest): Promise<GoalResponse> {
     const goal = await this.goalsRepository.findById(id)
 
@@ -42,8 +46,9 @@ export class UpdateGoalUseCase {
       name,
       description,
       amount,
-      period,
-      initiation_date: initiationDate,
+      currentAmount,
+      initiation_date,
+      expiration_date,
     })
 
     return updatedGoal

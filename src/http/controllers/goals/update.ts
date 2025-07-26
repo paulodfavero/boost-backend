@@ -13,8 +13,8 @@ export async function update(request: FastifyRequest, reply: FastifyReply) {
     description: z.string().optional(),
     amount: z.number().optional(),
     currentAmount: z.number().optional(),
-    period: z.string().optional(),
     initiationDate: z.string().optional(),
+    expirationDate: z.string().optional(),
   })
 
   const { goalId } = updateGoalParamsSchema.parse(request.params)
@@ -24,7 +24,12 @@ export async function update(request: FastifyRequest, reply: FastifyReply) {
     const updateGoalUseCase = makeUpdateGoalUseCase()
     const goal = await updateGoalUseCase.execute({
       id: goalId,
-      ...data,
+      name: data.name,
+      description: data.description,
+      amount: data.amount,
+      currentAmount: data.currentAmount,
+      initiation_date: data.initiationDate,
+      expiration_date: data.expirationDate,
     })
 
     return reply.status(200).send(goal)
