@@ -1,5 +1,4 @@
 import { PrismaClient } from '@prisma/client'
-import { addMonths, addDays } from 'date-fns'
 import {
   GoalsRepository,
   CreateGoalData,
@@ -9,27 +8,9 @@ import {
 export class PrismaGoalsRepository implements GoalsRepository {
   constructor(private prisma: PrismaClient) {}
 
-  private calculateExpirationDate(initiationDate: Date, period: string): Date {
-    switch (period.toLowerCase()) {
-      case 'day':
-        return addDays(initiationDate, 1)
-      case 'week':
-        return addDays(initiationDate, 7)
-      case 'month':
-        return addMonths(initiationDate, 1)
-      case 'year':
-        return addMonths(initiationDate, 12)
-      default:
-        return addMonths(initiationDate, 1) // default to one month
-    }
-  }
-
   async create(data: CreateGoalData) {
     const initiationDate = new Date(data.initiation_date)
-    const expirationDate = this.calculateExpirationDate(
-      initiationDate,
-      data.period,
-    )
+    const expirationDate = new Date(data.expiration_date)
 
     const goal = await this.prisma.goals.create({
       data: {
@@ -37,7 +18,6 @@ export class PrismaGoalsRepository implements GoalsRepository {
         description: data.description,
         amount: data.amount,
         currentAmount: data.currentAmount,
-        period: data.period,
         initiation_date: initiationDate,
         expiration_date: expirationDate,
         organizationId: data.organizationId,
@@ -50,7 +30,6 @@ export class PrismaGoalsRepository implements GoalsRepository {
       description: goal.description,
       amount: goal.amount,
       currentAmount: goal.currentAmount,
-      period: goal.period,
       initiation_date: goal.initiation_date.toISOString(),
       expiration_date: goal.expiration_date.toISOString(),
       organizationId: goal.organizationId,
@@ -76,7 +55,6 @@ export class PrismaGoalsRepository implements GoalsRepository {
       description: goal.description,
       amount: goal.amount,
       currentAmount: goal.currentAmount,
-      period: goal.period,
       initiation_date: goal.initiation_date.toISOString(),
       expiration_date: goal.expiration_date.toISOString(),
       organizationId: goal.organizationId,
@@ -101,7 +79,6 @@ export class PrismaGoalsRepository implements GoalsRepository {
       description: goal.description,
       amount: goal.amount,
       currentAmount: goal.currentAmount,
-      period: goal.period,
       initiation_date: goal.initiation_date.toISOString(),
       expiration_date: goal.expiration_date.toISOString(),
       organizationId: goal.organizationId,
@@ -119,12 +96,6 @@ export class PrismaGoalsRepository implements GoalsRepository {
       throw new Error('Goal not found')
     }
 
-    const initiationDate = data.initiation_date
-      ? new Date(data.initiation_date)
-      : goal.initiation_date
-    const period = data.period || goal.period
-    const expirationDate = this.calculateExpirationDate(initiationDate, period)
-
     const updatedGoal = await this.prisma.goals.update({
       where: {
         id,
@@ -134,11 +105,12 @@ export class PrismaGoalsRepository implements GoalsRepository {
         description: data.description,
         amount: data.amount,
         currentAmount: data.currentAmount,
-        period: data.period,
         initiation_date: data.initiation_date
           ? new Date(data.initiation_date)
           : undefined,
-        expiration_date: expirationDate,
+        expiration_date: data.expiration_date
+          ? new Date(data.expiration_date)
+          : undefined,
         updated_at: new Date(),
       },
     })
@@ -149,7 +121,6 @@ export class PrismaGoalsRepository implements GoalsRepository {
       description: updatedGoal.description,
       amount: updatedGoal.amount,
       currentAmount: updatedGoal.currentAmount,
-      period: updatedGoal.period,
       initiation_date: updatedGoal.initiation_date.toISOString(),
       expiration_date: updatedGoal.expiration_date.toISOString(),
       organizationId: updatedGoal.organizationId,

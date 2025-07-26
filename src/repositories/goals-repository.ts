@@ -4,7 +4,6 @@ export interface Goal {
   description: string
   amount: number
   currentAmount: number
-  period: string
   initiation_date?: string
   expiration_date?: string
   organizationId?: string
@@ -17,8 +16,8 @@ export interface CreateGoalData {
   description: string
   amount: number
   currentAmount: number
-  period: string
   initiation_date: string
+  expiration_date: string
   organizationId: string
 }
 
@@ -27,8 +26,8 @@ export interface UpdateGoalData {
   description?: string
   amount?: number
   currentAmount?: number
-  period?: string
   initiation_date?: string
+  expiration_date?: string
 }
 
 export interface GoalsRepository {

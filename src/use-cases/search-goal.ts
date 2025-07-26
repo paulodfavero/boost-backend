@@ -6,14 +6,15 @@ interface SearchGoalUseCaseRequest {
 
 interface GoalResponse {
   id: string
-  title: string
+  name: string
   description: string
-  targetAmount: number
+  amount: number
   currentAmount: number
-  deadline: string
-  organizationId: string
-  createdAt: Date
-  updatedAt: Date
+  initiation_date?: string
+  expiration_date?: string
+  organizationId?: string
+  created_at?: Date
+  updated_at?: Date
 }
 
 export class SearchGoalUseCase {
