@@ -5,8 +5,8 @@ interface CreateGoalUseCaseRequest {
   description: string
   amount: number
   currentAmount: number
-  period: string
   initiation_date: string
+  expiration_date: string
   organizationId: string
 }
 
@@ -16,12 +16,11 @@ interface GoalResponse {
   description: string
   amount: number
   currentAmount: number
-  period: string
-  initiation_date: string
-  expiration_date: string
-  organizationId: string
-  created_at: Date
-  updated_at: Date
+  initiation_date?: string
+  expiration_date?: string
+  organizationId?: string
+  created_at?: Date
+  updated_at?: Date
 }
 
 export class CreateGoalUseCase {
@@ -32,8 +31,8 @@ export class CreateGoalUseCase {
     description,
     amount,
     currentAmount,
-    period,
     initiation_date,
+    expiration_date,
     organizationId,
   }: CreateGoalUseCaseRequest): Promise<GoalResponse> {
     const goal = await this.goalsRepository.create({
@@ -41,8 +40,8 @@ export class CreateGoalUseCase {
       description,
       amount,
       currentAmount,
-      period,
       initiation_date,
+      expiration_date,
       organizationId,
     })
 
