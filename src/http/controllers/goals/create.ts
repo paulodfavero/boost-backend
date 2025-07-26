@@ -13,13 +13,19 @@ export async function create(request: FastifyRequest, reply: FastifyReply) {
     description: z.string(),
     amount: z.number(),
     currentAmount: z.number().default(0),
-    period: z.string(),
     initiationDate: z.string(),
+    expirationDate: z.string(),
   })
 
   const { organizationId } = createGoalParamsSchema.parse(request.params)
-  const { name, description, amount, currentAmount, period, initiationDate } =
-    createGoalBodySchema.parse(request.body)
+  const {
+    name,
+    description,
+    amount,
+    currentAmount,
+    initiationDate,
+    expirationDate,
+  } = createGoalBodySchema.parse(request.body)
   try {
     const createGoalUseCase = makeCreateGoalUseCase()
 
@@ -28,8 +34,8 @@ export async function create(request: FastifyRequest, reply: FastifyReply) {
       description,
       amount,
       currentAmount,
-      period,
       initiation_date: initiationDate,
+      expiration_date: expirationDate,
       organizationId,
     })
 

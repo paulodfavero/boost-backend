@@ -306,7 +306,6 @@ model Goals {
   description     String
   amount          Int
   currentAmount   Int          @default(0)
-  period          String
   initiation_date DateTime
   expiration_date DateTime
   organizationId  String
