@@ -1,8 +1,12 @@
 import { prisma } from '@/lib/prisma'
 import { CreditsRepository } from '../credit-repository'
-import { Prisma } from '@prisma/client'
+import { Prisma, Credit, Bank } from '@prisma/client'
 import dayjs from 'dayjs'
 import { lastDayOfMonth } from 'date-fns'
+
+type CreditWithBank = Credit & {
+  bank: Bank | null
+}
 
 interface CreditUpdateRepository {
   id: string
@@ -25,7 +29,7 @@ export class PrismaCreditRepository implements CreditsRepository {
     bankId?: string,
     monthStart?: string,
     monthEnd?: string,
-  ) {
+  ): Promise<CreditWithBank[]> {
     const startOfTheDay = date
       ? dayjs(date).startOf('date').toDate()
       : dayjs(monthStart).startOf('date').toDate()
@@ -47,6 +51,9 @@ export class PrismaCreditRepository implements CreditsRepository {
           gte: startOfTheDay,
           lte: endOfTheDay,
         },
+      },
+      include: {
+        bank: true,
       },
       orderBy: {
         created_at: 'desc',

@@ -1,7 +1,12 @@
+import { CreditsRepository } from '@/repositories/credit-repository'
 import { ExpensesRepository } from '@/repositories/expense-repository'
-
 import { GainsRepository } from '@/repositories/gain-repository'
 import { addMonths, format, subMonths } from 'date-fns'
+import { Credit, Bank } from '@prisma/client'
+
+type CreditWithBank = Credit & {
+  bank: Bank | null
+}
 
 interface SearchExpensesUseCaseRequest {
   organizationId: string
@@ -13,6 +18,7 @@ export class SearchResultsUseCase {
   constructor(
     private ExpensesRepository: ExpensesRepository,
     private GainsRepository: GainsRepository,
+    private CreditRepository: CreditsRepository,
   ) {}
 
   async execute({
@@ -31,6 +37,13 @@ export class SearchResultsUseCase {
       nextMonth,
     )
     const currentGain = await this.GainsRepository.searchMany(
+      organizationId,
+      '',
+      bankId,
+      previousMonth,
+      nextMonth,
+    )
+    const currentCredit = await this.CreditRepository.searchMany(
       organizationId,
       '',
       bankId,
@@ -186,6 +199,81 @@ export class SearchResultsUseCase {
       return yearA.localeCompare(yearB) || monthA.localeCompare(monthB)
     })
 
-    return { expenses: sortedMonthsExpenses, gains: sortedMonthsGains }
+    const filteredByMonthAndBankCredits = currentCredit
+      .map((transaction) => {
+        const month = format(new Date(transaction.expiration_date), 'y/MM')
+        const bankName = transaction.bank?.name || 'Cadastro manual'
+        return {
+          ...transaction,
+          month,
+          bankName,
+        }
+      })
+      .reduce((acc, transaction) => {
+        const month = transaction.month
+        const bankName = transaction.bankName
+
+        if (!acc[month]) {
+          acc[month] = {}
+        }
+        if (!acc[month][bankName]) {
+          acc[month][bankName] = []
+        }
+        acc[month][bankName].push(transaction)
+        return acc
+      }, {} as Record<string, Record<string, CreditWithBank[]>>)
+
+    const monthlyTotalsCredits = Object.entries(
+      filteredByMonthAndBankCredits,
+    ).reduce(
+      (acc, [month, banks]) => {
+        const monthBanks = Object.entries(banks).map(
+          ([bankName, transactions]) => {
+            const total = transactions.reduce(
+              (sum, transaction) => sum + transaction.amount,
+              0,
+            )
+            const paidTotal = transactions.reduce(
+              (sum, transaction) =>
+                transaction.paid ? sum + transaction.amount : sum,
+              0,
+            )
+
+            return {
+              bankName,
+              total,
+              paidTotal,
+              transactions,
+            }
+          },
+        )
+
+        acc.push({
+          month,
+          banks: monthBanks,
+        })
+        return acc
+      },
+      [] as Array<{
+        month: string
+        banks: Array<{
+          bankName: string
+          total: number
+          paidTotal: number
+          transactions: CreditWithBank[]
+        }>
+      }>,
+    )
+
+    const sortedMonthsCredits = monthlyTotalsCredits.sort((a, b) => {
+      const [yearA, monthA] = a.month.split('/')
+      const [yearB, monthB] = b.month.split('/')
+      return yearA.localeCompare(yearB) || monthA.localeCompare(monthB)
+    })
+    return {
+      expenses: sortedMonthsExpenses,
+      gains: sortedMonthsGains,
+      credits: sortedMonthsCredits,
+    }
   }
 }

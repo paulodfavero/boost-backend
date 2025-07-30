@@ -1,4 +1,8 @@
-import { Credit, Prisma } from '@prisma/client'
+import { Credit, Prisma, Bank } from '@prisma/client'
+
+type CreditWithBank = Credit & {
+  bank: Bank | null
+}
 
 interface CreditUpdateRepository {
   expirationDate?: string | Date
@@ -22,7 +26,7 @@ export interface CreditsRepository {
     bankId?: string,
     monthStart?: string,
     monthEnd?: string,
-  ): Promise<Credit[]>
+  ): Promise<CreditWithBank[]>
   searchCardList(organizationId: string): Promise<Credit[]>
   createMany(
     data: Prisma.Enumerable<Prisma.CreditCreateManyInput>,
