@@ -42,11 +42,7 @@ export class PrismaExpenseRepository implements ExpensesRepository {
       : dayjs(lastDayOfMonth(dayjs(monthEnd).startOf('date').toDate()))
           .endOf('date')
           .toDate()
-    console.log('startOfTheDay', startOfTheDay)
-    console.log('startOfTheDay.toISOString()', startOfTheDay.toISOString())
 
-    console.log('endOfTheDay', endOfTheDay)
-    console.log('endOfTheDay.toISOString()', endOfTheDay.toISOString())
     const expenses = await prisma.expense.findMany({
       where: {
         organizationId: {
