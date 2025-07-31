@@ -60,6 +60,7 @@ export class SearchExpenseUseCase {
       previousMonth,
       bankId,
     )
+    console.log('previousExpense', previousExpense)
     const nextExpense = await this.ExpensesRepository.searchMany(
       organizationId,
       nextMonth,

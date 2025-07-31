@@ -48,8 +48,8 @@ export class PrismaCreditRepository implements CreditsRepository {
           },
         }),
         expiration_date: {
-          gte: startOfTheDay,
-          lte: endOfTheDay,
+          gte: startOfTheDay.toISOString(),
+          lte: endOfTheDay.toISOString(),
         },
       },
       include: {
