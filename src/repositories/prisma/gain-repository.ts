@@ -44,8 +44,8 @@ export class PrismaGainRepository implements GainsRepository {
           },
         }),
         expiration_date: {
-          gte: startOfTheDay,
-          lte: endOfTheDay,
+          gte: startOfTheDay.toISOString(),
+          lte: endOfTheDay.toISOString(),
         },
       },
       orderBy: {
