@@ -40,9 +40,8 @@ export class SearchExpenseUseCase {
     let nextMonthTotalGains = 0
     let nextMonthReceivedExpenses = 0
     let nextMonthTotalExpenses = 0
-    console.log('date', date)
+
     const currentMonth = format(new Date(date), 'y/MM')
-    console.log('currentMonth', currentMonth)
     const previousMonth = format(subMonths(new Date(date), 1), 'y/MM')
     const nextMonth = format(addMonths(new Date(date), 1), 'y/MM')
 
@@ -51,7 +50,6 @@ export class SearchExpenseUseCase {
       date,
       bankId,
     )
-    console.log('expensesFormated', expensesFormated)
     const currentGain = await this.GainsRepository.searchMany(
       organizationId,
       date,
