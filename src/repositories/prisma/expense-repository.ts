@@ -56,8 +56,8 @@ export class PrismaExpenseRepository implements ExpensesRepository {
           },
         }),
         expiration_date: {
-          gte: startOfTheDay.toISOString(),
-          lte: endOfTheDay.toISOString(),
+          gte: startOfTheDay,
+          lte: endOfTheDay,
         },
       },
       orderBy: {
