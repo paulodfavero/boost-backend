@@ -34,8 +34,10 @@ export class PrismaCreditRepository implements CreditsRepository {
       ? dayjs(date).startOf('date').toDate()
       : dayjs(monthStart).startOf('date').toDate()
     const endOfTheDay = date
-      ? lastDayOfMonth(startOfTheDay)
-      : lastDayOfMonth(dayjs(monthEnd).startOf('date').toDate())
+      ? dayjs(lastDayOfMonth(startOfTheDay)).endOf('date').toDate()
+      : dayjs(lastDayOfMonth(dayjs(monthEnd).startOf('date').toDate()))
+          .endOf('date')
+          .toDate()
 
     const credits = await prisma.credit.findMany({
       where: {
@@ -48,8 +50,8 @@ export class PrismaCreditRepository implements CreditsRepository {
           },
         }),
         expiration_date: {
-          gte: startOfTheDay.toISOString(),
-          lte: endOfTheDay.toISOString(),
+          gte: startOfTheDay,
+          lte: endOfTheDay,
         },
       },
       include: {
