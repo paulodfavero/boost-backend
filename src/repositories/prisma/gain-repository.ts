@@ -30,8 +30,10 @@ export class PrismaGainRepository implements GainsRepository {
       ? dayjs(date).startOf('date').toDate()
       : dayjs(monthStart).startOf('date').toDate()
     const endOfTheDay = date
-      ? lastDayOfMonth(startOfTheDay)
-      : lastDayOfMonth(dayjs(monthEnd).startOf('date').toDate())
+      ? dayjs(lastDayOfMonth(startOfTheDay)).endOf('date').toDate()
+      : dayjs(lastDayOfMonth(dayjs(monthEnd).startOf('date').toDate()))
+          .endOf('date')
+          .toDate()
 
     const gains = await prisma.gain.findMany({
       where: {
@@ -44,8 +46,8 @@ export class PrismaGainRepository implements GainsRepository {
           },
         }),
         expiration_date: {
-          gte: startOfTheDay.toISOString(),
-          lte: endOfTheDay.toISOString(),
+          gte: startOfTheDay,
+          lte: endOfTheDay,
         },
       },
       orderBy: {
