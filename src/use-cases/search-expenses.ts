@@ -50,6 +50,7 @@ export class SearchExpenseUseCase {
       date,
       bankId,
     )
+    console.log('expensesFormated', expensesFormated)
     const currentGain = await this.GainsRepository.searchMany(
       organizationId,
       date,
@@ -60,7 +61,7 @@ export class SearchExpenseUseCase {
       previousMonth,
       bankId,
     )
-    console.log('previousExpense', previousExpense)
+
     const nextExpense = await this.ExpensesRepository.searchMany(
       organizationId,
       nextMonth,
