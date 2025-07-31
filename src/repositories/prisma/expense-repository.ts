@@ -38,8 +38,10 @@ export class PrismaExpenseRepository implements ExpensesRepository {
       ? dayjs(date).startOf('date').toDate()
       : dayjs(monthStart).startOf('date').toDate()
     const endOfTheDay = date
-      ? lastDayOfMonth(startOfTheDay)
-      : lastDayOfMonth(dayjs(monthEnd).startOf('date').toDate())
+      ? dayjs(lastDayOfMonth(startOfTheDay)).endOf('date').toDate()
+      : dayjs(lastDayOfMonth(dayjs(monthEnd).startOf('date').toDate()))
+          .endOf('date')
+          .toDate()
     console.log('startOfTheDay', startOfTheDay)
     console.log('startOfTheDay.toISOString()', startOfTheDay.toISOString())
 
@@ -56,8 +58,8 @@ export class PrismaExpenseRepository implements ExpensesRepository {
           },
         }),
         expiration_date: {
-          gte: startOfTheDay.toISOString().replace('Z', ''),
-          lte: endOfTheDay.toISOString().replace('Z', ''),
+          gte: startOfTheDay,
+          lte: endOfTheDay,
         },
       },
       orderBy: {
