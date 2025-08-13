@@ -26,30 +26,42 @@ export class SearchResultsUseCase {
     date,
     bankId,
   }: SearchExpensesUseCaseRequest): Promise<object> {
-    const previousMonth = format(subMonths(new Date(date), 6), 'y/MM')
-    const nextMonth = format(addMonths(new Date(date), 6), 'y/MM')
+    // Calculate 12 months period: 6 months before and 5 months after the given date
+    const startMonth = format(subMonths(new Date(date), 6), 'y/MM')
+    const endMonth = format(addMonths(new Date(date), 5), 'y/MM')
 
     const expensesFormated = await this.ExpensesRepository.searchMany(
       organizationId,
       '',
       bankId,
-      previousMonth,
-      nextMonth,
+      startMonth,
+      endMonth,
     )
     const currentGain = await this.GainsRepository.searchMany(
       organizationId,
       '',
       bankId,
-      previousMonth,
-      nextMonth,
+      startMonth,
+      endMonth,
     )
     const currentCredit = await this.CreditRepository.searchMany(
       organizationId,
       '',
       bankId,
-      previousMonth,
-      nextMonth,
+      startMonth,
+      endMonth,
     )
+
+    // Helper function to generate 12 months sequence
+    const generate12MonthsSequence = (startDate: Date) => {
+      const months = []
+      for (let i = 0; i < 12; i++) {
+        months.push(format(addMonths(startDate, i), 'y/MM'))
+      }
+      return months
+    }
+
+    const twelveMonthsSequence = generate12MonthsSequence(new Date(startMonth))
 
     const filteredByMonthExpenses = expensesFormated
       .map((transaction) => {
@@ -90,36 +102,18 @@ export class SearchResultsUseCase {
       return acc
     }, [] as Array<{ month: string; total: number; paidTotal: number; transactions: typeof expensesFormated }>)
 
-    // Create a sequence of months between previousMonth and nextMonth
-    const monthsSequenceExpenses = []
-    const processedMonths = new Set<string>()
-    let currentDate = new Date(previousMonth)
-    const endDate = new Date(nextMonth)
+    // Create exactly 12 months with zero values for missing months
+    const monthsSequenceExpenses = twelveMonthsSequence.map((monthKey) => {
+      const existingMonth = monthlyTotalsExpenses.find(
+        (m) => m.month === monthKey,
+      )
 
-    while (currentDate <= endDate) {
-      const monthKey = format(currentDate, 'y/MM')
-
-      if (!processedMonths.has(monthKey)) {
-        const existingMonth = monthlyTotalsExpenses.find(
-          (m) => m.month === monthKey,
-        )
-
-        monthsSequenceExpenses.push({
-          month: monthKey,
-          total: existingMonth?.total ?? 0,
-          paidTotal: existingMonth?.paidTotal ?? 0,
-          transactions: existingMonth?.transactions ?? [],
-        })
-
-        processedMonths.add(monthKey)
+      return {
+        month: monthKey,
+        total: existingMonth?.total ?? 0,
+        paidTotal: existingMonth?.paidTotal ?? 0,
+        transactions: existingMonth?.transactions ?? [],
       }
-      currentDate = addMonths(currentDate, 1)
-    }
-
-    const sortedMonthsExpenses = monthsSequenceExpenses.sort((a, b) => {
-      const [yearA, monthA] = a.month.split('/')
-      const [yearB, monthB] = b.month.split('/')
-      return yearA.localeCompare(yearB) || monthA.localeCompare(monthB)
     })
 
     const filteredByMonthGains = currentGain
@@ -167,36 +161,16 @@ export class SearchResultsUseCase {
       }>,
     )
 
-    // Create a sequence of months between previousMonth and nextMonth
-    const monthsSequenceGains = []
-    const processedMonthsGains = new Set<string>()
-    let currentDateGains = new Date(previousMonth)
-    const endDateGains = new Date(nextMonth)
+    // Create exactly 12 months with zero values for missing months
+    const monthsSequenceGains = twelveMonthsSequence.map((monthKey) => {
+      const existingMonth = monthlyTotalsGains.find((m) => m.month === monthKey)
 
-    while (currentDateGains <= endDateGains) {
-      const monthKey = format(currentDateGains, 'y/MM')
-
-      if (!processedMonthsGains.has(monthKey)) {
-        const existingMonth = monthlyTotalsGains.find(
-          (m) => m.month === monthKey,
-        )
-
-        monthsSequenceGains.push({
-          month: monthKey,
-          total: existingMonth?.total ?? 0,
-          paidTotal: existingMonth?.paidTotal ?? 0,
-          transactions: existingMonth?.transactions ?? [],
-        })
-
-        processedMonthsGains.add(monthKey)
+      return {
+        month: monthKey,
+        total: existingMonth?.total ?? 0,
+        paidTotal: existingMonth?.paidTotal ?? 0,
+        transactions: existingMonth?.transactions ?? [],
       }
-      currentDateGains = addMonths(currentDateGains, 1)
-    }
-
-    const sortedMonthsGains = monthsSequenceGains.sort((a, b) => {
-      const [yearA, monthA] = a.month.split('/')
-      const [yearB, monthB] = b.month.split('/')
-      return yearA.localeCompare(yearB) || monthA.localeCompare(monthB)
     })
 
     const filteredByMonthAndBankCredits = currentCredit
@@ -265,15 +239,22 @@ export class SearchResultsUseCase {
       }>,
     )
 
-    const sortedMonthsCredits = monthlyTotalsCredits.sort((a, b) => {
-      const [yearA, monthA] = a.month.split('/')
-      const [yearB, monthB] = b.month.split('/')
-      return yearA.localeCompare(yearB) || monthA.localeCompare(monthB)
+    // Create exactly 12 months with zero values for missing months
+    const monthsSequenceCredits = twelveMonthsSequence.map((monthKey) => {
+      const existingMonth = monthlyTotalsCredits.find(
+        (m) => m.month === monthKey,
+      )
+
+      return {
+        month: monthKey,
+        banks: existingMonth?.banks ?? [],
+      }
     })
+
     return {
-      expenses: sortedMonthsExpenses,
-      gains: sortedMonthsGains,
-      credits: sortedMonthsCredits,
+      expenses: monthsSequenceExpenses,
+      gains: monthsSequenceGains,
+      credits: monthsSequenceCredits,
     }
   }
 }
