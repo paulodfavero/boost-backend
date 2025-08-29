@@ -8,6 +8,10 @@ const envSchema = z.object({
   STRIPE_SECRET_KEY: z.string(),
   STRIPE_PUBLISHABLE_KEY: z.string(),
   SITE_URL: z.string(),
+  SMTP_HOST: z.string().optional(),
+  SMTP_PORT: z.coerce.number().optional(),
+  SMTP_USER: z.string().optional(),
+  SMTP_PASS: z.string().optional(),
 })
 
 const _env = envSchema.safeParse(process.env)

@@ -1,5 +1,6 @@
 import { app } from './app'
 import { env } from './env'
+import { TokenCleanupService } from './lib/cleanup-expired-tokens'
 
 app
   .listen({
@@ -8,4 +9,9 @@ app
   })
   .then(() => {
     console.log('🚀 HTTP Server Running!')
+
+    // Iniciar serviço de limpeza de tokens expirados
+    const tokenCleanupService = new TokenCleanupService()
+    tokenCleanupService.startCleanupSchedule()
+    console.log('🧹 Token cleanup service started!')
   })
