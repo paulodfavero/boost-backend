@@ -16,6 +16,7 @@ import { creditsRoutes } from './http/controllers/credit/routes'
 import { goalsRoutes } from './http/controllers/goals/routes'
 import { categoryCreditCardRoutes } from './http/controllers/categoryCreditCard/routes'
 import { subcategoryCreditCardRoutes } from './http/controllers/subcategoryCreditCard/routes'
+import { paymentRoutes } from './http/controllers/payment/routes'
 
 const isDevelopment = process.env.NODE_ENV === 'dev'
 
@@ -143,3 +144,4 @@ app.register(creditsRoutes)
 app.register(goalsRoutes)
 app.register(categoryCreditCardRoutes)
 app.register(subcategoryCreditCardRoutes)
+app.register(paymentRoutes)

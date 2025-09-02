@@ -1,4 +1,5 @@
 import { OrganizationsRepository } from '@/repositories/organization-repository'
+import { EmailService } from '@/lib/email'
 import bcrypt from 'bcryptjs'
 
 interface CreateOrganizationUseCaseResponse {
@@ -22,7 +23,11 @@ interface OrganizationResponse {
 
 export class CreateOrganizationUseCase {
   userRepository: any
-  constructor(private organizationsRepository: OrganizationsRepository) {}
+  private emailService: EmailService
+
+  constructor(private organizationsRepository: OrganizationsRepository) {
+    this.emailService = new EmailService()
+  }
 
   async execute({
     name,
@@ -58,6 +63,16 @@ export class CreateOrganizationUseCase {
     }
 
     const response = await this.organizationsRepository.create(data)
+
+    // Enviar e-mail de boas-vindas apenas para novas organizações
+    if (email) {
+      try {
+        await this.emailService.sendWelcomeEmail(email, name)
+      } catch (error) {
+        console.error('❌ Erro ao enviar e-mail de boas-vindas:', error)
+        // Não falha a criação da organização se o e-mail falhar
+      }
+    }
 
     return {
       id: response.id,
