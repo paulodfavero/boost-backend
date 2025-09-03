@@ -33,15 +33,6 @@ export async function createCheckoutSession(
       validOrigin = env.SITE_URL
     }
 
-    // Log URLs para debug
-    const successUrl = `${validOrigin}/plans/success?sessionId={CHECKOUT_SESSION_ID}&organizationId=${organizationId}`
-    const cancelUrl = `${validOrigin}/plans?canceled=true`
-
-    console.log('🔗 Creating checkout session with URLs:')
-    console.log('  Success URL:', successUrl)
-    console.log('  Cancel URL:', cancelUrl)
-    console.log('  Origin:', validOrigin)
-
     // Create Checkout Sessions from body params.
     const session = await stripe.checkout.sessions.create({
       customer_email: email,
@@ -59,8 +50,8 @@ export async function createCheckoutSession(
       // ],
       allow_promotion_codes: true,
       locale: 'pt-BR',
-      success_url: successUrl,
-      cancel_url: cancelUrl,
+      success_url: `${validOrigin}/plans/success?sessionId={CHECKOUT_SESSION_ID}&organizationId=${organizationId}`,
+      cancel_url: `${validOrigin}/plans?canceled=true`,
     })
 
     if (session.url) {
@@ -77,13 +68,6 @@ export async function createCheckoutSession(
     console.error('Erro no endpoint checkout-sessions:', error)
 
     if (error instanceof Stripe.errors.StripeError) {
-      console.error('Stripe Error Details:', {
-        type: error.type,
-        code: error.code,
-        message: error.message,
-        doc_url: error.doc_url,
-      })
-
       return reply.status(400).send({
         error: error.message,
         type: error.type,
