@@ -8,7 +8,7 @@ import { CreditsRepository } from '@/repositories/credit-repository'
 import { GoalsRepository } from '@/repositories/goals-repository'
 import { BanksRepository } from '@/repositories/bank-repository'
 import { InvestmentRepository } from '@/repositories/investment-repository'
-import { cache } from '@/lib/cache'
+// import { cache } from '@/lib/cache' // Temporariamente desabilitado para debug
 
 interface ChatMessage {
   role: 'system' | 'user' | 'assistant'
@@ -160,21 +160,15 @@ export class ChatUseCase {
     needsCreditCards: boolean
     needsInvestments: boolean
   } {
-    const lastMessage =
-      messages[messages.length - 1]?.content.toLowerCase() || ''
-
+    // Always fetch all user data to provide comprehensive context
+    // This ensures the AI has access to all user information regardless of the question
     return {
-      needsExpenses: /gasto|despesa|saída|pagar|comprar/.test(lastMessage),
-      needsGains: /receita|entrada|salário|ganho|receber/.test(lastMessage),
-      needsGoals: /meta|objetivo|planejamento|economia|poupança/.test(
-        lastMessage,
-      ),
-      needsCredits: /cartão|crédito|fatura|limite/.test(lastMessage),
-      needsCreditCards: /cartão|crédito|limite|vencimento/.test(lastMessage),
-      needsInvestments:
-        /investimento|aplicação|renda fixa|renda variável|fundo|ação|título|cdb|lci|lca/.test(
-          lastMessage,
-        ),
+      needsExpenses: true,
+      needsGains: true,
+      needsGoals: true,
+      needsCredits: true,
+      needsCreditCards: true,
+      needsInvestments: true,
     }
   }
 
@@ -182,108 +176,102 @@ export class ChatUseCase {
     // Analisar contexto da mensagem para otimizar consultas
     const context = this.analyzeMessageContext(messages)
 
-    // Verificar cache primeiro
-    const cacheKey = `chat-data-${organizationId}`
-    const cachedData = cache.get<{
-      organization: any
-      expensesTransactions: any[]
-      gainsTransactions: any[]
-      goals: any[]
-      creditTransactions: any[]
-      creditCardList: any[]
-      investments: any[]
-    }>(cacheKey)
+    // Temporariamente desabilitar cache para debug
+    // Sempre buscar dados frescos do banco
 
-    let organization,
-      expensesTransactions,
-      gainsTransactions,
-      goals,
-      creditTransactions,
-      creditCardList,
-      investments
+    // Buscar apenas dados necessários baseado no contexto
+    const promises: Promise<any>[] = [
+      this.organizationsRepository.findById(organizationId), // Sempre necessário
+    ]
 
-    if (cachedData) {
-      // Usar dados do cache
-      organization = cachedData.organization
-      expensesTransactions = cachedData.expensesTransactions
-      gainsTransactions = cachedData.gainsTransactions
-      goals = cachedData.goals
-      creditTransactions = cachedData.creditTransactions
-      creditCardList = cachedData.creditCardList
-      investments = cachedData.investments
-    } else {
-      // Buscar apenas dados necessários baseado no contexto
-      const promises: Promise<any>[] = [
-        this.organizationsRepository.findById(organizationId), // Sempre necessário
-      ]
+    if (context.needsExpenses) {
+      // Get expenses from the last 2 years to provide comprehensive context
+      const twoYearsAgo = new Date()
+      twoYearsAgo.setFullYear(twoYearsAgo.getFullYear() - 2)
+      const currentDate = new Date()
 
-      if (context.needsExpenses) {
-        promises.push(this.expensesRepository.searchMany(organizationId))
-      } else {
-        promises.push(Promise.resolve([]))
-      }
+      const monthStart = format(twoYearsAgo, 'yyyy/MM')
+      const monthEnd = format(currentDate, 'yyyy/MM')
 
-      if (context.needsGains) {
-        promises.push(this.gainsRepository.searchMany(organizationId))
-      } else {
-        promises.push(Promise.resolve([]))
-      }
-
-      if (context.needsGoals) {
-        promises.push(this.goalsRepository.findByOrganizationId(organizationId))
-      } else {
-        promises.push(Promise.resolve([]))
-      }
-
-      if (context.needsCredits) {
-        promises.push(this.creditsRepository.searchMany(organizationId))
-      } else {
-        promises.push(Promise.resolve([]))
-      }
-
-      if (context.needsCreditCards) {
-        promises.push(this.creditsRepository.searchCardList(organizationId))
-      } else {
-        promises.push(Promise.resolve([]))
-      }
-
-      if (context.needsInvestments) {
-        promises.push(
-          this.investmentRepository.findByOrganizationId(organizationId),
-        )
-      } else {
-        promises.push(Promise.resolve([]))
-      }
-
-      const results = await Promise.all(promises)
-
-      organization = results[0]
-      expensesTransactions = results[1]
-      gainsTransactions = results[2]
-      goals = results[3]
-      creditTransactions = results[4]
-      creditCardList = results[5]
-      investments = results[6]
-
-      // Cachear dados por 2 minutos
-      cache.set(
-        cacheKey,
-        {
-          organization,
-          expensesTransactions,
-          gainsTransactions,
-          goals,
-          creditTransactions,
-          creditCardList,
-          investments,
-        },
-        2 * 60 * 1000,
+      promises.push(
+        this.expensesRepository.searchMany(
+          organizationId,
+          undefined, // date
+          undefined, // bankId
+          monthStart,
+          monthEnd,
+        ),
       )
     }
+
+    if (context.needsGains) {
+      // Get gains from the last 2 years to provide comprehensive context
+      const twoYearsAgo = new Date()
+      twoYearsAgo.setFullYear(twoYearsAgo.getFullYear() - 2)
+      const currentDate = new Date()
+
+      const monthStart = format(twoYearsAgo, 'yyyy/MM')
+      const monthEnd = format(currentDate, 'yyyy/MM')
+
+      promises.push(
+        this.gainsRepository.searchMany(
+          organizationId,
+          undefined, // date
+          undefined, // bankId
+          monthStart,
+          monthEnd,
+        ),
+      )
+    }
+
+    if (context.needsGoals) {
+      promises.push(this.goalsRepository.findByOrganizationId(organizationId))
+    }
+
+    if (context.needsCredits) {
+      // Get credit transactions from the last 2 years to provide comprehensive context
+      const twoYearsAgo = new Date()
+      twoYearsAgo.setFullYear(twoYearsAgo.getFullYear() - 2)
+      const currentDate = new Date()
+
+      const monthStart = format(twoYearsAgo, 'yyyy/MM')
+      const monthEnd = format(currentDate, 'yyyy/MM')
+
+      promises.push(
+        this.creditsRepository.searchMany(
+          organizationId,
+          undefined, // date
+          undefined, // bankId
+          monthStart,
+          monthEnd,
+        ),
+      )
+    }
+
+    if (context.needsCreditCards) {
+      promises.push(this.creditsRepository.searchCardList(organizationId))
+    }
+
+    if (context.needsInvestments) {
+      promises.push(
+        this.investmentRepository.findByOrganizationId(organizationId),
+      )
+    }
+
+    const results = await Promise.all(promises)
+
+    const organization = results[0]
+    const expensesTransactions = results[1]
+    const gainsTransactions = results[2]
+    const goals = results[3]
+    const creditTransactions = results[4]
+    const creditCardList = results[5]
+    const investments = results[6]
 
     if (!organization) {
       throw new Error('Organização não encontrada')
     }
+
     const systemPrompt: ChatMessage = {
       role: 'system',
       content: `Você é um assistente especializado da Boost Finance. Sua função é responder perguntas exclusivamente com base nas informações oficiais e disponíveis da Boost Finance. Com linguajar descontraído.
