@@ -91,7 +91,7 @@ export class TipsIaUseCase {
 
     const userPrompt = {
       role: 'user' as const,
-      content: `Receberá uma lista de transações do usuário (com descrição, categoria e valor). Sua tarefa é gerar **uma única dica de economia personalizada, curta e clara (máx. 2 frases)**.\n\nRegras:\n- Escolha apenas o gasto mais relevante, priorizando o de MAIOR valor ou que se repete mais vezes.\n- Ignore valores pequenos ou menos impactantes.\n- Seja assertivo e direto, evitando frases genéricas.\n- O tom deve ser motivador e amigável, mas objetivo.\n- Sugira apenas **uma ação prática** (ex.: 'cancele', 'reduza', 'substitua').\n- Escreva em português do Brasil.\n\nExemplo de saída:\n"Você gastou R$ 344 em delivery este mês 🍔. Reduzindo pela metade, já economiza R$ 170 para guardar."\n\nTransações do usuário:\n ${allTransactions.join(
+      content: `Receberá uma lista de transações do usuário (com descrição, categoria e valor). Sua tarefa é gerar **uma única dica de economia personalizada, curta e clara (máx. 2 frases)**.\n\nRegras:\n- Escolha apenas o gasto mais relevante, priorizando o de MAIOR valor ou que se repete mais vezes.\n- Ignore valores pequenos ou menos impactantes.\n- Ignore transações de categorias de **investimentos**.\n- Seja assertivo e direto, evitando frases genéricas.\n- O tom deve ser motivador e amigável, mas objetivo.\n- Sugira apenas **uma ação prática** (ex.: 'cancele', 'reduza', 'substitua').\n- Escreva em português do Brasil.\n\nExemplo de saída:\n"Você gastou R$ 344 em delivery este mês 🍔. Reduzindo pela metade, já economiza R$ 170 para guardar."\n\nTransações do usuário:\n ${allTransactions.join(
         '; ',
       )}`,
     }
