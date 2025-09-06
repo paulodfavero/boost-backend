@@ -39,14 +39,18 @@ export class CreateInvestmentUseCase {
         bankId,
       )
       if (existingInvestment) {
-        // Se já existe, fazer update das informações
-        const updatedInvestment = await this.investmentRepository.update(
-          existingInvestment.id,
-          {
-            investments,
-          },
-        )
-        return updatedInvestment
+        // Só fazer update se o novo investments.length for maior que o existente
+        if (investments.length > existingInvestment.investments.length) {
+          const updatedInvestment = await this.investmentRepository.update(
+            existingInvestment.id,
+            {
+              investments,
+            },
+          )
+          return updatedInvestment
+        }
+        // Se não for maior, retornar o investment existente sem alteração
+        return existingInvestment
       }
     }
 
