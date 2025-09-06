@@ -2,8 +2,10 @@ import { FastifyReply, FastifyRequest } from 'fastify'
 import { z } from 'zod'
 import jwt from 'jsonwebtoken'
 import { makeAuthenticateUseCase } from '@/use-cases/factories/make-authenticate-use-case'
+import { makeCreateAccessLogUseCase } from '@/use-cases/factories/make-create-access-log-use-case'
 import { InvalidCredentialsError } from '@/use-cases/errors/invalid-credentials-error'
 import { env } from '@/env'
+import { parseUserAgent, getClientIp } from '@/lib/device-info'
 
 export async function login(request: FastifyRequest, reply: FastifyReply) {
   const authenticateBodySchema = z.object({
@@ -20,6 +22,35 @@ export async function login(request: FastifyRequest, reply: FastifyReply) {
       email,
       password,
     })
+
+    // Extract device information from request
+    const userAgent = request.headers['user-agent']
+    const ipAddress = getClientIp(request)
+
+    // Skip logging for axios requests to avoid duplication
+    if (userAgent && userAgent.includes('axios')) {
+      // Don't create log for axios requests
+    } else {
+      let deviceInfo = {
+        deviceType: 'unknown',
+        browser: 'unknown',
+        os: 'unknown',
+      }
+      if (userAgent) {
+        deviceInfo = parseUserAgent(userAgent)
+      }
+
+      // Create access log only for browser requests
+      const createAccessLogUseCase = makeCreateAccessLogUseCase()
+      await createAccessLogUseCase.execute({
+        organizationId: organization.id,
+        userAgent,
+        ipAddress,
+        deviceType: deviceInfo.deviceType,
+        browser: deviceInfo.browser,
+        os: deviceInfo.os,
+      })
+    }
 
     const token = jwt.sign(
       {

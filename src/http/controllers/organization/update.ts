@@ -2,6 +2,8 @@ import { FastifyReply, FastifyRequest } from 'fastify'
 import { z } from 'zod'
 
 import { makeUpdateOrganizationUseCase } from '@/use-cases/factories/make-update-organization-use-case'
+import { makeCreateAccessLogUseCase } from '@/use-cases/factories/make-create-access-log-use-case'
+import { parseUserAgent, getClientIp } from '@/lib/device-info'
 
 export async function update(request: FastifyRequest, reply: FastifyReply) {
   const updateOrganizationParamsSchema = z.object({
@@ -22,6 +24,35 @@ export async function update(request: FastifyRequest, reply: FastifyReply) {
     organizationId,
     data,
   })
+
+  // Extract device information from request
+  const userAgent = request.headers['user-agent']
+  const ipAddress = getClientIp(request)
+
+  // Skip logging for axios requests to avoid duplication
+  if (userAgent && userAgent.includes('axios')) {
+    // Don't create log for axios requests
+  } else {
+    let deviceInfo = {
+      deviceType: 'unknown',
+      browser: 'unknown',
+      os: 'unknown',
+    }
+    if (userAgent) {
+      deviceInfo = parseUserAgent(userAgent)
+    }
+
+    // Create access log for organization update (only for browser requests)
+    const createAccessLogUseCase = makeCreateAccessLogUseCase()
+    await createAccessLogUseCase.execute({
+      organizationId,
+      userAgent,
+      ipAddress,
+      deviceType: deviceInfo.deviceType,
+      browser: deviceInfo.browser,
+      os: deviceInfo.os,
+    })
+  }
 
   return reply.status(201).send(result)
 }

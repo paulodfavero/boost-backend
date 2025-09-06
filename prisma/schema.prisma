@@ -29,6 +29,7 @@ model Organization {
   Suggestion         Suggestion[]
   User               User[]
   Investment         Investment[]
+  AccessLog          AccessLog[]
 
   @@map("organizations")
 }
@@ -308,4 +309,20 @@ model Investment {
   bankId String? @unique
 
   @@map("investments")
+}
+
+model AccessLog {
+  id             String       @id @default(dbgenerated("nanoid(11)"))
+  created_at     DateTime     @default(now())
+  updated_at     DateTime     @default(now())
+  organizationId String
+  user_agent     String?
+  ip_address     String?
+  device_type    String?
+  browser        String?
+  os             String?
+  location       String?
+  organization   Organization @relation(fields: [organizationId], references: [id])
+
+  @@map("access_logs")
 }
