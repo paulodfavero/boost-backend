@@ -99,11 +99,11 @@ export class ChatUseCase {
     const formattedTransactions = transactions
       .map((transaction) => {
         const date = transaction.purchase_date || transaction.expiration_date
-        return `data: ${
+        return `data compra: ${
           date ? format(new Date(date), 'dd/MM/yyyy') : 'N/A'
         }, valor: ${this.priceFormatter(transaction.amount)}, categoria: ${
           transaction.category || 'N/A'
-        }, descrição: ${transaction.description}`
+        }, nome da transação: ${transaction.description};`
       })
       .join('\n')
 
@@ -152,6 +152,18 @@ export class ChatUseCase {
       .join('\n')
   }
 
+  private formatBanks(banks?: any[]): string {
+    if (!banks || banks.length === 0) {
+      return 'Nenhum banco conectado'
+    }
+
+    return banks
+      .map((bank) => {
+        return `${bank.name}`
+      })
+      .join('\n')
+  }
+
   private analyzeMessageContext(messages: ChatMessage[]): {
     needsExpenses: boolean
     needsGains: boolean
@@ -159,6 +171,7 @@ export class ChatUseCase {
     needsCredits: boolean
     needsCreditCards: boolean
     needsInvestments: boolean
+    needsBanks: boolean
   } {
     // Always fetch all user data to provide comprehensive context
     // This ensures the AI has access to all user information regardless of the question
@@ -169,6 +182,7 @@ export class ChatUseCase {
       needsCredits: true,
       needsCreditCards: true,
       needsInvestments: true,
+      needsBanks: true,
     }
   }
 
@@ -223,6 +237,9 @@ export class ChatUseCase {
         ),
       )
     }
+    if (context.needsBanks) {
+      promises.push(this.banksRepository.findByOrganizationId(organizationId))
+    }
 
     if (context.needsGoals) {
       promises.push(this.goalsRepository.findByOrganizationId(organizationId))
@@ -263,10 +280,11 @@ export class ChatUseCase {
     const organization = results[0]
     const expensesTransactions = results[1]
     const gainsTransactions = results[2]
-    const goals = results[3]
-    const creditTransactions = results[4]
-    const creditCardList = results[5]
-    const investments = results[6]
+    const banks = results[3]
+    const goals = results[4]
+    const creditTransactions = results[5]
+    const creditCardList = results[6]
+    const investments = results[7]
 
     if (!organization) {
       throw new Error('Organização não encontrada')
@@ -290,6 +308,23 @@ export class ChatUseCase {
 
           **Categorias disponíveis para transações**:
           ${categories.map((cat: any) => `- ${cat.categoryName}`).join('\n')}
+
+          **Dados do usuário**:
+          - Nome do usuário: ${organization.name}.
+          - Dia atual: ${format(new Date(), 'dd/MM/yyyy')}.
+          - Despesas: ${this.formatTransactions(expensesTransactions)}.
+          - Recebimentos: ${this.formatTransactions(
+            gainsTransactions,
+          )}.          
+          - Cartão de Crédito do usuário: ${this.formatCreditCards(
+            creditCardList,
+          )}
+          - Gastos no cartão de crédito: ${this.formatTransactions(
+            creditTransactions,
+          )}.
+          - Planejamento dos gastos: ${this.formatGoals(goals)}.
+          - Bancos conectados: ${this.formatBanks(banks)}.
+          - Investimentos: ${this.formatInvestments(investments)}.
 
           **Sobre a Boost Finance**:
           - A Boost Finance é uma plataforma de educação e planejamento financeiro pessoal
@@ -350,29 +385,14 @@ export class ChatUseCase {
             - Gerenciamento de Receitas e Despesas
             - Alertas de vencimento de contas
             - Relatório de gastos por categoria
-            - Comparação mês a mês no período de 12 meses
-          
-          **Dados do usuário**:
-          - Nome do usuário: ${organization.name}.
-          - Dia atual: ${format(new Date(), 'dd/MM/yyyy')}.
-          - Despesas: ${this.formatTransactions(expensesTransactions)}.
-          - Recebimentos: ${this.formatTransactions(
-            gainsTransactions,
-          )}.          
-          - Cartão de Crédito do usuário: ${this.formatCreditCards(
-            creditCardList,
-          )}
-          - Gastos no cartão de crédito: ${this.formatTransactions(
-            creditTransactions,
-          )}.
-          - Planejamento dos gastos: ${this.formatGoals(goals)}.
-          - Investimentos: ${this.formatInvestments(investments)}.
+            - Comparação mês a mês no período de 12 meses        
         `,
     }
-
+    console.log('systemPrompt', systemPrompt)
     try {
       const stream = await this.openai.chat.completions.create({
-        model: 'gpt-4o-mini',
+        model: 'gpt-4.1-mini',
+        store: true,
         stream: true,
         temperature: 0.2,
         messages: [systemPrompt, ...messages],
