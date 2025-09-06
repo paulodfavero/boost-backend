@@ -71,6 +71,7 @@ export async function createCheckoutSession(
       return reply.status(400).send({
         error: error.message,
         type: error.type,
+        code: error.code,
       })
     }
 
