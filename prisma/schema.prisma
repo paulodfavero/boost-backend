@@ -20,7 +20,7 @@ model Organization {
   welcome_email_sent Boolean           @default(false)
   trial_start        DateTime?
   trial_end          DateTime?
-  plan               String            @default("free")
+  plan               String            @default("FREE")
   BankTypeAccount    BankTypeAccount[]
   Bank               Bank[]
   Category           Category[]
