@@ -81,10 +81,15 @@ export class CreateOrganizationUseCase {
 
     const response = await this.organizationsRepository.create(data)
 
-    // Enviar e-mail de boas-vindas apenas para novas organizações
     if (email) {
       try {
         await this.emailService.sendWelcomeEmail(email, name)
+        await this.organizationsRepository.update({
+          organizationId: response.id,
+          data: {
+            welcome_email_sent: true,
+          },
+        })
       } catch (error) {
         console.error('❌ Erro ao enviar e-mail de boas-vindas:', error)
         // Não falha a criação da organização se o e-mail falhar
