@@ -19,6 +19,8 @@ interface OrganizationResponse {
   created: boolean
   organizationId: string
   hasPassword: boolean
+  plan: string
+  trialEnd?: Date | null
 }
 
 export class CreateOrganizationUseCase {
@@ -40,7 +42,14 @@ export class CreateOrganizationUseCase {
     )
 
     if (hasOrganization) {
-      const { name, email, id: organizationId, password } = hasOrganization
+      const {
+        name,
+        email,
+        id: organizationId,
+        password,
+        plan,
+        trial_end,
+      } = hasOrganization
       return {
         id: organizationId,
         name,
@@ -49,12 +58,20 @@ export class CreateOrganizationUseCase {
         created: true,
         organizationId,
         hasPassword: !!password,
+        plan,
+        trialEnd: trial_end,
       }
     }
+
+    const now = new Date()
+    const trialEnd = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000) // 7 dias
 
     const data: any = {
       name,
       email,
+      plan: 'TRIAL',
+      trial_start: now,
+      trial_end: trialEnd,
     }
 
     if (password) {
@@ -82,6 +99,8 @@ export class CreateOrganizationUseCase {
       created: false,
       organizationId: response.id,
       hasPassword: !!password,
+      plan: response.plan,
+      trialEnd: response.trial_end,
     }
   }
 }

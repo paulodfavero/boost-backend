@@ -14,6 +14,8 @@ interface GetOrganizationUseCaseResponse {
   cpf?: string | null
   email: string | null
   stripeCustomerId: string | null
+  plan: string
+  trialEnd?: Date | null
 }
 
 export class GetOrganizationUseCase {
@@ -37,6 +39,8 @@ export class GetOrganizationUseCase {
       cpf: organization.cpf,
       email: organization.email,
       stripeCustomerId: organization.stripe_customer_id,
+      plan: organization.plan,
+      trialEnd: organization.trial_end,
     }
   }
 }
