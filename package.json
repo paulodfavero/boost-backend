@@ -37,6 +37,7 @@
     "@types/stripe": "8.0.417",
     "bcryptjs": "2.4.3",
     "date-fns": "2.30.0",
+    "date-fns-holiday-br": "1.0.7",
     "dayjs": "1.11.7",
     "dotenv": "16.0.3",
     "fastify": "^4.17.0",
