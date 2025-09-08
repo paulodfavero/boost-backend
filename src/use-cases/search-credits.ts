@@ -214,10 +214,23 @@ export class SearchCreditUseCase {
               )
               .filter((credit) => {
                 if (credit.purchase_date) {
-                  return isBefore(
+                  console.log(
+                    'credit.purchase_date',
+                    new Date(credit.purchase_date),
+                  )
+
+                  const aqui = isBefore(
                     new Date(credit.purchase_date),
                     new Date(getBalances?.balanceCloseDate ?? ''),
                   )
+                  aqui &&
+                    console.log(
+                      'aqui',
+                      credit.purchase_date,
+                      credit.description,
+                      credit.amount,
+                    )
+                  return aqui
                 }
                 return false
               })
@@ -225,7 +238,7 @@ export class SearchCreditUseCase {
                 acc += credit.amount
                 return acc
               }, 0)
-
+            console.log('getNextCredit', getNextCredit)
             const getCurrentBalance = creditsFormated
               .filter(
                 (credit) => credit.bankTypeAccountId === bankTypeAccountId,
@@ -236,13 +249,21 @@ export class SearchCreditUseCase {
                   //   'credit.purchase_date',
                   //   new Date(credit.purchase_date),
                   // )
-                  return isAfter(
+                  const aqui = isAfter(
                     new Date(credit.purchase_date),
                     subMonths(
                       subDays(new Date(getBalances?.balanceCloseDate ?? ''), 1),
                       1,
                     ),
                   )
+                  aqui &&
+                    console.log(
+                      'aqui 2',
+                      credit.purchase_date,
+                      credit.description,
+                      credit.amount,
+                    )
+                  return aqui
                 }
                 return false
               })
