@@ -1,6 +1,18 @@
 import { CreditsRepository } from '@/repositories/credit-repository'
 import { ExpensesRepository } from '@/repositories/expense-repository'
-import { addMonths, format, subMonths } from 'date-fns'
+import {
+  addMonths,
+  format,
+  subMonths,
+  getYear,
+  getMonth,
+  isWeekend,
+  addDays,
+  isBefore,
+  isAfter,
+  subDays,
+} from 'date-fns'
+import { isNationalHoliday } from 'date-fns-holiday-br'
 import {
   BanksRepository,
   BanksTypeAccountRepository,
@@ -19,6 +31,54 @@ export class SearchCreditUseCase {
     private BankRepository: BanksRepository,
     private BankTypeAccountRepository: BanksTypeAccountRepository,
   ) {}
+
+  private getNextBusinessDay(date: Date): Date {
+    let currentDate = new Date(date)
+
+    while (isWeekend(currentDate) || isNationalHoliday(currentDate)) {
+      currentDate = addDays(currentDate, 1)
+    }
+
+    return currentDate
+  }
+
+  private calculateBalanceDueDate(
+    bankTypeAccount: any,
+    currentDate: string,
+  ): { balanceDueDate: string; balanceCloseDate: string } | null {
+    if (!bankTypeAccount?.balance_due_date_week_day) {
+      return null
+    }
+
+    const currentDateObj = new Date(currentDate)
+    const year = getYear(currentDateObj)
+    const currentMonth = getMonth(currentDateObj) + 1 // getMonth retorna 0-11, então adicionamos 1
+    const nextMonth = currentMonth === 12 ? 1 : currentMonth + 1
+    const nextYear = currentMonth === 12 ? year + 1 : year
+
+    // Criar a data com o ano, mês atual + 1, e o dia da semana do balance_due_date_week_day
+    const balanceDueDateRaw = new Date(
+      nextYear,
+      nextMonth - 1,
+      parseInt(bankTypeAccount.balance_due_date_week_day),
+    )
+
+    // Criar a data com o ano, mês atual + 1, e o dia da semana do balance_close_date_week_day
+    const balanceCloseDateRaw = new Date(
+      nextYear,
+      nextMonth - 1,
+      parseInt(bankTypeAccount.balance_close_date_week_day),
+    )
+
+    // Ajustar apenas balanceDueDate para próximo dia útil se necessário
+    const balanceDueDate = this.getNextBusinessDay(balanceDueDateRaw)
+    const balanceCloseDate = balanceCloseDateRaw
+
+    return {
+      balanceDueDate: balanceDueDate?.toISOString(),
+      balanceCloseDate: balanceCloseDate?.toISOString(),
+    }
+  }
 
   async execute({
     organizationId,
@@ -74,7 +134,7 @@ export class SearchCreditUseCase {
       nextMonth,
       bankId,
     )
-
+    // console.log('nextCredit', nextCredit)
     previousExpense.map(({ amount, paid }) => {
       previousMonthTotalExpenses += amount
       if (paid) previousMonthReceivedExpenses += amount
@@ -102,6 +162,15 @@ export class SearchCreditUseCase {
       if (paid) receivedExpenses += amount
       return true
     })
+    // Map para armazenar os cálculos de balance por bankTypeAccountId
+    const balanceAmountMap = new Map<
+      string,
+      {
+        balanceAmount: number
+        balanceDueDate: string | null
+        balanceCloseDate: string | null
+      }
+    >()
 
     const credits = await Promise.all(
       creditsFormated.map(
@@ -109,7 +178,6 @@ export class SearchCreditUseCase {
           id,
           expiration_date,
           purchase_date,
-          balance_close_date,
           description,
           category,
           company,
@@ -133,11 +201,73 @@ export class SearchCreditUseCase {
             ? await this.BankRepository.findById(bankId)
             : null
 
+          const getBalances = this.calculateBalanceDueDate(
+            bankTypeAccount,
+            date,
+          )
+
+          // Só calcula o balance se ainda não foi calculado para este bankTypeAccountId
+          if (!balanceAmountMap.has(bankTypeAccountId ?? '')) {
+            const getNextCredit = nextCredit
+              .filter(
+                (credit) => credit.bankTypeAccountId === bankTypeAccountId,
+              )
+              .filter((credit) => {
+                if (credit.purchase_date) {
+                  return isBefore(
+                    new Date(credit.purchase_date),
+                    new Date(getBalances?.balanceCloseDate ?? ''),
+                  )
+                }
+                return false
+              })
+              .reduce((acc, credit) => {
+                acc += credit.amount
+                return acc
+              }, 0)
+
+            const getCurrentBalance = creditsFormated
+              .filter(
+                (credit) => credit.bankTypeAccountId === bankTypeAccountId,
+              )
+              .filter((credit) => {
+                if (credit.purchase_date) {
+                  // console.log(
+                  //   'credit.purchase_date',
+                  //   new Date(credit.purchase_date),
+                  // )
+                  return isAfter(
+                    new Date(credit.purchase_date),
+                    subMonths(
+                      subDays(new Date(getBalances?.balanceCloseDate ?? ''), 1),
+                      1,
+                    ),
+                  )
+                }
+                return false
+              })
+              .reduce((acc, credit) => {
+                acc += credit.amount
+                return acc
+              }, 0)
+
+            // Armazena o valor calculado no Map com as datas
+            balanceAmountMap.set(bankTypeAccountId ?? '', {
+              balanceAmount: getNextCredit + getCurrentBalance,
+              balanceDueDate: getBalances?.balanceDueDate || null,
+              balanceCloseDate: getBalances?.balanceCloseDate || null,
+            })
+          }
+
+          // console.log('Balance Due Date Calculation:', {
+          //   balanceDueDate: getBalances?.balanceDueDate,
+          //   balanceCloseDate: getBalances?.balanceCloseDate,
+          // })
+
           return {
             id,
             expirationDate: expiration_date,
             purchaseDate: purchase_date,
-            balanceCloseDate: balance_close_date,
             description,
             company,
             category,
@@ -155,7 +285,18 @@ export class SearchCreditUseCase {
       ),
     )
 
+    // Converte o Map para array de objetos
+    const balanceAmount = Array.from(balanceAmountMap.entries()).map(
+      ([bankTypeAccountId, balanceData]) => ({
+        bankTypeAccountId,
+        balanceAmount: balanceData.balanceAmount,
+        balanceDueDate: balanceData.balanceDueDate,
+        balanceCloseDate: balanceData.balanceCloseDate,
+      }),
+    )
+
     return {
+      balanceAmount,
       result: [...credits],
       previousMonth: {
         label: previousMonth,
