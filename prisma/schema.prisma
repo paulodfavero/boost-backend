@@ -192,32 +192,34 @@ model Bank {
 }
 
 model BankTypeAccount {
-  id              String        @id @default(dbgenerated("nanoid(11)"))
-  created_at      DateTime      @default(now())
-  type            String
-  subtype         String
-  name            String
-  marketing_name  String?
-  owner           String
-  balance         Float
-  currency_code   String
-  tax_number      String?
-  account_id      String        @unique
-  item_id         String
-  number          String
-  last_updated_at DateTime?
-  bank_data       String?
-  credit_data     String?
-  bankItemId      String
-  organizationId  String?
-  bankId          String?
-  name_alias      String?
-  is_bank_visible Boolean?      @default(true)
-  bank            Bank          @relation(fields: [bankItemId], references: [item_id])
-  organization    Organization? @relation(fields: [organizationId], references: [id])
-  Credit          Credit[]
-  expense         Expense[]
-  Gain            Gain[]
+  id                          String        @id @default(dbgenerated("nanoid(11)"))
+  created_at                  DateTime      @default(now())
+  type                        String
+  subtype                     String
+  name                        String
+  marketing_name              String?
+  owner                       String
+  balance                     Float
+  balance_due_date_week_day   String?
+  balance_close_date_week_day String?
+  currency_code               String
+  tax_number                  String?
+  account_id                  String        @unique
+  item_id                     String
+  number                      String
+  last_updated_at             DateTime?
+  bank_data                   String?
+  credit_data                 String?
+  bankItemId                  String
+  organizationId              String?
+  bankId                      String?
+  name_alias                  String?
+  is_bank_visible             Boolean?      @default(true)
+  bank                        Bank          @relation(fields: [bankItemId], references: [item_id])
+  organization                Organization? @relation(fields: [organizationId], references: [id])
+  Credit                      Credit[]
+  expense                     Expense[]
+  Gain                        Gain[]
 
   @@map("bankTypeAccount")
 }

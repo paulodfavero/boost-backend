@@ -7,9 +7,48 @@ import {
   BankNotFound,
   OrganizationNotFound,
 } from './errors/organization-not-found-error'
-import { Bank, Prisma } from '@prisma/client'
+import { Bank } from '@prisma/client'
+import { subDays } from 'date-fns'
 
-interface CreateBankUseCaseResponse {
+import { balanceCloseDateByBank } from '@/consts/balanceCloseDateByBank'
+
+// Função auxiliar para encontrar o cutOffRule baseado no nome do banco
+function findCutOffRule(bankName: string): number | null {
+  if (!bankName) return null
+
+  const normalizedBankName = bankName
+    .toLowerCase()
+    .replace(/\s+/g, '_')
+    .replace(/[^a-z0-9_]/g, '') // Remove caracteres especiais
+
+  // Busca exata primeiro
+  if (
+    balanceCloseDateByBank.find((bank) =>
+      bank.bankName.includes(normalizedBankName),
+    )
+  ) {
+    const result =
+      balanceCloseDateByBank.find((bank) =>
+        bank.bankName.includes(normalizedBankName),
+      )?.cutOffRule ?? null
+    return result
+  }
+
+  // Busca por contém (include/contain) - fallback
+  for (const bank of balanceCloseDateByBank) {
+    if (
+      normalizedBankName.includes(bank.bankName) ||
+      bank.bankName.includes(normalizedBankName)
+    ) {
+      const result = bank.cutOffRule
+      return result
+    }
+  }
+
+  return null
+}
+
+interface CreateUpBankUseCaseResponse {
   itemId: string
   name: string
   primaryColor: string
@@ -17,7 +56,7 @@ interface CreateBankUseCaseResponse {
   type: string
   imageUrl: string
   hasMFA: boolean
-  products?: Prisma.BankCreateproductsInput | undefined
+  products?: any
   status: string
   lastUpdatedAt: string | Date
   organizationId: string
@@ -59,7 +98,7 @@ export class CreateBankUseCase {
     status,
     lastUpdatedAt,
     organizationId,
-  }: CreateBankUseCaseResponse): Promise<Bank> {
+  }: CreateUpBankUseCaseResponse): Promise<Bank> {
     const organization = await this.organizationsRepository.findById(
       organizationId,
     )
@@ -145,6 +184,33 @@ export class CreateBankTypeAccountUseCase {
     )
     if (!organization) throw new OrganizationNotFound()
 
+    let balanceDueDateWeekDay: string | undefined
+    let balanceCloseDateWeekDay: string | undefined
+
+    if (creditData) {
+      try {
+        const parsedCreditData = JSON.parse(creditData)
+        if (parsedCreditData && parsedCreditData.balanceDueDate) {
+          const date = new Date(parsedCreditData.balanceDueDate)
+          balanceDueDateWeekDay = date.getDate().toString().padStart(2, '0')
+
+          const bankName = (bank as any).name
+
+          const cutOffRule = findCutOffRule(bankName)
+
+          if (cutOffRule !== null) {
+            const closeDate = subDays(date, cutOffRule)
+            balanceCloseDateWeekDay = closeDate
+              .getDate()
+              .toString()
+              .padStart(2, '0')
+          }
+        }
+      } catch (error) {
+        console.error('Erro ao fazer parse do creditData:', error)
+      }
+    }
+
     const isBankTypeCreated: any =
       await this.bankTypeAccountRepository.findByAccountId(accountId)
 
@@ -166,6 +232,8 @@ export class CreateBankTypeAccountUseCase {
         bank_data: bankData,
         credit_data: creditData,
         tax_number: taxNumber,
+        balance_due_date_week_day: balanceDueDateWeekDay,
+        balance_close_date_week_day: balanceCloseDateWeekDay,
         bank: {
           connect: {
             item_id: itemId,
@@ -195,6 +263,8 @@ export class CreateBankTypeAccountUseCase {
         bank_data: bankData,
         credit_data: creditData,
         tax_number: taxNumber,
+        balance_due_date_week_day: balanceDueDateWeekDay,
+        balance_close_date_week_day: balanceCloseDateWeekDay,
         bank: {
           connect: {
             item_id: itemId,
@@ -226,6 +296,8 @@ export class CreateBankTypeAccountUseCase {
       creditData: creditData ?? '',
       organizationId,
       taxNumber,
+      balanceDueDateWeekDay,
+      balanceCloseDateWeekDay,
     }
   }
 }
