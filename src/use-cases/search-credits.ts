@@ -220,8 +220,26 @@ export class SearchCreditUseCase {
                   )
 
                   const aqui = isBefore(
-                    new Date(credit.purchase_date),
-                    new Date(getBalances?.balanceCloseDate ?? ''),
+                    new Date(
+                      format(new Date(credit.purchase_date), 'yyyy/MM/dd'),
+                    ),
+                    new Date(
+                      format(
+                        new Date(getBalances?.balanceCloseDate ?? ''),
+                        'yyyy/MM/dd',
+                      ),
+                    ),
+                  )
+                  console.log(
+                    'isBefore comparison:',
+                    format(new Date(credit.purchase_date), 'yyyy/MM/dd'),
+                    'isBefore',
+                    format(
+                      new Date(getBalances?.balanceCloseDate ?? ''),
+                      'yyyy/MM/dd',
+                    ),
+                    '=',
+                    aqui,
                   )
                   aqui &&
                     console.log(
@@ -250,10 +268,17 @@ export class SearchCreditUseCase {
                   //   new Date(credit.purchase_date),
                   // )
                   const aqui = isAfter(
-                    new Date(credit.purchase_date),
-                    subMonths(
-                      subDays(new Date(getBalances?.balanceCloseDate ?? ''), 1),
-                      1,
+                    new Date(
+                      format(new Date(credit.purchase_date), 'yyyy/MM/dd'),
+                    ),
+                    new Date(
+                      subMonths(
+                        subDays(
+                          new Date(getBalances?.balanceCloseDate ?? ''),
+                          1,
+                        ),
+                        1,
+                      ),
                     ),
                   )
                   aqui &&
