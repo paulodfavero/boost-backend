@@ -213,15 +213,15 @@ export class SearchCreditUseCase {
                 (credit) => credit.bankTypeAccountId === bankTypeAccountId,
               )
               .filter((credit) => {
-                if (credit.purchase_date) {
+                if (credit.expiration_date) {
                   console.log(
-                    'credit.purchase_date',
-                    new Date(credit.purchase_date),
+                    'credit.expiration_date',
+                    new Date(credit.expiration_date),
                   )
 
                   const aqui = isBefore(
                     new Date(
-                      format(new Date(credit.purchase_date), 'yyyy/MM/dd'),
+                      format(new Date(credit.expiration_date), 'yyyy/MM/dd'),
                     ),
                     new Date(
                       format(
@@ -232,7 +232,7 @@ export class SearchCreditUseCase {
                   )
                   console.log(
                     'isBefore comparison:',
-                    format(new Date(credit.purchase_date), 'yyyy/MM/dd'),
+                    format(new Date(credit.expiration_date), 'yyyy/MM/dd'),
                     'isBefore',
                     format(
                       new Date(getBalances?.balanceCloseDate ?? ''),
@@ -244,7 +244,7 @@ export class SearchCreditUseCase {
                   aqui &&
                     console.log(
                       'aqui',
-                      credit.purchase_date,
+                      credit.expiration_date,
                       credit.description,
                       credit.amount,
                     )
@@ -262,14 +262,14 @@ export class SearchCreditUseCase {
                 (credit) => credit.bankTypeAccountId === bankTypeAccountId,
               )
               .filter((credit) => {
-                if (credit.purchase_date) {
+                if (credit.expiration_date) {
                   // console.log(
-                  //   'credit.purchase_date',
-                  //   new Date(credit.purchase_date),
+                  //   'credit.expiration_date',
+                  //   new Date(credit.expiration_date),
                   // )
                   const aqui = isAfter(
                     new Date(
-                      format(new Date(credit.purchase_date), 'yyyy/MM/dd'),
+                      format(new Date(credit.expiration_date), 'yyyy/MM/dd'),
                     ),
                     new Date(
                       subMonths(
@@ -284,7 +284,7 @@ export class SearchCreditUseCase {
                   aqui &&
                     console.log(
                       'aqui 2',
-                      credit.purchase_date,
+                      credit.expiration_date,
                       credit.description,
                       credit.amount,
                     )
