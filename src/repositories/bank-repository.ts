@@ -29,6 +29,8 @@ export interface CreateBankTypeAccountUseCaseResponse {
   bank_data?: string
   credit_data?: string
   tax_number?: string
+  balance_due_date_week_day?: string
+  balance_close_date_week_day?: string
   bank: {
     connect: {
       item_id: string
