@@ -65,5 +65,7 @@ export interface BanksTypeAccountRepository {
   updateNameAlias(data: {
     bankTypeAccountId: string
     nameAlias?: string
+    balance_close_date_week_day?: string
+    balance_due_date_week_day?: string
   }): Promise<BankTypeAccount>
 }

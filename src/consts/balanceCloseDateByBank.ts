@@ -141,7 +141,7 @@ export const balanceCloseDateByBank = [
   },
   {
     bankName: 'banco_sofisa',
-    cutOffRule: 7,
+    cutOffRule: 10,
     toValidate: true,
   },
   {
