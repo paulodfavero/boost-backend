@@ -185,6 +185,8 @@ export class PrismaBankTypeAccountRepository
   async updateNameAlias(data: {
     bankTypeAccountId: string
     nameAlias?: string
+    balance_close_date_week_day?: string
+    balance_due_date_week_day?: string
   }) {
     const bankTypeAccount = await prisma.bankTypeAccount.update({
       where: {
@@ -192,6 +194,8 @@ export class PrismaBankTypeAccountRepository
       },
       data: {
         name_alias: data.nameAlias,
+        balance_close_date_week_day: data.balance_close_date_week_day,
+        balance_due_date_week_day: data.balance_due_date_week_day,
       } as any,
     })
 

@@ -9,6 +9,8 @@ interface UpdateBankTypeAccountUseCaseRequest {
   bankTypeAccountId: string
   organizationId: string
   nameAlias?: string
+  balance_close_date_week_day?: string
+  balance_due_date_week_day?: string
 }
 
 export class UpdateBankTypeAccountUseCase {
@@ -21,6 +23,8 @@ export class UpdateBankTypeAccountUseCase {
     bankTypeAccountId,
     organizationId,
     nameAlias,
+    balance_close_date_week_day,
+    balance_due_date_week_day,
   }: UpdateBankTypeAccountUseCaseRequest): Promise<object> {
     const organization = await this.organizationsRepository.findById(
       organizationId,
@@ -35,6 +39,8 @@ export class UpdateBankTypeAccountUseCase {
     const response = await this.bankTypeAccountRepository.updateNameAlias({
       bankTypeAccountId,
       nameAlias,
+      balance_close_date_week_day,
+      balance_due_date_week_day,
     })
 
     return response

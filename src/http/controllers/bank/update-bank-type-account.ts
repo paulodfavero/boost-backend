@@ -14,11 +14,14 @@ export async function updateBankTypeAccount(
 
   const updateBankTypeAccountBodySchema = z.object({
     nameAlias: z.string().optional(),
+    balance_close_date_week_day: z.string().optional(),
+    balance_due_date_week_day: z.string().optional(),
   })
 
   const { bankTypeAccountId, organizationId } =
     updateBankTypeAccountParamsSchema.parse(request.params)
-  const { nameAlias } = updateBankTypeAccountBodySchema.parse(request.body)
+  const { nameAlias, balance_close_date_week_day, balance_due_date_week_day } =
+    updateBankTypeAccountBodySchema.parse(request.body)
 
   const updateBankTypeAccountUseCase = makeUpdateBankTypeAccountUseCase()
 
@@ -26,6 +29,8 @@ export async function updateBankTypeAccount(
     bankTypeAccountId,
     organizationId,
     nameAlias,
+    balance_close_date_week_day,
+    balance_due_date_week_day,
   })
 
   return reply.status(200).send(data)
