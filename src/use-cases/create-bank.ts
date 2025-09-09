@@ -247,7 +247,7 @@ export class CreateBankTypeAccountUseCase {
       })
       id = response.id
     } else {
-      const response = await this.bankTypeAccountRepository.updateByAccountId({
+      const updateData: any = {
         id,
         type,
         subtype,
@@ -263,8 +263,6 @@ export class CreateBankTypeAccountUseCase {
         bank_data: bankData,
         credit_data: creditData,
         tax_number: taxNumber,
-        balance_due_date_week_day: balanceDueDateWeekDay,
-        balance_close_date_week_day: balanceCloseDateWeekDay,
         bank: {
           connect: {
             item_id: itemId,
@@ -275,7 +273,20 @@ export class CreateBankTypeAccountUseCase {
             id: organizationId,
           },
         },
-      })
+      }
+
+      // Só atualiza os campos de data se não existirem no banco
+      if (!isBankTypeCreated.balance_due_date_week_day) {
+        updateData.balance_due_date_week_day = balanceDueDateWeekDay
+      }
+
+      if (!isBankTypeCreated.balance_close_date_week_day) {
+        updateData.balance_close_date_week_day = balanceCloseDateWeekDay
+      }
+
+      const response = await this.bankTypeAccountRepository.updateByAccountId(
+        updateData,
+      )
       id = response.id
     }
 
