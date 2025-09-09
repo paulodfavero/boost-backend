@@ -341,6 +341,54 @@ export class SearchCreditUseCase {
       }),
     )
 
+    // Format nextMonth credits similar to current month credits
+    const nextMonthCredits = await Promise.all(
+      nextCredit.map(
+        async ({
+          id,
+          expiration_date,
+          purchase_date,
+          description,
+          category,
+          company,
+          amount,
+          type_payment,
+          installment_current,
+          installment_total_payment,
+          group_installment_id,
+          paid,
+          bankId,
+          bankTypeAccountId,
+        }) => {
+          const bankTypeAccount = bankTypeAccountId
+            ? await this.BankTypeAccountRepository.findById(bankTypeAccountId)
+            : null
+
+          const bank = bankId
+            ? await this.BankRepository.findById(bankId)
+            : null
+
+          return {
+            id,
+            expirationDate: expiration_date,
+            purchaseDate: purchase_date,
+            description,
+            company,
+            category,
+            amount,
+            typePayment: type_payment,
+            installmentCurrent: installment_current,
+            installmentTotalPayment: installment_total_payment,
+            groupInstallmentId: group_installment_id,
+            paid,
+            bank,
+            bankName: (bank as any)?.name ?? null,
+            bankTypeAccount,
+          }
+        },
+      ),
+    )
+
     return {
       balanceAmount,
       result: [...credits],
@@ -364,6 +412,7 @@ export class SearchCreditUseCase {
         totalCredits: nextMonthTotalCredits,
         receivedExpenses: nextMonthReceivedExpenses,
         totalExpenses: nextMonthTotalExpenses,
+        credits: nextMonthCredits,
       },
     }
   }
