@@ -367,7 +367,7 @@ export class SearchCreditUseCase {
           const bank = bankId
             ? await this.BankRepository.findById(bankId)
             : null
-
+          if (!(bank as any)?.name) return null
           return {
             id,
             expirationDate: expiration_date,
