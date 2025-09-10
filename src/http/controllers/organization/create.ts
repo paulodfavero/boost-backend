@@ -31,9 +31,7 @@ export async function create(request: FastifyRequest, reply: FastifyReply) {
     if (!data) throw new Error()
     const { organizationId, created } = data
 
-    if (created) return reply.status(201).send(data)
-
-    // Extract device information from request (only for new organizations)
+    // Extract device information from request (for both new and existing organizations)
     const userAgent = request.headers['user-agent']
     const ipAddress = getClientIp(request)
 
@@ -50,7 +48,7 @@ export async function create(request: FastifyRequest, reply: FastifyReply) {
         deviceInfo = parseUserAgent(userAgent)
       }
 
-      // Create access log for new account creation (only for new organizations and browser requests)
+      // Create access log for both new and existing organizations (browser requests only)
       const createAccessLogUseCase = makeCreateAccessLogUseCase()
       await createAccessLogUseCase.execute({
         organizationId,
@@ -61,6 +59,8 @@ export async function create(request: FastifyRequest, reply: FastifyReply) {
         os: deviceInfo.os,
       })
     }
+
+    if (created) return reply.status(201).send(data)
     await createUserUseCase.execute({
       name,
       email,
