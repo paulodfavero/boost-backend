@@ -1,6 +1,7 @@
 import { OrganizationsRepository } from '@/repositories/organization-repository'
 import { EmailService } from '@/lib/email'
 import bcrypt from 'bcryptjs'
+import { OrganizationAlreadyExistsError } from './errors/organization-already-exist'
 
 interface CreateOrganizationUseCaseResponse {
   name: string
@@ -40,8 +41,15 @@ export class CreateOrganizationUseCase {
     const hasOrganization = await this.organizationsRepository.findByEmail(
       email,
     )
-
     if (hasOrganization) {
+      if (hasOrganization.password) throw new OrganizationAlreadyExistsError()
+      await this.organizationsRepository.update({
+        organizationId: hasOrganization.id,
+        data: {
+          updated_at: new Date(),
+        },
+      })
+
       const {
         name,
         email,

@@ -256,7 +256,6 @@ export class SearchCreditUseCase {
                 acc += credit.amount
                 return acc
               }, 0)
-            console.log('getNextCredit', getNextCredit)
             const getCurrentBalance = creditsFormated
               .filter(
                 (credit) => credit.bankTypeAccountId === bankTypeAccountId,
