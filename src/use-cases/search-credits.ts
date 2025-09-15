@@ -236,7 +236,10 @@ export class SearchCreditUseCase {
             }
           }
           // Só calcula o balance se ainda não foi calculado para este bankTypeAccountId
-          if (!balanceAmountMap.has(bankTypeAccountId ?? '')) {
+          if (
+            getBalances?.balanceCloseDate &&
+            !balanceAmountMap.has(bankTypeAccountId ?? '')
+          ) {
             const getNextCredit = nextCredit
               .filter(
                 (credit) => credit.bankTypeAccountId === bankTypeAccountId,
@@ -252,7 +255,7 @@ export class SearchCreditUseCase {
                     'new Date(format(new Date(getBalances?.balanceCloseDate ?? ""), "yyyy/MM/dd"))',
                     new Date(
                       format(
-                        new Date(getBalances?.balanceCloseDate ?? ''),
+                        new Date(getBalances?.balanceCloseDate),
                         'yyyy/MM/dd',
                       ),
                     ),
@@ -261,7 +264,7 @@ export class SearchCreditUseCase {
                     new Date(format(credit.expiration_date, 'yyyy/MM/dd')),
                     new Date(
                       format(
-                        new Date(getBalances?.balanceCloseDate ?? ''),
+                        new Date(getBalances?.balanceCloseDate),
                         'yyyy/MM/dd',
                       ),
                     ),
@@ -288,10 +291,7 @@ export class SearchCreditUseCase {
                     new Date(format(credit.expiration_date, 'yyyy/MM/dd')),
                     new Date(
                       subMonths(
-                        subDays(
-                          new Date(getBalances?.balanceCloseDate ?? ''),
-                          1,
-                        ),
+                        subDays(new Date(getBalances?.balanceCloseDate), 1),
                         1,
                       ),
                     ),
