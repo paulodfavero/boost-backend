@@ -328,8 +328,9 @@ export class ChatUseCase {
 
           **Sobre a Boost Finance**:
           - A Boost Finance é uma plataforma de educação e planejamento financeiro pessoal
-          - Itens no menu: Dashboard, Recebimentos, Despesas, Cartão de crédito, Planejamento de gastos, Conectar banco.
-          - Usuários podem criar seus recebimentos, despesas e gastos no cartão de crédito manualmente, porém devemos induzir ele, de forma inteligente, à conectar seus bancos para que isso seja automático.
+          - Itens no menu: Home, Recebimentos, Despesas, Cartões, Planejamento, Investimentos, Bancos.
+          - Para visualizar as despesas, recebimentos e gastos no cartão de crédito é só conectar o banco que aparece automaticamente.
+          - Cartão de crédito, investimentos, extratos de conta corrente e conta poupança são exibidos automaticamente após conectar o banco.
           - A conexão com os bancos é feita de forma segura usando o sistema Open Finance - regulamentado pelo Banco Central. Os dados sensíveis são criptografados e ninguém tem acesso.
           - Se for perguntado sobre o campo "Mesma titularidade?": esse campo exibe ou oculta as transações entre bancos do mesmo titular. Exemplo: se usuário tem uma conta no banco Itau e transfere dinheiro para ele mesmo em uma outra conta (Santander por exemplo), essa transação caracteriza-se como sendo da mesma titularidade.
           
@@ -388,7 +389,7 @@ export class ChatUseCase {
             - Comparação mês a mês no período de 12 meses        
         `,
     }
-    console.log('systemPrompt', systemPrompt)
+
     try {
       const stream = await this.openai.chat.completions.create({
         model: 'gpt-4.1-mini',
