@@ -24,10 +24,6 @@ interface SearchCreditsUseCaseRequest {
   bankId?: string
 }
 
-interface SearchCreditCardListUseCaseRequest {
-  organizationId: string
-}
-
 export class SearchCreditUseCase {
   constructor(
     private CreditsRepository: CreditsRepository,
@@ -212,31 +208,23 @@ export class SearchCreditUseCase {
 
           // Aplicar a mesma lógica do balance: só retorna transações que estão na conta
           if (expiration_date && getBalances?.balanceCloseDate) {
-            // Validar se as datas são válidas antes de usar
-            const expirationDate = new Date(expiration_date)
-            const balanceCloseDate = new Date(getBalances.balanceCloseDate)
-
-            if (
-              isNaN(expirationDate.getTime()) ||
-              isNaN(balanceCloseDate.getTime())
-            ) {
-              console.error('Invalid date values:', {
-                expiration_date,
-                balanceCloseDate: getBalances.balanceCloseDate,
-              })
-              return null
-            }
-
             // Condição 1: isBefore - transação deve estar antes da data de fechamento
             const isBeforeCloseDate = isBefore(
-              new Date(format(expirationDate, 'yyyy/MM/dd')),
-              new Date(format(balanceCloseDate, 'yyyy/MM/dd')),
+              new Date(format(new Date(expiration_date), 'yyyy/MM/dd')),
+              new Date(
+                format(new Date(getBalances.balanceCloseDate), 'yyyy/MM/dd'),
+              ),
             )
 
             // Condição 2: isAfter - transação deve estar após (data de fechamento - 1 mês - 1 dia)
             const isAfterCloseDateMinusMonthAndDay = isAfter(
-              new Date(format(expirationDate, 'yyyy/MM/dd')),
-              new Date(subMonths(subDays(balanceCloseDate, 1), 1)),
+              new Date(format(new Date(expiration_date), 'yyyy/MM/dd')),
+              new Date(
+                subMonths(
+                  subDays(new Date(getBalances.balanceCloseDate), 1),
+                  1,
+                ),
+              ),
             )
 
             // Se não atender a ambas as condições, não retorna a transação
@@ -252,22 +240,21 @@ export class SearchCreditUseCase {
               )
               .filter((credit) => {
                 if (credit.expiration_date) {
-                  const creditExpirationDate = new Date(credit.expiration_date)
-
-                  const balanceCloseDate = new Date(
-                    getBalances?.balanceCloseDate ?? '',
+                  console.log(
+                    'credit.expiration_date',
+                    new Date(credit.expiration_date),
                   )
 
-                  if (
-                    isNaN(creditExpirationDate.getTime()) ||
-                    isNaN(balanceCloseDate.getTime())
-                  ) {
-                    return false
-                  }
-
                   return isBefore(
-                    new Date(format(creditExpirationDate, 'yyyy/MM/dd')),
-                    new Date(format(balanceCloseDate, 'yyyy/MM/dd')),
+                    new Date(
+                      format(new Date(credit.expiration_date), 'yyyy/MM/dd'),
+                    ),
+                    new Date(
+                      format(
+                        new Date(getBalances?.balanceCloseDate ?? ''),
+                        'yyyy/MM/dd',
+                      ),
+                    ),
                   )
                 }
                 return false
@@ -286,21 +273,19 @@ export class SearchCreditUseCase {
                   //   'credit.expiration_date',
                   //   new Date(credit.expiration_date),
                   // )
-                  const creditExpirationDate = new Date(credit.expiration_date)
-                  const balanceCloseDate = new Date(
-                    getBalances?.balanceCloseDate ?? '',
-                  )
-
-                  if (
-                    isNaN(creditExpirationDate.getTime()) ||
-                    isNaN(balanceCloseDate.getTime())
-                  ) {
-                    return false
-                  }
-
                   return isAfter(
-                    new Date(format(creditExpirationDate, 'yyyy/MM/dd')),
-                    new Date(subMonths(subDays(balanceCloseDate, 1), 1)),
+                    new Date(
+                      format(new Date(credit.expiration_date), 'yyyy/MM/dd'),
+                    ),
+                    new Date(
+                      subMonths(
+                        subDays(
+                          new Date(getBalances?.balanceCloseDate ?? ''),
+                          1,
+                        ),
+                        1,
+                      ),
+                    ),
                   )
                 }
                 return false
@@ -389,31 +374,23 @@ export class SearchCreditUseCase {
 
           // Aplicar a mesma lógica do balance: só retorna transações que estão na conta
           if (expiration_date && getBalances?.balanceCloseDate) {
-            // Validar se as datas são válidas antes de usar
-            const expirationDate = new Date(expiration_date)
-            const balanceCloseDate = new Date(getBalances.balanceCloseDate)
-
-            if (
-              isNaN(expirationDate.getTime()) ||
-              isNaN(balanceCloseDate.getTime())
-            ) {
-              console.error('Invalid date values:', {
-                expiration_date,
-                balanceCloseDate: getBalances.balanceCloseDate,
-              })
-              return null
-            }
-
             // Condição 1: isBefore - transação deve estar antes da data de fechamento
             const isBeforeCloseDate = isBefore(
-              new Date(format(expirationDate, 'yyyy/MM/dd')),
-              new Date(format(balanceCloseDate, 'yyyy/MM/dd')),
+              new Date(format(new Date(expiration_date), 'yyyy/MM/dd')),
+              new Date(
+                format(new Date(getBalances.balanceCloseDate), 'yyyy/MM/dd'),
+              ),
             )
 
             // Condição 2: isAfter - transação deve estar após (data de fechamento - 1 mês - 1 dia)
             const isAfterCloseDateMinusMonthAndDay = isAfter(
-              new Date(format(expirationDate, 'yyyy/MM/dd')),
-              new Date(subMonths(subDays(balanceCloseDate, 1), 1)),
+              new Date(format(new Date(expiration_date), 'yyyy/MM/dd')),
+              new Date(
+                subMonths(
+                  subDays(new Date(getBalances.balanceCloseDate), 1),
+                  1,
+                ),
+              ),
             )
 
             // Se não atender a ambas as condições, não retorna a transação
@@ -485,7 +462,7 @@ export class SearchCreditCardListUseCase {
 
   async execute({
     organizationId,
-  }: SearchCreditCardListUseCaseRequest): Promise<object> {
+  }: SearchCreditsUseCaseRequest): Promise<object> {
     const creditsFormated =
       (await this.BankTypeAccountRepository.findByOrganizationId(
         organizationId,
