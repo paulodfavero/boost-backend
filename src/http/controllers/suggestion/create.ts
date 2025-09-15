@@ -17,7 +17,7 @@ export async function create(request: FastifyRequest, reply: FastifyReply) {
   const { amountByMonth, isUseful, message } = createSuggestionBodySchema.parse(
     request.body,
   )
-  console.log('%ccreate.ts line:15 aqui', 'color: #007acc;')
+
   const createSuggestionUseCase = makeCreateSuggestionUseCase()
 
   const data = await createSuggestionUseCase.execute({

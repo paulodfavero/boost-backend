@@ -31,7 +31,6 @@ export class DeleteBankUseCase {
       organizationId,
     )
 
-    /// //// aqui rolam as validações
     if (!organization) throw new OrganizationNotFound()
     console.log(bankId, organizationId)
     await this.gainsRepository.deleteMany(bankId)

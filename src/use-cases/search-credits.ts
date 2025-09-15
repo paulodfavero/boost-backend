@@ -24,6 +24,10 @@ interface SearchCreditsUseCaseRequest {
   bankId?: string
 }
 
+interface SearchCreditCardListUseCaseRequest {
+  organizationId: string
+}
+
 export class SearchCreditUseCase {
   constructor(
     private CreditsRepository: CreditsRepository,
@@ -245,7 +249,7 @@ export class SearchCreditUseCase {
                     new Date(credit.expiration_date),
                   )
 
-                  const aqui = isBefore(
+                  return isBefore(
                     new Date(
                       format(new Date(credit.expiration_date), 'yyyy/MM/dd'),
                     ),
@@ -256,25 +260,6 @@ export class SearchCreditUseCase {
                       ),
                     ),
                   )
-                  console.log(
-                    'isBefore comparison:',
-                    format(new Date(credit.expiration_date), 'yyyy/MM/dd'),
-                    'isBefore',
-                    format(
-                      new Date(getBalances?.balanceCloseDate ?? ''),
-                      'yyyy/MM/dd',
-                    ),
-                    '=',
-                    aqui,
-                  )
-                  aqui &&
-                    console.log(
-                      'aqui',
-                      credit.expiration_date,
-                      credit.description,
-                      credit.amount,
-                    )
-                  return aqui
                 }
                 return false
               })
@@ -292,7 +277,7 @@ export class SearchCreditUseCase {
                   //   'credit.expiration_date',
                   //   new Date(credit.expiration_date),
                   // )
-                  const aqui = isAfter(
+                  return isAfter(
                     new Date(
                       format(new Date(credit.expiration_date), 'yyyy/MM/dd'),
                     ),
@@ -306,14 +291,6 @@ export class SearchCreditUseCase {
                       ),
                     ),
                   )
-                  aqui &&
-                    console.log(
-                      'aqui 2',
-                      credit.expiration_date,
-                      credit.description,
-                      credit.amount,
-                    )
-                  return aqui
                 }
                 return false
               })
@@ -489,7 +466,7 @@ export class SearchCreditCardListUseCase {
 
   async execute({
     organizationId,
-  }: SearchCreditsUseCaseRequest): Promise<object> {
+  }: SearchCreditCardListUseCaseRequest): Promise<object> {
     const creditsFormated =
       (await this.BankTypeAccountRepository.findByOrganizationId(
         organizationId,
