@@ -253,7 +253,6 @@ export class SearchCreditUseCase {
               .filter((credit) => {
                 if (credit.expiration_date) {
                   const creditExpirationDate = new Date(credit.expiration_date)
-                  console.log('credit.expiration_date', creditExpirationDate)
 
                   const balanceCloseDate = new Date(
                     getBalances?.balanceCloseDate ?? '',
