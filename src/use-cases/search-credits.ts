@@ -134,7 +134,6 @@ export class SearchCreditUseCase {
       nextMonth,
       bankId,
     )
-    // console.log('nextCredit', nextCredit)
     previousExpense.map(({ amount, paid }) => {
       previousMonthTotalExpenses += amount
       if (paid) previousMonthReceivedExpenses += amount
@@ -205,7 +204,6 @@ export class SearchCreditUseCase {
             bankTypeAccount,
             date,
           )
-          console.log('getBalances', getBalances)
           // Aplicar a mesma lógica do balance: só retorna transações que estão na conta
           if (expiration_date && getBalances?.balanceCloseDate) {
             // Condição 1: isBefore - transação deve estar antes da data de fechamento
@@ -215,7 +213,6 @@ export class SearchCreditUseCase {
                 format(new Date(getBalances.balanceCloseDate), 'yyyy/MM/dd'),
               ),
             )
-            console.log('isBeforeCloseDate', isBeforeCloseDate)
             // Condição 2: isAfter - transação deve estar após (data de fechamento - 1 mês - 1 dia)
             const isAfterCloseDateMinusMonthAndDay = isAfter(
               new Date(format(expiration_date, 'yyyy/MM/dd')),
@@ -225,10 +222,6 @@ export class SearchCreditUseCase {
                   1,
                 ),
               ),
-            )
-            console.log(
-              'isAfterCloseDateMinusMonthAndDay',
-              isAfterCloseDateMinusMonthAndDay,
             )
             // Se não atender a ambas as condições, não retorna a transação
             if (!(isBeforeCloseDate && isAfterCloseDateMinusMonthAndDay)) {
@@ -246,20 +239,6 @@ export class SearchCreditUseCase {
               )
               .filter((credit) => {
                 if (credit.expiration_date) {
-                  console.log('credit.expiration_date', credit.expiration_date)
-                  console.log(
-                    'new Date(format(credit.expiration_date, "yyyy/MM/dd"))',
-                    new Date(format(credit.expiration_date, 'yyyy/MM/dd')),
-                  )
-                  console.log(
-                    'new Date(format(new Date(getBalances?.balanceCloseDate ?? ""), "yyyy/MM/dd"))',
-                    new Date(
-                      format(
-                        new Date(getBalances?.balanceCloseDate),
-                        'yyyy/MM/dd',
-                      ),
-                    ),
-                  )
                   return isBefore(
                     new Date(format(credit.expiration_date, 'yyyy/MM/dd')),
                     new Date(
@@ -276,17 +255,12 @@ export class SearchCreditUseCase {
                 acc += credit.amount
                 return acc
               }, 0)
-            console.log('getNextCredit', getNextCredit)
             const getCurrentBalance = creditsFormated
               .filter(
                 (credit) => credit.bankTypeAccountId === bankTypeAccountId,
               )
               .filter((credit) => {
                 if (credit.expiration_date) {
-                  // console.log(
-                  //   'credit.expiration_date',
-                  //   credit.expiration_date,
-                  // )
                   return isAfter(
                     new Date(format(credit.expiration_date, 'yyyy/MM/dd')),
                     new Date(
@@ -303,7 +277,6 @@ export class SearchCreditUseCase {
                 acc += credit.amount
                 return acc
               }, 0)
-            console.log('getCurrentBalance', getCurrentBalance)
             // Armazena o valor calculado no Map com as datas
             balanceAmountMap.set(bankTypeAccountId ?? '', {
               balanceAmount: getNextCredit + getCurrentBalance,
@@ -311,11 +284,6 @@ export class SearchCreditUseCase {
               balanceCloseDate: getBalances?.balanceCloseDate || null,
             })
           }
-
-          // console.log('Balance Due Date Calculation:', {
-          //   balanceDueDate: getBalances?.balanceDueDate,
-          //   balanceCloseDate: getBalances?.balanceCloseDate,
-          // })
 
           return {
             id,
