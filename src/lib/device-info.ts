@@ -12,7 +12,12 @@ export function parseUserAgent(userAgent: string): DeviceInfo {
   if (
     ua.includes('mobile') ||
     ua.includes('android') ||
-    ua.includes('iphone')
+    ua.includes('iphone') ||
+    ua.includes('phone') ||
+    ua.includes('webview') ||
+    ua.includes('okhttp') || // Android HTTP client
+    ua.includes('reactnative') ||
+    ua.includes('flutter')
   ) {
     deviceType = 'mobile'
   } else if (ua.includes('tablet') || ua.includes('ipad')) {
@@ -31,6 +36,14 @@ export function parseUserAgent(userAgent: string): DeviceInfo {
     browser = 'edge'
   } else if (ua.includes('opera') || ua.includes('opr')) {
     browser = 'opera'
+  } else if (ua.includes('webview')) {
+    browser = 'webview'
+  } else if (ua.includes('okhttp')) {
+    browser = 'okhttp'
+  } else if (ua.includes('reactnative')) {
+    browser = 'react-native'
+  } else if (ua.includes('flutter')) {
+    browser = 'flutter'
   }
 
   // Detect OS
@@ -66,4 +79,29 @@ export function getClientIp(req: any): string | undefined {
     req.socket?.remoteAddress ||
     req.ip
   )
+}
+
+// Debug function to test User-Agent parsing
+export function debugUserAgent(userAgent: string): {
+  original: string
+  parsed: DeviceInfo
+  analysis: string
+} {
+  const parsed = parseUserAgent(userAgent)
+  const ua = userAgent.toLowerCase()
+
+  let analysis = 'Analysis:\n'
+  analysis += `- Contains 'mobile': ${ua.includes('mobile')}\n`
+  analysis += `- Contains 'android': ${ua.includes('android')}\n`
+  analysis += `- Contains 'iphone': ${ua.includes('iphone')}\n`
+  analysis += `- Contains 'webview': ${ua.includes('webview')}\n`
+  analysis += `- Contains 'okhttp': ${ua.includes('okhttp')}\n`
+  analysis += `- Contains 'reactnative': ${ua.includes('reactnative')}\n`
+  analysis += `- Contains 'flutter': ${ua.includes('flutter')}\n`
+
+  return {
+    original: userAgent,
+    parsed,
+    analysis,
+  }
 }
