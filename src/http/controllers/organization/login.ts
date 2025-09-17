@@ -35,6 +35,7 @@ export async function login(request: FastifyRequest, reply: FastifyReply) {
         deviceType: 'unknown',
         browser: 'unknown',
         os: 'unknown',
+        platform: 'web',
       }
       if (userAgent) {
         deviceInfo = parseUserAgent(userAgent)
@@ -49,6 +50,7 @@ export async function login(request: FastifyRequest, reply: FastifyReply) {
         deviceType: deviceInfo.deviceType,
         browser: deviceInfo.browser,
         os: deviceInfo.os,
+        platform: deviceInfo.platform,
       })
     }
 

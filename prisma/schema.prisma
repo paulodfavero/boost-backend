@@ -327,6 +327,7 @@ model AccessLog {
   browser        String?
   os             String?
   location       String?
+  platform       String?
   organization   Organization @relation(fields: [organizationId], references: [id])
 
   @@map("access_logs")
