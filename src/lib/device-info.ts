@@ -19,7 +19,9 @@ export function parseUserAgent(userAgent: string): DeviceInfo {
     ua.includes('okhttp') || // Android HTTP client
     ua.includes('reactnative') ||
     ua.includes('flutter') ||
-    ua.includes('alamofire') // iOS HTTP client
+    ua.includes('alamofire') || // iOS HTTP client
+    ua.includes('ios') || // iOS in custom user agents
+    ua.includes('boostfinance') // Custom app user agent
   ) {
     deviceType = 'mobile'
   } else if (ua.includes('tablet') || ua.includes('ipad')) {
@@ -48,6 +50,8 @@ export function parseUserAgent(userAgent: string): DeviceInfo {
     browser = 'flutter'
   } else if (ua.includes('alamofire')) {
     browser = 'alamofire'
+  } else if (ua.includes('boostfinance')) {
+    browser = 'boostfinance-app'
   }
 
   // Detect OS - Fixed iOS detection
@@ -75,7 +79,8 @@ export function parseUserAgent(userAgent: string): DeviceInfo {
     ua.includes('okhttp') ||
     ua.includes('reactnative') ||
     ua.includes('flutter') ||
-    ua.includes('alamofire')
+    ua.includes('alamofire') ||
+    ua.includes('boostfinance') // Custom app user agent
   ) {
     platform = 'mobile_app'
   } else if (ua.includes('electron') || ua.includes('tauri')) {
@@ -119,6 +124,7 @@ export function debugUserAgent(userAgent: string): {
   analysis += `- Contains 'reactnative': ${ua.includes('reactnative')}\n`
   analysis += `- Contains 'flutter': ${ua.includes('flutter')}\n`
   analysis += `- Contains 'alamofire': ${ua.includes('alamofire')}\n`
+  analysis += `- Contains 'boostfinance': ${ua.includes('boostfinance')}\n`
   analysis += `- Contains 'electron': ${ua.includes('electron')}\n`
   analysis += `- Contains 'tauri': ${ua.includes('tauri')}\n`
 
