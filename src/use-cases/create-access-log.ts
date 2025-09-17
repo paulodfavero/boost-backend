@@ -8,6 +8,7 @@ interface CreateAccessLogUseCaseRequest {
   browser?: string
   os?: string
   location?: string
+  platform?: string
 }
 
 interface CreateAccessLogUseCaseResponse {
@@ -22,6 +23,7 @@ interface CreateAccessLogUseCaseResponse {
     browser?: string | null
     os?: string | null
     location?: string | null
+    platform?: string | null
   }
 }
 
@@ -36,6 +38,7 @@ export class CreateAccessLogUseCase {
     browser,
     os,
     location,
+    platform,
   }: CreateAccessLogUseCaseRequest): Promise<CreateAccessLogUseCaseResponse> {
     const accessLog = await this.accessLogRepository.create({
       organization: {
@@ -49,6 +52,7 @@ export class CreateAccessLogUseCase {
       browser,
       os,
       location,
+      platform,
     })
 
     return {
@@ -63,6 +67,7 @@ export class CreateAccessLogUseCase {
         browser: accessLog.browser,
         os: accessLog.os,
         location: accessLog.location,
+        platform: accessLog.platform,
       },
     }
   }
