@@ -2,6 +2,7 @@ import { FastifyReply, FastifyRequest } from 'fastify'
 import { z } from 'zod'
 
 import { makeDeleteGainUseCase } from '@/use-cases/factories/make-delete-gain-use-case'
+import { invalidateCache } from '@/http/middlewares/cache'
 
 export async function deleteTransaction(
   request: FastifyRequest,
@@ -43,6 +44,9 @@ export async function deleteTransaction(
     organizationId,
     transactionId,
   })
+
+  // Invalidar cache de ganhos após exclusão
+  invalidateCache('gains')
 
   return reply.status(201).send(data)
 }

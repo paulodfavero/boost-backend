@@ -2,6 +2,7 @@ import { FastifyReply, FastifyRequest } from 'fastify'
 import { z } from 'zod'
 
 import { makeDeleteCreditUseCase } from '@/use-cases/factories/make-delete-credit-use-case'
+import { invalidateCache } from '@/http/middlewares/cache'
 
 export async function deleteTransaction(
   request: FastifyRequest,
@@ -22,6 +23,9 @@ export async function deleteTransaction(
     organizationId,
     transactionId,
   })
+
+  // Invalidar cache de créditos após exclusão
+  invalidateCache('credits')
 
   return reply.status(201).send(data)
 }

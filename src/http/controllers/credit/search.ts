@@ -4,9 +4,27 @@ import {
   makeSearchCreditCardListUseCase,
   makeSearchCreditUseCase,
 } from '@/use-cases/factories/make-search-credit-use-case'
+import {
+  cacheMiddleware,
+  saveToCache,
+  cacheConfigs,
+} from '@/http/middlewares/cache'
 
 export async function search(request: FastifyRequest, reply: FastifyReply) {
   try {
+    // Aplicar middleware de cache
+    await cacheMiddleware(cacheConfigs.credits)(request, reply)
+
+    // Se o cache retornou dados, a função já foi finalizada
+    if (reply.sent) {
+      console.log('🎯 GET /credit - Cache HIT - Dados retornados do cache')
+      return
+    }
+
+    console.log(
+      '🔄 GET /credit - Cache MISS - Executando busca no banco de dados',
+    )
+
     const searchQueryCreditsSchema = z.object({
       a: z.string(),
       date: z.string(),
@@ -21,6 +39,10 @@ export async function search(request: FastifyRequest, reply: FastifyReply) {
       date,
       bankId: bankId || '',
     })
+
+    // Salvar no cache
+    saveToCache(request, data, cacheConfigs.credits)
+    console.log('💾 GET /credit - Dados salvos no cache')
 
     return reply.status(200).send(data)
   } catch (err) {

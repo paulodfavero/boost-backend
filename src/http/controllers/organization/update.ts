@@ -4,6 +4,7 @@ import { z } from 'zod'
 import { makeUpdateOrganizationUseCase } from '@/use-cases/factories/make-update-organization-use-case'
 import { makeCreateAccessLogUseCase } from '@/use-cases/factories/make-create-access-log-use-case'
 import { parseUserAgent, getClientIp } from '@/lib/device-info'
+import { invalidateCache } from '@/http/middlewares/cache'
 
 export async function update(request: FastifyRequest, reply: FastifyReply) {
   const updateOrganizationParamsSchema = z.object({
@@ -53,6 +54,9 @@ export async function update(request: FastifyRequest, reply: FastifyReply) {
       os: deviceInfo.os,
     })
   }
+
+  // Invalidar cache de organizações após atualização
+  invalidateCache('organizations')
 
   return reply.status(201).send(result)
 }

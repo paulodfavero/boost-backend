@@ -4,6 +4,11 @@ import { GainsRepository } from '@/repositories/gain-repository'
 import { addMonths, format, subMonths } from 'date-fns'
 import { Credit, Bank } from '@prisma/client'
 
+// Helper function to check if a category is "Transferência mesma titularidade"
+const isSamePersonTransferCategory = (categoryName: string): boolean => {
+  return categoryName.includes('Transferência mesma titularidade')
+}
+
 type CreditWithBank = Credit & {
   bank: Bank | null
 }
@@ -12,6 +17,7 @@ interface SearchExpensesUseCaseRequest {
   organizationId: string
   date: string
   bankId?: string
+  isSamePersonTransfer?: boolean
 }
 
 export class SearchResultsUseCase {
@@ -25,6 +31,7 @@ export class SearchResultsUseCase {
     organizationId,
     date,
     bankId,
+    isSamePersonTransfer = false,
   }: SearchExpensesUseCaseRequest): Promise<object> {
     // Calculate 12 months period: 6 months before and 5 months after the given date
     const startMonth = format(subMonths(new Date(date), 6), 'y/MM')
@@ -63,7 +70,18 @@ export class SearchResultsUseCase {
 
     const twelveMonthsSequence = generate12MonthsSequence(new Date(startMonth))
 
-    const filteredByMonthExpenses = expensesFormated
+    // Filter expenses based on isSamePersonTransfer parameter
+    const filteredExpenses = expensesFormated.filter((expense) => {
+      if (isSamePersonTransfer) {
+        // When true, include all transactions including same person transfers
+        return true
+      } else {
+        // When false (default), exclude same person transfer transactions
+        return !isSamePersonTransferCategory(expense.category || '')
+      }
+    })
+
+    const filteredByMonthExpenses = filteredExpenses
       .map((transaction) => {
         const month = format(new Date(transaction.expiration_date), 'y/MM')
         return {
@@ -78,7 +96,7 @@ export class SearchResultsUseCase {
         }
         acc[month].push(transaction)
         return acc
-      }, {} as Record<string, typeof expensesFormated>)
+      }, {} as Record<string, typeof filteredExpenses>)
 
     const monthlyTotalsExpenses = Object.entries(
       filteredByMonthExpenses,
@@ -116,7 +134,18 @@ export class SearchResultsUseCase {
       }
     })
 
-    const filteredByMonthGains = currentGain
+    // Filter gains based on isSamePersonTransfer parameter
+    const filteredGains = currentGain.filter((gain) => {
+      if (isSamePersonTransfer) {
+        // When true, include all transactions including same person transfers
+        return true
+      } else {
+        // When false (default), exclude same person transfer transactions
+        return !isSamePersonTransferCategory(gain.category || '')
+      }
+    })
+
+    const filteredByMonthGains = filteredGains
       .map((transaction) => {
         const month = format(new Date(transaction.expiration_date), 'y/MM')
         return {
@@ -131,7 +160,7 @@ export class SearchResultsUseCase {
         }
         acc[month].push(transaction)
         return acc
-      }, {} as Record<string, typeof currentGain>)
+      }, {} as Record<string, typeof filteredGains>)
 
     const monthlyTotalsGains = Object.entries(filteredByMonthGains).reduce(
       (acc, [month, transactions]) => {

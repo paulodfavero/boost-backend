@@ -2,6 +2,7 @@ import { FastifyReply, FastifyRequest } from 'fastify'
 import { z } from 'zod'
 
 import { makeUpdateBankUseCase } from '@/use-cases/factories/make-update-bank-use-case'
+import { invalidateCache } from '@/http/middlewares/cache'
 
 export async function update(request: FastifyRequest, reply: FastifyReply) {
   const updateBankParamsSchema = z.object({
@@ -25,6 +26,9 @@ export async function update(request: FastifyRequest, reply: FastifyReply) {
     organizationId,
     nameAlias,
   })
+
+  // Invalidar cache de bancos após atualização
+  invalidateCache('banks')
 
   return reply.status(200).send(data)
 }
