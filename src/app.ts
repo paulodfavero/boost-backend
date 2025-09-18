@@ -21,6 +21,7 @@ import { investmentRoutes } from './http/controllers/investment/routes'
 import { chatRoutes } from './http/controllers/chat/routes'
 import { tipsIaRoutes } from './http/controllers/tips-ia/routes'
 import { accessLogRoutes } from './http/controllers/access-log/routes'
+import { cacheRoutes } from './http/controllers/cache/routes'
 
 const isDevelopment = process.env.NODE_ENV === 'dev'
 
@@ -153,3 +154,4 @@ app.register(investmentRoutes)
 app.register(chatRoutes)
 app.register(tipsIaRoutes)
 app.register(accessLogRoutes)
+app.register(cacheRoutes)

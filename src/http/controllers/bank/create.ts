@@ -5,6 +5,7 @@ import {
   makeCreateBankUseCase,
   makeCreateBankTypeAccountUseCase,
 } from '@/use-cases/factories/make-create-bank-use-case'
+import { invalidateCache } from '@/http/middlewares/cache'
 
 export async function create(request: FastifyRequest, reply: FastifyReply) {
   const createBankParamsSchema = z.object({
@@ -51,6 +52,9 @@ export async function create(request: FastifyRequest, reply: FastifyReply) {
     lastUpdatedAt,
     organizationId,
   })
+
+  // Invalidar cache de bancos após criação
+  invalidateCache('banks')
 
   return reply.status(201).send(data)
 }

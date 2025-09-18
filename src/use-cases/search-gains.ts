@@ -6,10 +6,16 @@ import {
   BanksTypeAccountRepository,
 } from '@/repositories/bank-repository'
 
+// Helper function to check if a category is "Transferência mesma titularidade"
+const isSamePersonTransferCategory = (categoryName: string): boolean => {
+  return categoryName.includes('Transferência mesma titularidade')
+}
+
 interface SearchGainsUseCaseRequest {
   organizationId: string
   date: string
   bankId?: string
+  isSamePersonTransfer?: boolean
 }
 
 export class SearchGainUseCase {
@@ -24,6 +30,7 @@ export class SearchGainUseCase {
     organizationId,
     date,
     bankId,
+    isSamePersonTransfer = false,
   }: SearchGainsUseCaseRequest): Promise<object> {
     let totalGains = 0
     let receivedGains = 0
@@ -104,8 +111,19 @@ export class SearchGainUseCase {
       return true
     })
 
+    // Filter gains based on isSamePersonTransfer parameter
+    const filteredGains = gainsFormated.filter((gain) => {
+      if (isSamePersonTransfer) {
+        // When true, include all transactions including same person transfers
+        return true
+      } else {
+        // When false (default), exclude same person transfer transactions
+        return !isSamePersonTransferCategory(gain.category || '')
+      }
+    })
+
     const gains = await Promise.all(
-      gainsFormated.map(
+      filteredGains.map(
         async ({
           id,
           expiration_date,

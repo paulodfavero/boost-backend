@@ -2,6 +2,7 @@ import { FastifyReply, FastifyRequest } from 'fastify'
 import { z } from 'zod'
 
 import { makeCreateCreditUseCase } from '@/use-cases/factories/make-create-credit-use-case'
+import { invalidateCache } from '@/http/middlewares/cache'
 
 export async function create(request: FastifyRequest, reply: FastifyReply) {
   const createCheckInParamsSchema = z.object({
@@ -25,7 +26,7 @@ export async function create(request: FastifyRequest, reply: FastifyReply) {
       installmentTotalPayment: z.number().nullish(),
       bankId: z.string().nullish(),
       bankTypeAccountId: z.string().nullish(),
-      merchant: z 
+      merchant: z
         .object({
           businessName: z.string().nullish(),
           cnpj: z.string().nullish(),
@@ -47,6 +48,9 @@ export async function create(request: FastifyRequest, reply: FastifyReply) {
       reqBody,
     })
 
+    // Invalidar cache de créditos após criação
+    invalidateCache('credits')
+
     return reply.status(201).send(data)
   } catch (err) {
     // if (err instanceof UserAlreadyExistsError) {
@@ -54,6 +58,4 @@ export async function create(request: FastifyRequest, reply: FastifyReply) {
     // }
     // throw err
   }
-
-  
 }

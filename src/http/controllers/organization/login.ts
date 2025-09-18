@@ -27,13 +27,8 @@ export async function login(request: FastifyRequest, reply: FastifyReply) {
     const userAgent = request.headers['user-agent']
     const ipAddress = getClientIp(request)
 
-    // Debug logs for production
-    console.log('🔍 LOGIN DEBUG - User Agent:', userAgent)
-    console.log('🔍 LOGIN DEBUG - IP Address:', ipAddress)
-
     // Skip logging for axios requests to avoid duplication
     if (userAgent && userAgent.includes('axios')) {
-      console.log('🔍 LOGIN DEBUG - Skipping axios request')
       // Don't create log for axios requests
     } else {
       let deviceInfo = {
@@ -44,15 +39,11 @@ export async function login(request: FastifyRequest, reply: FastifyReply) {
       }
       if (userAgent) {
         deviceInfo = parseUserAgent(userAgent)
-        console.log(
-          '🔍 LOGIN DEBUG - Parsed Device Info:',
-          JSON.stringify(deviceInfo, null, 2),
-        )
       }
 
       // Create access log only for browser requests
       const createAccessLogUseCase = makeCreateAccessLogUseCase()
-      const accessLogResult = await createAccessLogUseCase.execute({
+      await createAccessLogUseCase.execute({
         organizationId: organization.id,
         userAgent,
         ipAddress,
@@ -61,11 +52,6 @@ export async function login(request: FastifyRequest, reply: FastifyReply) {
         os: deviceInfo.os,
         platform: deviceInfo.platform,
       })
-
-      console.log(
-        '🔍 LOGIN DEBUG - Access Log Created:',
-        JSON.stringify(accessLogResult.accessLog, null, 2),
-      )
     }
 
     const token = jwt.sign(
