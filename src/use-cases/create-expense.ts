@@ -5,6 +5,41 @@ import { OrganizationsRepository } from '@/repositories/organization-repository'
 
 import { OrganizationNotFound } from './errors/organization-not-found-error'
 
+// Helper function to validate investment category based on description
+function validateInvestmentCategory(
+  description: string,
+  category: string,
+): string {
+  const desc = description.toLowerCase()
+
+  // If description contains credit card related terms, change to credit card payment
+  if (
+    desc.includes('fatura') ||
+    desc.includes('cartao') ||
+    desc.includes('pag boleto') ||
+    desc.includes('cartão') ||
+    desc.includes('pagamento efetuado')
+  ) {
+    return 'Pagamento de cartão de crédito'
+  }
+
+  // If description contains investment related terms, keep as investment
+  if (
+    desc.includes('aplic') ||
+    desc.includes('invest') ||
+    desc.includes('tesouro') ||
+    desc.includes('cdb') ||
+    desc.includes('lci') ||
+    desc.includes('fundo')
+  ) {
+    return category
+  }
+
+  // If it's an investment category but doesn't match investment keywords,
+  // and doesn't match credit card keywords, keep the original category
+  return category
+}
+
 type MerchantType = {
   businessName?: string | undefined
   cnae?: string | undefined
@@ -72,6 +107,12 @@ export class CreateExpenseUseCase {
         bankId,
       } = transaction
 
+      // Validate and potentially adjust category based on description
+      const validatedCategory = validateInvestmentCategory(
+        description,
+        category,
+      )
+
       const expiration_date = format(new Date(expirationDate), 'y/MM/dd')
       const type_payment = typePayment
       const installment_current = installmentCurrent || null
@@ -98,7 +139,7 @@ export class CreateExpenseUseCase {
             organizationId,
             bankTypeAccountId,
             description,
-            category,
+            category: validatedCategory,
             amount,
             paid,
             bankId,
@@ -126,7 +167,7 @@ export class CreateExpenseUseCase {
           {
             bank_transaction_id: bankTransactionId,
             description,
-            category,
+            category: validatedCategory,
             amount: amountInstallment || amount,
             paid: paidCurrent,
             expiration_date: newExpirationDate,
