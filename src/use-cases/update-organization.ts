@@ -1,6 +1,7 @@
 import { OrganizationsRepository } from '@/repositories/organization-repository'
 
 import { OrganizationNotFound } from './errors/organization-not-found-error'
+import { getPlanTypeFromStripe } from '../lib/stripe-helper'
 
 // Aceita qualquer campo da Organization exceto id e created_at
 interface UpdateOrganizationData {
@@ -26,6 +27,14 @@ export class UpdateOrganizationUseCase {
       data: updateData,
     })
 
-    return response
+    // Get plan type from Stripe and add to response
+    const planType = await getPlanTypeFromStripe(
+      organization.stripe_customer_id,
+    )
+
+    return {
+      ...response,
+      planType,
+    }
   }
 }

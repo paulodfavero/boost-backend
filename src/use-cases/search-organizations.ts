@@ -1,5 +1,6 @@
 import { OrganizationsRepository } from '@/repositories/organization-repository'
 import { BanksRepository } from '@/repositories/bank-repository'
+import { getPlanTypeFromStripe } from '../lib/stripe-helper'
 
 interface SearchOrganizationsUseCaseRequest {
   date?: string
@@ -29,10 +30,13 @@ export class SearchOrganizationsUseCase {
       result[month] = await Promise.all(
         orgs.map(async (org: any) => {
           const banks = await this.banksRepository.findByOrganizationId(org.id)
+          // Get plan type from Stripe
+          const planType = await getPlanTypeFromStripe(org.stripe_customer_id)
           return {
             ...org,
             bankCount: Array.isArray(banks) ? banks.length : 0,
             bankCreatedAt: Array.isArray(banks) ? banks[0]?.created_at : null,
+            planType,
           }
         }),
       )

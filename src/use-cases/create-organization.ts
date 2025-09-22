@@ -2,6 +2,7 @@ import { OrganizationsRepository } from '@/repositories/organization-repository'
 import { EmailService } from '@/lib/email'
 import bcrypt from 'bcryptjs'
 import { OrganizationAlreadyExistsError } from './errors/organization-already-exist'
+import { getPlanTypeFromStripe } from '../lib/stripe-helper'
 
 interface CreateOrganizationUseCaseResponse {
   name: string
@@ -21,6 +22,7 @@ interface OrganizationResponse {
   organizationId: string
   hasPassword: boolean
   plan: string
+  planType: string
   trialEnd?: Date | null
 }
 
@@ -57,7 +59,11 @@ export class CreateOrganizationUseCase {
         password,
         plan,
         trial_end,
+        stripe_customer_id,
       } = hasOrganization
+
+      // Get plan type from Stripe
+      const planType = await getPlanTypeFromStripe(stripe_customer_id)
       return {
         id: organizationId,
         name,
@@ -67,6 +73,7 @@ export class CreateOrganizationUseCase {
         organizationId,
         hasPassword: !!password,
         plan,
+        planType,
         trialEnd: trial_end,
       }
     }
@@ -104,6 +111,9 @@ export class CreateOrganizationUseCase {
       }
     }
 
+    // Get plan type from Stripe (will be TRIAL for new organizations)
+    const planType = await getPlanTypeFromStripe(response.stripe_customer_id)
+
     return {
       id: response.id,
       name,
@@ -113,6 +123,7 @@ export class CreateOrganizationUseCase {
       organizationId: response.id,
       hasPassword: !!password,
       plan: response.plan,
+      planType,
       trialEnd: response.trial_end,
     }
   }
