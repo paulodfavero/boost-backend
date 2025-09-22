@@ -172,7 +172,7 @@ export function invalidateTransactionCache() {
 export const cacheConfigs = {
   // Cache para categorias - 10 minutos
   categories: {
-    ttl: 10 * 60 * 1000,
+    ttl: 15 * 60 * 1000,
     enabled: isCacheEnabledForEndpoint('ENABLE_CACHE_CATEGORIES'),
     keyGenerator: (request: FastifyRequest) => {
       const query = request.query as { a?: string }
@@ -212,7 +212,7 @@ export const cacheConfigs = {
 
   // Cache para despesas - 3 minutos (dados semi-dinâmicos)
   expenses: {
-    ttl: 3 * 60 * 1000,
+    ttl: 5 * 60 * 1000,
     enabled: isCacheEnabledForEndpoint('ENABLE_CACHE_EXPENSES'),
     keyGenerator: (request: FastifyRequest) => {
       const query = request.query as {
@@ -229,7 +229,7 @@ export const cacheConfigs = {
 
   // Cache para ganhos - 3 minutos (dados semi-dinâmicos)
   gains: {
-    ttl: 3 * 60 * 1000,
+    ttl: 5 * 60 * 1000,
     enabled: isCacheEnabledForEndpoint('ENABLE_CACHE_GAINS'),
     keyGenerator: (request: FastifyRequest) => {
       const query = request.query as {
@@ -261,9 +261,8 @@ export const cacheConfigs = {
     },
   },
 
-  // Cache para resultados - 1 minuto (dados muito dinâmicos)
   results: {
-    ttl: 1 * 60 * 1000,
+    ttl: 5 * 60 * 1000,
     enabled: isCacheEnabledForEndpoint('ENABLE_CACHE_RESULTS'),
     keyGenerator: (request: FastifyRequest) => {
       const query = request.query as {
