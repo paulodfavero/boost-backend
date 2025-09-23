@@ -13,6 +13,9 @@ function validateInvestmentCategory(
   const desc = description.toLowerCase()
 
   // If description contains credit card related terms, change to credit card payment
+  if (desc.includes('pix')) {
+    return 'Transferência - PIX'
+  }
   if (
     desc.includes('fatura') ||
     desc.includes('cartao') ||
