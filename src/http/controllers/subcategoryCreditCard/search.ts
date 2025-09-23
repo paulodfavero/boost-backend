@@ -23,5 +23,10 @@ export async function searchMany(request: FastifyRequest, reply: FastifyReply) {
   // Salvar no cache
   saveToCache(request, data, cacheConfigs.subcategories)
 
+  // Definir headers para controlar cache do navegador
+  // Cache por 5 minutos no navegador, mas pode ser invalidado pelo servidor
+  reply.header('Cache-Control', 'public, max-age=300, must-revalidate')
+  reply.header('ETag', `"subcategories-${Date.now()}"`)
+
   return reply.status(200).send(data)
 }
