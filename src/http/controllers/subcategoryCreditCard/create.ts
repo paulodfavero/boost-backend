@@ -2,6 +2,7 @@ import { FastifyReply, FastifyRequest } from 'fastify'
 import { z } from 'zod'
 
 import { makeCreateSubcategoryUseCase } from '@/use-cases/factories/make-create-subcategory-use-case'
+import { invalidateCache } from '@/http/middlewares/cache'
 
 export async function create(request: FastifyRequest, reply: FastifyReply) {
   const createSubsubcategoryBodySchema = z.object({
@@ -34,6 +35,9 @@ export async function create(request: FastifyRequest, reply: FastifyReply) {
       ],
     })
 
+    // Invalidar cache de subcategorias após criação
+    invalidateCache('subcategories')
+
     return reply.status(201).send(data)
   } catch (err) {
     // if (err instanceof SubsubcategoryAlreadyExistsError) {
@@ -63,6 +67,9 @@ export async function createMany(request: FastifyRequest, reply: FastifyReply) {
     const data = await createSubsubcategoryUseCase.execute({
       reqBody,
     })
+
+    // Invalidar cache de subcategorias após criação
+    invalidateCache('subcategories')
 
     return reply.status(201).send(data)
   } catch (err) {
