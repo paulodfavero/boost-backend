@@ -20,6 +20,7 @@ const envSchema = z.object({
   SMTP_PORT: z.coerce.number().optional(),
   SMTP_USER: z.string().optional(),
   SMTP_PASS: z.string().optional(),
+  APPLE_SHARED_SECRET: z.string().optional(),
 })
 
 const _env = envSchema.safeParse(process.env)
