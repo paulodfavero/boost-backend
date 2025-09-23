@@ -87,6 +87,10 @@ export function cacheMiddleware(options: CacheOptions = {}) {
       reply.header('X-Cache-Key', cacheKey)
       reply.header('X-Cache-Enabled', 'true')
 
+      // Headers para controlar cache do navegador
+      reply.header('Cache-Control', 'public, max-age=300, must-revalidate')
+      reply.header('ETag', `"cached-${Date.now()}"`)
+
       return reply.send(cachedData)
     }
 
