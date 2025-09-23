@@ -15,6 +15,7 @@ const CACHE_FEATURE_FLAGS = {
   ENABLE_CACHE_GAINS: process.env.ENABLE_CACHE_GAINS === 'true',
   ENABLE_CACHE_CREDITS: process.env.ENABLE_CACHE_CREDITS === 'true',
   ENABLE_CACHE_RESULTS: process.env.ENABLE_CACHE_RESULTS === 'true',
+  ENABLE_CACHE_SUBCATEGORIES: process.env.ENABLE_CACHE_SUBCATEGORIES === 'true',
 
   // Cache de transações (mais crítico)
   ENABLE_CACHE_TRANSACTIONS: process.env.ENABLE_CACHE_TRANSACTIONS === 'true',
@@ -274,6 +275,16 @@ export const cacheConfigs = {
       return `results:${query.a || 'all'}:${query.date || 'all'}:${
         query.bankId || 'all'
       }:${query.isSamePersonTransfer || 'false'}`
+    },
+  },
+
+  // Cache para subcategorias - 15 minutos (dados relativamente estáticos)
+  subcategories: {
+    ttl: 15 * 60 * 1000,
+    enabled: isCacheEnabledForEndpoint('ENABLE_CACHE_SUBCATEGORIES'),
+    keyGenerator: (request: FastifyRequest) => {
+      const query = request.query as { a?: string }
+      return `subcategories:${query.a || 'all'}`
     },
   },
 }
