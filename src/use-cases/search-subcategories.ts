@@ -12,15 +12,6 @@ export class SearchSubcategoryUseCase {
       this.subcategoriesRepository.searchMany(),
       this.categoriesCreditCardRepository.searchMany(),
     ])
-
-    // Concatenate categoriesCreditCard with their subcategories
-    const result = categoriesCreditCard.map((category) => ({
-      ...category,
-      subcategories: subcategories.filter(
-        (sub) => sub.categoryCreditCardId === category.id,
-      ),
-    }))
-
-    return result
+    return [...subcategories, ...categoriesCreditCard]
   }
 }
