@@ -35,9 +35,13 @@ export class GetOrganizationUseCase {
       throw new OrganizationNotFound()
     }
 
-    // Get plan type from Stripe
+    // Get plan type from Stripe or IAP
     const planType = await getPlanTypeFromStripe(
       organization.stripe_customer_id,
+      {
+        plan: organization.plan,
+        apple_iap_transaction_id: organization.apple_iap_transaction_id,
+      },
     )
 
     return {
