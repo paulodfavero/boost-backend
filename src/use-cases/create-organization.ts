@@ -62,8 +62,11 @@ export class CreateOrganizationUseCase {
         stripe_customer_id,
       } = hasOrganization
 
-      // Get plan type from Stripe
-      const planType = await getPlanTypeFromStripe(stripe_customer_id)
+      // Get plan type from Stripe or IAP
+      const planType = await getPlanTypeFromStripe(stripe_customer_id, {
+        plan,
+        apple_iap_transaction_id: hasOrganization.apple_iap_transaction_id,
+      })
       return {
         id: organizationId,
         name,
@@ -111,8 +114,11 @@ export class CreateOrganizationUseCase {
       }
     }
 
-    // Get plan type from Stripe (will be TRIAL for new organizations)
-    const planType = await getPlanTypeFromStripe(response.stripe_customer_id)
+    // Get plan type from Stripe or IAP (will be TRIAL for new organizations)
+    const planType = await getPlanTypeFromStripe(response.stripe_customer_id, {
+      plan: response.plan,
+      apple_iap_transaction_id: response.apple_iap_transaction_id,
+    })
 
     return {
       id: response.id,

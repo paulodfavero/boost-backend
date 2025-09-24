@@ -27,9 +27,13 @@ export class UpdateOrganizationUseCase {
       data: updateData,
     })
 
-    // Get plan type from Stripe and add to response
+    // Get plan type from Stripe or IAP and add to response
     const planType = await getPlanTypeFromStripe(
       organization.stripe_customer_id,
+      {
+        plan: organization.plan,
+        apple_iap_transaction_id: organization.apple_iap_transaction_id,
+      },
     )
 
     return {

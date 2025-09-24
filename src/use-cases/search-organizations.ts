@@ -30,8 +30,11 @@ export class SearchOrganizationsUseCase {
       result[month] = await Promise.all(
         orgs.map(async (org: any) => {
           const banks = await this.banksRepository.findByOrganizationId(org.id)
-          // Get plan type from Stripe
-          const planType = await getPlanTypeFromStripe(org.stripe_customer_id)
+          // Get plan type from Stripe or IAP
+          const planType = await getPlanTypeFromStripe(org.stripe_customer_id, {
+            plan: org.plan,
+            apple_iap_transaction_id: org.apple_iap_transaction_id,
+          })
           return {
             ...org,
             bankCount: Array.isArray(banks) ? banks.length : 0,
