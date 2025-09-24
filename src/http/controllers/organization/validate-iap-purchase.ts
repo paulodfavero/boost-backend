@@ -23,6 +23,15 @@ export async function validateIAPPurchase(
   })
 
   try {
+    console.log('=== VALIDATE IAP PURCHASE - INÍCIO ===')
+    console.log('Request params:', request.params)
+    console.log('Request body:', request.body)
+    console.log('Request headers:', {
+      'user-agent': request.headers['user-agent'],
+      'content-type': request.headers['content-type'],
+      authorization: request.headers.authorization ? 'present' : 'missing',
+    })
+
     const { organizationId } = validateIAPPurchaseParamsSchema.parse(
       request.params,
     )
@@ -33,6 +42,15 @@ export async function validateIAPPurchase(
       plan,
       transactionDate,
     } = validateIAPPurchaseBodySchema.parse(request.body)
+
+    console.log('Dados validados:', {
+      organizationId,
+      productId,
+      transactionId,
+      plan,
+      transactionDate,
+      transactionReceiptLength: transactionReceipt?.length || 0,
+    })
 
     const validateIAPPurchaseUseCase = makeValidateIAPPurchaseUseCase()
 
@@ -78,6 +96,9 @@ export async function validateIAPPurchase(
 
     // Invalidar cache de organizações após atualização
     invalidateCache('organizations')
+
+    console.log('Resultado da validação IAP:', result)
+    console.log('=== VALIDATE IAP PURCHASE - FIM ===')
 
     if (result.success) {
       return reply.status(200).send(result)
