@@ -256,7 +256,12 @@ export class SearchCreditUseCase {
               // Condição 2: isAfter - transação deve estar após (data de fechamento - 1 mês - 1 dia)
               const isAfterCloseDateMinusMonthAndDay = isAfter(
                 new Date(format(expiration_date, 'yyyy/MM/dd')),
-                new Date(subMonths(new Date(getBalances.balanceCloseDate), 1)),
+                new Date(
+                  subMonths(
+                    subDays(new Date(getBalances.balanceCloseDate), 1),
+                    1,
+                  ),
+                ),
               )
               // Se não atender a ambas as condições, não retorna a transação
               if (!(isBeforeCloseDate && isAfterCloseDateMinusMonthAndDay)) {
