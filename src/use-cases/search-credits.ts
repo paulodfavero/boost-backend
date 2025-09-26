@@ -170,9 +170,13 @@ export class SearchCreditUseCase {
         balanceCloseDate: string | null
       }
     >()
-
+    const prevCurrentNextCreditsTransactions = [
+      ...previousCredit,
+      ...creditsFormated,
+      ...nextCredit,
+    ]
     const credits = await Promise.all(
-      creditsFormated.map(
+      prevCurrentNextCreditsTransactions.map(
         async ({
           id,
           expiration_date,
@@ -206,80 +210,72 @@ export class SearchCreditUseCase {
           )
           // Aplicar a mesma lógica do balance: só retorna transações que estão na conta
           if (expiration_date && getBalances?.balanceCloseDate) {
-            // Condição 1: isBefore - transação deve estar antes da data de fechamento
-            const isBeforeCloseDate = isBefore(
-              new Date(format(expiration_date, 'yyyy/MM/dd')),
-              new Date(
-                format(new Date(getBalances.balanceCloseDate), 'yyyy/MM/dd'),
-              ),
-            )
-            // Condição 2: isAfter - transação deve estar após (data de fechamento - 1 mês - 1 dia)
-            const isAfterCloseDateMinusMonthAndDay = isAfter(
-              new Date(format(expiration_date, 'yyyy/MM/dd')),
-              new Date(
+            if (getBalances.balanceCloseDate > getBalances.balanceDueDate) {
+              console.log(
+                'getBalances',
+                getBalances.balanceCloseDate,
+                getBalances.balanceDueDate,
+              )
+              // console.log('expiration_date', expiration_date)
+              console.log(
+                new Date(subMonths(new Date(getBalances.balanceCloseDate), 2)),
+              )
+              console.log(new Date(format(expiration_date, 'yyyy/MM/dd')))
+              console.log(
+                new Date(subMonths(new Date(getBalances.balanceCloseDate), 1)),
+              )
+              const expirationDate = new Date(
+                format(expiration_date, 'yyyy/MM/dd'),
+              )
+              const previousMonthCloseDate = new Date(
+                subMonths(new Date(getBalances.balanceCloseDate), 2),
+              )
+              const nextMonthCloseDate = new Date(
                 subMonths(
-                  subDays(new Date(getBalances.balanceCloseDate), 1),
+                  addDays(new Date(getBalances.balanceCloseDate), 1),
                   1,
                 ),
-              ),
-            )
-            // Se não atender a ambas as condições, não retorna a transação
-            if (!(isBeforeCloseDate && isAfterCloseDateMinusMonthAndDay)) {
-              return null
+              )
+
+              if (
+                !(
+                  isAfter(expirationDate, previousMonthCloseDate) &&
+                  isBefore(expirationDate, nextMonthCloseDate)
+                )
+              ) {
+                return null
+              }
+            }
+            if (getBalances.balanceCloseDate < getBalances.balanceDueDate) {
+              const isBeforeCloseDate = isBefore(
+                new Date(format(expiration_date, 'yyyy/MM/dd')),
+                new Date(
+                  format(new Date(getBalances.balanceCloseDate), 'yyyy/MM/dd'),
+                ),
+              )
+              // Condição 2: isAfter - transação deve estar após (data de fechamento - 1 mês - 1 dia)
+              const isAfterCloseDateMinusMonthAndDay = isAfter(
+                new Date(format(expiration_date, 'yyyy/MM/dd')),
+                new Date(subMonths(new Date(getBalances.balanceCloseDate), 1)),
+              )
+              // Se não atender a ambas as condições, não retorna a transação
+              if (!(isBeforeCloseDate && isAfterCloseDateMinusMonthAndDay)) {
+                return null
+              }
             }
           }
-          // Só calcula o balance se ainda não foi calculado para este bankTypeAccountId
-          if (
-            getBalances?.balanceCloseDate &&
-            !balanceAmountMap.has(bankTypeAccountId ?? '')
-          ) {
-            const getNextCredit = nextCredit
-              .filter(
-                (credit) => credit.bankTypeAccountId === bankTypeAccountId,
-              )
-              .filter((credit) => {
-                if (credit.expiration_date) {
-                  return isBefore(
-                    new Date(format(credit.expiration_date, 'yyyy/MM/dd')),
-                    new Date(
-                      format(
-                        new Date(getBalances?.balanceCloseDate),
-                        'yyyy/MM/dd',
-                      ),
-                    ),
-                  )
-                }
-                return false
-              })
-              .reduce((acc, credit) => {
-                acc += credit.amount
-                return acc
-              }, 0)
-            const getCurrentBalance = creditsFormated
-              .filter(
-                (credit) => credit.bankTypeAccountId === bankTypeAccountId,
-              )
-              .filter((credit) => {
-                if (credit.expiration_date) {
-                  return isAfter(
-                    new Date(format(credit.expiration_date, 'yyyy/MM/dd')),
-                    new Date(
-                      subMonths(
-                        subDays(new Date(getBalances?.balanceCloseDate), 1),
-                        1,
-                      ),
-                    ),
-                  )
-                }
-                return false
-              })
-              .reduce((acc, credit) => {
-                acc += credit.amount
-                return acc
-              }, 0)
-            // Armazena o valor calculado no Map com as datas
+
+          // Armazena o valor calculado no Map com as datas, somando os amounts
+          const existingBalance = balanceAmountMap.get(bankTypeAccountId ?? '')
+          if (existingBalance) {
             balanceAmountMap.set(bankTypeAccountId ?? '', {
-              balanceAmount: getNextCredit + getCurrentBalance,
+              balanceAmount: existingBalance.balanceAmount + amount,
+              balanceDueDate: getBalances?.balanceDueDate || null,
+              balanceCloseDate: getBalances?.balanceCloseDate || null,
+            })
+          } else {
+            balanceAmountMap.set(bankTypeAccountId ?? '', {
+              balanceAmount: amount,
               balanceDueDate: getBalances?.balanceDueDate || null,
               balanceCloseDate: getBalances?.balanceCloseDate || null,
             })
