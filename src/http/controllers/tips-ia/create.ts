@@ -11,30 +11,31 @@ export async function create(request: FastifyRequest, reply: FastifyReply) {
     const { organizationId } = tipsIaBodySchema.parse(request.body)
 
     const tipsIaUseCase = makeTipsIaUseCase()
-    const stream = await tipsIaUseCase.execute({
+    const result = await tipsIaUseCase.execute({
       organizationId,
     })
 
     // Se não há despesas, retorna mensagem vazia
-    if (!stream) {
+    if (!result) {
       return reply.status(200).send('')
     }
 
-    // Configurar headers para streaming
-    reply.raw.setHeader('Content-Type', 'text/plain; charset=utf-8')
-    reply.raw.setHeader('Cache-Control', 'no-cache')
-    reply.raw.setHeader('Connection', 'keep-alive')
-    reply.raw.setHeader('Transfer-Encoding', 'chunked')
+    // // Configurar headers para streaming
+    // reply.raw.setHeader('Content-Type', 'text/plain; charset=utf-8')
+    // reply.raw.setHeader('Cache-Control', 'no-cache')
+    // reply.raw.setHeader('Connection', 'keep-alive')
+    // reply.raw.setHeader('Transfer-Encoding', 'chunked')
 
     // Enviar resposta como stream
-    for await (const chunk of stream) {
-      const token = chunk.choices[0]?.delta?.content || ''
-      if (token) {
-        reply.raw.write(token)
-      }
-    }
+    // for await (const chunk of stream) {
+    //   const token = chunk.choices[0]?.delta?.content || ''
+    //   if (token) {
+    //     reply.raw.write(token)
+    //   }
+    // }
+    return reply.status(200).send(result)
 
-    reply.raw.end()
+    // reply.raw.end()
   } catch (error) {
     console.error('Erro no tips-ia:', error)
 
