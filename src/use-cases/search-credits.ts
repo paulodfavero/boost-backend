@@ -60,14 +60,14 @@ export class SearchCreditUseCase {
     const balanceDueDateRaw = new Date(
       nextYear,
       nextMonth - 1,
-      parseInt(bankTypeAccount.balance_due_date_week_day),
+      parseInt(bankTypeAccount?.balance_due_date_week_day ?? '1'),
     )
 
     // Criar a data com o ano, mês atual + 1, e o dia da semana do balance_close_date_week_day
     const balanceCloseDateRaw = new Date(
       nextYear,
       nextMonth - 1,
-      parseInt(bankTypeAccount.balance_close_date_week_day),
+      parseInt(bankTypeAccount?.balance_close_date_week_day ?? '5'),
     )
 
     // Ajustar apenas balanceDueDate para próximo dia útil se necessário
