@@ -95,7 +95,7 @@ export class TipsIaUseCase {
 - Ignore transações de categorias de **investimentos** e também de gastos essenciais pouco flexíveis (ex.: aluguel, condomínio, contas fixas obrigatórias).
 - Priorize categorias ajustáveis no curto prazo (ex.: delivery, mercado, transporte por app, assinaturas, lazer).
 - Seja assertivo e direto, evitando frases genéricas.
-- Sugira apenas **uma ação prática e imediata** (ex.: 'cancele', 'reduza', 'substitua').
+- Sugira apenas **uma ação prática** (ex.: 'cancele', 'reduza', 'substitua').
 - Escreva em português do Brasil.\n\nExemplo de saída:\n"Você gastou R$ 344 em delivery este mês 🍔. Reduzindo pela metade, já economiza R$ 170 para guardar."\n\nTransações do usuário:\n ${allTransactions.join(
         '; ',
       )}`,
