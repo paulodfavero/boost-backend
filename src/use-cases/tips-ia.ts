@@ -42,7 +42,8 @@ export class TipsIaUseCase {
     const currentDate = new Date()
     const monthStart = format(currentDate, 'yyyy-MM-01') // Primeiro dia do mês
     const monthEnd = format(currentDate, 'yyyy-MM-dd') // Último dia do mês atual
-
+    console.log('monthStart', monthStart)
+    console.log('monthEnd', monthEnd)
     const expensesTransactions = await this.expensesRepository.searchMany(
       organizationId,
       undefined, // date
@@ -50,6 +51,7 @@ export class TipsIaUseCase {
       monthStart,
       monthEnd,
     )
+
     const creditsTransactions = await this.creditsRepository.searchMany(
       organizationId,
       undefined, // date
@@ -106,7 +108,8 @@ export class TipsIaUseCase {
         temperature: 0.2,
         messages: [systemPrompt, userPrompt],
       })
-      console.log('response', response)
+      console.log('allTransactions', allTransactions)
+      console.log('response', response.choices[0]?.message?.content)
       const content = response.choices[0]?.message?.content
       if (!content) {
         throw new Error('')
