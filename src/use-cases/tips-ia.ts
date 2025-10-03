@@ -106,7 +106,8 @@ export class TipsIaUseCase {
         temperature: 0.2,
         messages: [systemPrompt, userPrompt],
       })
-      console.log('response', response)
+      console.log('allTransactions', allTransactions)
+      console.log('response', response.choices[0]?.message?.content)
       const content = response.choices[0]?.message?.content
       if (!content) {
         throw new Error('')
