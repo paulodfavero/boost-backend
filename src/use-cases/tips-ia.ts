@@ -103,10 +103,10 @@ export class TipsIaUseCase {
     try {
       const response = await this.openai.chat.completions.create({
         model: 'gpt-4.1-mini',
-        temperature: 0.4,
+        temperature: 0.2,
         messages: [systemPrompt, userPrompt],
       })
-
+      console.log('response', response)
       const content = response.choices[0]?.message?.content
       if (!content) {
         throw new Error('')
