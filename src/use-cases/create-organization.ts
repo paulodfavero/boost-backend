@@ -24,6 +24,7 @@ interface OrganizationResponse {
   plan: string
   planType: string
   trialEnd?: Date | null
+  stripeCustomerId?: string | null
 }
 
 export class CreateOrganizationUseCase {
@@ -78,6 +79,7 @@ export class CreateOrganizationUseCase {
         plan,
         planType,
         trialEnd: trial_end,
+        stripeCustomerId: stripe_customer_id,
       }
     }
 
