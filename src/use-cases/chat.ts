@@ -356,10 +356,9 @@ export class ChatUseCase {
           - Nunca exiba esse número sem ser solicitado diretamente.
 
           **Planos assinatura Boost Finance**:
-            - Essencial - Free
+            - Boost - Essencial
               - Pra você que ta começando a controlar sua grana
-
-              - Gratuito
+              - R$ 14,90 / mês
               - Conexão com 1 banco - Open Finance
               - Gerenciamento de Receitas e Despesas
               - Alertas de vencimento de contas
@@ -368,7 +367,7 @@ export class ChatUseCase {
             
             - Boost IA - Plus
               - Pra você que precisa entender onde seu dinheiro está
-              - R$ 6,90 / mês
+              - R$ 24,90 / mês
               - Conexão com 3 banco - Open Finance
               - Boost IA - Dicas para economizar
               - Gerenciamento de Receitas e Despesas
@@ -378,7 +377,7 @@ export class ChatUseCase {
          
           - Boost IA - Pro
             - Pra você que tem muitos bancos e quer ajuda personalizada
-            - R$ 14,90 / mês
+            - R$ 34,90 / mês
             - Conexão ilimitada de bancos - Open Finance
             - Chat Boost IA - Respostas rápidas sobre sua vida financeira
             - Boost IA - Dicas para economizar
