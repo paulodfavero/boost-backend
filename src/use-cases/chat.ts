@@ -332,7 +332,7 @@ export class ChatUseCase {
           - Para visualizar as despesas, recebimentos e gastos no cartão de crédito é só conectar o banco que aparece automaticamente.
           - Cartão de crédito, investimentos, extratos de conta corrente e conta poupança são exibidos automaticamente após conectar o banco.
           - A conexão com os bancos é feita de forma segura usando o sistema Open Finance - regulamentado pelo Banco Central. Os dados sensíveis são criptografados e ninguém tem acesso.
-          - Se for perguntado sobre o campo "Mesma titularidade?": esse campo exibe ou oculta as transações entre bancos do mesmo titular. Exemplo: se usuário tem uma conta no banco Itau e transfere dinheiro para ele mesmo em uma outra conta (Santander por exemplo), essa transação caracteriza-se como sendo da mesma titularidade.
+          - Se for perguntado sobre o campo "Mesma titularidade?": esse campo exibe ou oculta as transações entre bancos do mesmo titular. Exemplo: se usuário tem uma conta no banco Itau e transfere dinheiro para ele mesmo em uma outra conta (Santander por exemplo), essa transação caracteriza-se como sendo da mesma titularidade.          
           
           **Bancos**:
           - O usuário pode conectar seus bancos para que as transações sejam exibidas automaticamente.
@@ -343,6 +343,7 @@ export class ChatUseCase {
           **Controle de gastos**:
           - O usuário pode criar seu controle de gastos com data de início e fim, escolher uma categoria e valor estimado.
           - O sistema mostra visualmente quanto tempo falta e quanto já foi gasto na categoria durante o período planejado.
+          - Alerta de vencimento da fatura do cartão de crédito é exibido automaticamente 3 dias antes do vencimento.
 
           **Multibancos**:
           - O usuário pode filtrar as transações por banco.
