@@ -295,13 +295,29 @@ export class SearchCreditUseCase {
     )
 
     // Converte o Map para array de objetos
-    const balanceAmount = Array.from(balanceAmountMap.entries()).map(
-      ([bankTypeAccountId, balanceData]) => ({
-        bankTypeAccountId,
-        balanceAmount: balanceData.balanceAmount,
-        balanceDueDate: balanceData.balanceDueDate,
-        balanceCloseDate: balanceData.balanceCloseDate,
-      }),
+    const balanceAmount = await Promise.all(
+      Array.from(balanceAmountMap.entries()).map(
+        async ([bankTypeAccountId, balanceData]) => {
+          const bankTypeAccount = bankTypeAccountId
+            ? await this.BankTypeAccountRepository.findById(bankTypeAccountId)
+            : null
+
+          const bank = (bankTypeAccount as any)?.bankId
+            ? await this.BankRepository.findById(
+                (bankTypeAccount as any).bankId,
+              )
+            : null
+
+          return {
+            bankTypeAccountId,
+            balanceAmount: balanceData.balanceAmount,
+            balanceDueDate: balanceData.balanceDueDate,
+            balanceCloseDate: balanceData.balanceCloseDate,
+            bankName: (bank as any)?.name ?? null,
+            bankImageUrl: (bank as any)?.image_url ?? null,
+          }
+        },
+      ),
     )
 
     // Format nextMonth credits similar to current month credits
