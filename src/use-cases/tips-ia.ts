@@ -90,7 +90,8 @@ export class TipsIaUseCase {
 
     const userPrompt = {
       role: 'user' as const,
-      content: `Receberá uma lista de transações do usuário (com descrição, categoria e valor). Sua tarefa é gerar **uma única dica de economia personalizada, curta e clara (máx. 2 frases)**.\n\nRegras:\n- Escolha apenas o gasto mais relevante, priorizando o de MAIOR valor ou que se repete mais vezes.
+      content: `Receberá uma lista de transações do usuário (com descrição, categoria e valor). Sua tarefa é gerar **uma única dica de economia personalizada, curta e clara (máx. 2 frases)**.\n\nRegras:\n
+      - Escolha apenas o gasto mais relevante, priorizando o de MAIOR valor ou que se repete mais vezes.
 - Ignore valores pequenos ou menos impactantes.
 - Ignore transações de categorias de **investimentos** e também de gastos essenciais pouco flexíveis (ex.: aluguel, condomínio, contas fixas obrigatórias).
 - Priorize categorias ajustáveis no curto prazo (ex.: delivery, mercado, transporte por app, assinaturas, lazer).

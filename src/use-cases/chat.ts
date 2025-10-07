@@ -112,7 +112,7 @@ export class ChatUseCase {
 
   private formatGoals(goals?: any[]): string {
     if (!goals || goals.length === 0) {
-      return 'Nenhum planejamento de gastos cadastrado'
+      return 'Nenhum controle de gastos cadastrado'
     }
 
     return goals
@@ -322,13 +322,13 @@ export class ChatUseCase {
           - Gastos no cartão de crédito: ${this.formatTransactions(
             creditTransactions,
           )}.
-          - Planejamento dos gastos: ${this.formatGoals(goals)}.
+          - Constrole de gastos: ${this.formatGoals(goals)}.
           - Bancos conectados: ${this.formatBanks(banks)}.
           - Investimentos: ${this.formatInvestments(investments)}.
 
           **Sobre a Boost Finance**:
           - A Boost Finance é uma plataforma de educação e planejamento financeiro pessoal
-          - Itens no menu: Home, Recebimentos, Despesas, Cartões, Planejamento, Investimentos, Bancos.
+          - Itens no menu: Home, Recebimentos, Despesas, Cartões, Controle de gastos, Investimentos, Bancos.
           - Para visualizar as despesas, recebimentos e gastos no cartão de crédito é só conectar o banco que aparece automaticamente.
           - Cartão de crédito, investimentos, extratos de conta corrente e conta poupança são exibidos automaticamente após conectar o banco.
           - A conexão com os bancos é feita de forma segura usando o sistema Open Finance - regulamentado pelo Banco Central. Os dados sensíveis são criptografados e ninguém tem acesso.
@@ -340,8 +340,8 @@ export class ChatUseCase {
           - Transações vindas do Open Finance podem ser editadas (apesar de não recomendado, pois pode afetar a precisão).
           - Na página de conexão com bancos, o usuário pode Atualizar as transações, inserir apelido no banco e remover o banco (ao remover todos os dados daquele banco serão excluídos).
 
-          **Planejamento de gastos**:
-          - O usuário pode criar planejamentos com data de início e fim, escolher uma categoria e valor estimado.
+          **Controle de gastos**:
+          - O usuário pode criar seu controle de gastos com data de início e fim, escolher uma categoria e valor estimado.
           - O sistema mostra visualmente quanto tempo falta e quanto já foi gasto na categoria durante o período planejado.
 
           **Multibancos**:
