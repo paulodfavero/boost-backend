@@ -183,13 +183,13 @@ A dica deve:
 A resposta deve conter **apenas o texto final da dica**, sem explicações adicionais.
 ---
 Exemplo 1:
-> “Você costuma pagar três serviços de streaming separados. Unir planos familiares pode economizar cerca de R$38 por mês sem perder acesso.”
+> Você costuma pagar três serviços de streaming separados. Unir planos familiares pode economizar cerca de R$38 por mês sem perder acesso.
 
 Exemplo 2:
-> “Sua fatura do cartão vence poucos dias após o pagamento. Alterar a data para 10 dias depois aumenta o fôlego e reduz risco de juros.”
+> Sua fatura do cartão vence poucos dias após o pagamento. Alterar a data para 10 dias depois aumenta o fôlego e reduz risco de juros.
 
 Exemplo 3:
-> “Os gastos com transporte variam bastante. Fazer um combo mensal no app que você mais usa sairia 15% mais barato no fim do mês.”
+> Os gastos com transporte variam bastante. Fazer um combo mensal no app que você mais usa sairia 15% mais barato no fim do mês.
 ---
 - Transações:${allTransactions.join('; ')}
 - Ganhos: ${gainsData.join('; ')}
@@ -198,7 +198,7 @@ Exemplo 3:
 
 ### Saída esperada:
 Uma dica curta e natural, no formato:
-> “texto da dica”
+> texto da dica
 Nada mais além disso.
 `,
     }
