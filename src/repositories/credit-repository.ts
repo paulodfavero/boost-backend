@@ -34,4 +34,5 @@ export interface CreditsRepository {
   update(data: CreditUpdateRepository): Promise<object>
   delete(transactionId: string): Promise<object>
   deleteMany(bankId: string): Promise<object>
+  deleteManyByOrganization(organizationId: string): Promise<object>
 }

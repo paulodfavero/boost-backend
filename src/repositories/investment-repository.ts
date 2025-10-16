@@ -25,4 +25,5 @@ export interface InvestmentRepository {
   findByBankId(bankId: string): Promise<Investment | null>
   update(id: string, data: UpdateInvestmentData): Promise<Investment>
   delete(id: string): Promise<void>
+  deleteManyByOrganization(organizationId: string): Promise<object>
 }

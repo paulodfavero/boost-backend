@@ -1,6 +1,7 @@
 import { FastifyReply, FastifyRequest } from 'fastify'
 import { z } from 'zod'
 import { makeGetOrganizationUseCase } from '@/use-cases/factories/make-get-organization-use-case'
+import { makeGetOrganizationByEmailUseCase } from '@/use-cases/factories/make-get-organization-by-email-use-case'
 
 export async function search(request: FastifyRequest, reply: FastifyReply) {
   const searchBanksQuerySchema = z.object({
@@ -12,6 +13,24 @@ export async function search(request: FastifyRequest, reply: FastifyReply) {
 
   const data = await searchOrganizationId.execute({
     id,
+  })
+
+  return reply.status(200).send(data)
+}
+
+export async function searchByEmail(
+  request: FastifyRequest,
+  reply: FastifyReply,
+) {
+  const searchByEmailQuerySchema = z.object({
+    email: z.string().email(),
+  })
+
+  const { email } = searchByEmailQuerySchema.parse(request.params)
+  const getOrganizationByEmailUseCase = makeGetOrganizationByEmailUseCase()
+
+  const data = await getOrganizationByEmailUseCase.execute({
+    email,
   })
 
   return reply.status(200).send(data)

@@ -105,6 +105,16 @@ export class PrismaCreditRepository implements CreditsRepository {
     return credit
   }
 
+  async deleteManyByOrganization(organizationId: string) {
+    const credit = await prisma.credit.deleteMany({
+      where: {
+        organizationId,
+      },
+    })
+
+    return credit
+  }
+
   async searchCardList(organizationId: string) {
     const credits = await prisma.credit.findMany({
       where: {

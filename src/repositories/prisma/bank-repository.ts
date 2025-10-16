@@ -104,6 +104,16 @@ export class PrismaBanksRepository implements BanksRepository {
 
     return bank
   }
+
+  async deleteManyByOrganization(organizationId: string) {
+    const result = await prisma.bank.deleteMany({
+      where: {
+        organizationId,
+      },
+    })
+
+    return result
+  }
 }
 export class PrismaBankTypeAccountRepository
   implements BanksTypeAccountRepository
@@ -195,5 +205,15 @@ export class PrismaBankTypeAccountRepository
     })
 
     return bankTypeAccount
+  }
+
+  async deleteManyByOrganization(organizationId: string) {
+    const result = await prisma.bankTypeAccount.deleteMany({
+      where: {
+        organizationId,
+      },
+    })
+
+    return result
   }
 }

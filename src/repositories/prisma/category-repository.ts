@@ -20,4 +20,14 @@ export class PrismaCategoriesRepository implements CategoriesRepository {
 
     return category
   }
+
+  async deleteManyByOrganization(organizationId: string) {
+    const result = await prisma.category.deleteMany({
+      where: {
+        organizationId,
+      },
+    })
+
+    return result
+  }
 }

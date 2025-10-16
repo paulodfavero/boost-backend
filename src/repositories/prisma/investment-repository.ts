@@ -77,4 +77,14 @@ export class PrismaInvestmentRepository implements InvestmentRepository {
       },
     })
   }
+
+  async deleteManyByOrganization(organizationId: string): Promise<object> {
+    const result = await prisma.investment.deleteMany({
+      where: {
+        organizationId,
+      },
+    })
+
+    return result
+  }
 }

@@ -97,4 +97,14 @@ export class PrismaGainRepository implements GainsRepository {
 
     return gain
   }
+
+  async deleteManyByOrganization(organizationId: string) {
+    const gain = await prisma.gain.deleteMany({
+      where: {
+        organizationId,
+      },
+    })
+
+    return gain
+  }
 }

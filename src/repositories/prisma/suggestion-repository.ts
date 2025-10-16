@@ -10,4 +10,14 @@ export class PrismaSuggestionsRepository implements SuggestionsRepository {
 
     return suggestion
   }
+
+  async deleteManyByOrganization(organizationId: string) {
+    const result = await prisma.suggestion.deleteMany({
+      where: {
+        organizationId,
+      },
+    })
+
+    return result
+  }
 }

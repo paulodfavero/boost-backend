@@ -105,4 +105,14 @@ export class PrismaExpenseRepository implements ExpensesRepository {
 
     return expense
   }
+
+  async deleteManyByOrganization(organizationId: string) {
+    const expense = await prisma.expense.deleteMany({
+      where: {
+        organizationId,
+      },
+    })
+
+    return expense
+  }
 }

@@ -1,9 +1,7 @@
-import { Company } from '@prisma/client'
-interface CreateCompanyUseCaseResponse {
-  name: string
-  organizationId: string
-}
+import { Company, Prisma } from '@prisma/client'
+
 export interface CompaniesRepository {
   searchMany(query: string): Promise<Company[]>
-  create(data: CreateCompanyUseCaseResponse): Promise<Company>
+  create(data: Prisma.CompanyCreateInput): Promise<Company>
+  deleteManyByOrganization(organizationId: string): Promise<object>
 }

@@ -36,4 +36,5 @@ export interface GoalsRepository {
   findByOrganizationId(organizationId: string): Promise<Goal[]>
   update(id: string, data: UpdateGoalData): Promise<Goal>
   delete(id: string): Promise<void>
+  deleteManyByOrganization(organizationId: string): Promise<object>
 }
