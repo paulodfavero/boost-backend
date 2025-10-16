@@ -52,6 +52,16 @@ export class PrismaOrganizationsRepository implements OrganizationsRepository {
     return organization
   }
 
+  async delete(id: string) {
+    const organization = await prisma.organization.delete({
+      where: {
+        id,
+      },
+    })
+
+    return organization
+  }
+
   async searchMany(date?: string) {
     if (!date) {
       const organizations = await prisma.organization.findMany({})

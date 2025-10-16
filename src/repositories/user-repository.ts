@@ -8,4 +8,5 @@ interface CreateUserUseCaseResponse {
 }
 export interface UsersRepository {
   create(data: CreateUserUseCaseResponse): Promise<User>
+  deleteManyByOrganization(organizationId: string): Promise<object>
 }

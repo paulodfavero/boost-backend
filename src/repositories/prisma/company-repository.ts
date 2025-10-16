@@ -20,4 +20,14 @@ export class PrismaCompaniesRepository implements CompaniesRepository {
 
     return company
   }
+
+  async deleteManyByOrganization(organizationId: string) {
+    const result = await prisma.company.deleteMany({
+      where: {
+        organizationId,
+      },
+    })
+
+    return result
+  }
 }

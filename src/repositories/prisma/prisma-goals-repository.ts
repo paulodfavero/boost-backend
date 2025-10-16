@@ -136,4 +136,14 @@ export class PrismaGoalsRepository implements GoalsRepository {
       },
     })
   }
+
+  async deleteManyByOrganization(organizationId: string) {
+    const result = await this.prisma.goals.deleteMany({
+      where: {
+        organizationId,
+      },
+    })
+
+    return result
+  }
 }

@@ -16,6 +16,7 @@ export interface OrganizationsRepository {
   findByEmail(email: string): Promise<Organization | null>
   create(data: CreateOrganizationUseCaseResponse): Promise<Organization>
   update(data: UpdateOrganizationUseCaseResponse): Promise<Organization>
+  delete(id: string): Promise<Organization>
   searchMany(
     date?: string,
   ): Promise<Organization[] | Record<string, Organization[]>>

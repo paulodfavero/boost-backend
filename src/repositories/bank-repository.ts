@@ -51,6 +51,7 @@ export interface BanksRepository {
   create(data: CreateBankUseCaseResponse): Promise<Bank>
   delete(bankId: string): Promise<object>
   updateNameAlias(data: { bankId: string; nameAlias?: string }): Promise<Bank>
+  deleteManyByOrganization(organizationId: string): Promise<object>
 }
 export interface BanksTypeAccountRepository {
   findByAccountId(accountId: string): unknown
@@ -68,4 +69,5 @@ export interface BanksTypeAccountRepository {
     balance_close_date_week_day?: string
     balance_due_date_week_day?: string
   }): Promise<BankTypeAccount>
+  deleteManyByOrganization(organizationId: string): Promise<object>
 }

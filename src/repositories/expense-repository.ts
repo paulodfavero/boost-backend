@@ -31,4 +31,5 @@ export interface ExpensesRepository {
   update(data: ExpenseUpdateRepository): Promise<object>
   delete(transactionId: string): Promise<object>
   deleteMany(bankId: string): Promise<object>
+  deleteManyByOrganization(organizationId: string): Promise<object>
 }

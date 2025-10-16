@@ -6,6 +6,7 @@ export interface AccessLogRepository {
   findByOrganizationId(organizationId: string): Promise<AccessLog[]>
   findById(id: string): Promise<AccessLog | null>
   delete(id: string): Promise<void>
+  deleteManyByOrganization(organizationId: string): Promise<object>
 }
 
 export class PrismaAccessLogRepository implements AccessLogRepository {
@@ -46,5 +47,15 @@ export class PrismaAccessLogRepository implements AccessLogRepository {
         id,
       },
     })
+  }
+
+  async deleteManyByOrganization(organizationId: string): Promise<object> {
+    const result = await prisma.accessLog.deleteMany({
+      where: {
+        organizationId,
+      },
+    })
+
+    return result
   }
 }
