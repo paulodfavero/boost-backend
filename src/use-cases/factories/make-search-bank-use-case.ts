@@ -8,9 +8,13 @@ import {
 } from '../search-banks'
 
 export function makeSearchBankUseCase() {
-  const bankRepository = new PrismaBanksRepository()
+  const banksRepository = new PrismaBanksRepository()
+  const bankTypeAccountRepository = new PrismaBankTypeAccountRepository()
 
-  const useCase = new SearchBankUseCase(bankRepository)
+  const useCase = new SearchBankUseCase(
+    banksRepository,
+    bankTypeAccountRepository,
+  )
 
   return useCase
 }
