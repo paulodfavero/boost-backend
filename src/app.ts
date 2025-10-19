@@ -23,6 +23,7 @@ import { tipsIaRoutes } from './http/controllers/tips-ia/routes'
 import { financialScoreRoutes } from './http/controllers/financial-score/routes'
 import { accessLogRoutes } from './http/controllers/access-log/routes'
 import { cacheRoutes } from './http/controllers/cache/routes'
+import { walletRoutes } from './http/controllers/wallet/routes'
 
 const isDevelopment = process.env.NODE_ENV === 'dev'
 
@@ -157,3 +158,4 @@ app.register(tipsIaRoutes)
 app.register(financialScoreRoutes)
 app.register(accessLogRoutes)
 app.register(cacheRoutes)
+app.register(walletRoutes)

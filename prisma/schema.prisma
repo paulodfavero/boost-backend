@@ -34,6 +34,7 @@ model Organization {
   User                     User[]
   Investment               Investment[]
   AccessLog                AccessLog[]
+  Wallet                   Wallet[]
 
   @@map("organizations")
 }
@@ -332,4 +333,16 @@ model AccessLog {
   organization   Organization @relation(fields: [organizationId], references: [id])
 
   @@map("access_logs")
+}
+
+model Wallet {
+  id             String       @id @default(dbgenerated("nanoid(11)"))
+  created_at     DateTime     @default(now())
+  updated_at     DateTime     @default(now())
+  name           String
+  balance        Int          @default(0)
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id])
+
+  @@map("wallets")
 }
