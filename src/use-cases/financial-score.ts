@@ -3,6 +3,7 @@ import { format, subMonths } from 'date-fns'
 import { OrganizationsRepository } from '@/repositories/organization-repository'
 import { ExpensesRepository } from '@/repositories/expense-repository'
 import { CreditsRepository } from '@/repositories/credit-repository'
+import { GainsRepository } from '@/repositories/gain-repository'
 
 interface FinancialScoreUseCaseRequest {
   organizationId: string
@@ -15,6 +16,7 @@ export class FinancialScoreUseCase {
     private organizationsRepository: OrganizationsRepository,
     private expensesRepository: ExpensesRepository,
     private creditsRepository: CreditsRepository,
+    private gainsRepository: GainsRepository,
   ) {
     this.openai = new OpenAI({
       apiKey: process.env.OPENAI_API_KEY,
@@ -62,6 +64,14 @@ export class FinancialScoreUseCase {
     const startDate = format(twelveMonthsAgo, 'yyyy-MM-dd')
     const endDate = format(currentDate, 'yyyy-MM-dd')
 
+    const gainsTransactions = await this.gainsRepository.searchMany(
+      organizationId,
+      undefined, // date
+      undefined, // bankId
+      startDate,
+      endDate,
+    )
+
     const expensesTransactions = await this.expensesRepository.searchMany(
       organizationId,
       undefined, // date
@@ -87,120 +97,160 @@ export class FinancialScoreUseCase {
     }
 
     // Organizar dados por mês e categoria para cálculo do score
-    const dadosPorMes: { [key: string]: { [key: string]: number } } = {}
+    const dadosPorMes: {
+      [key: string]: {
+        gastos: { [categoria: string]: number }
+        ganhos: { [categoria: string]: number }
+      }
+    } = {}
 
     // Processar despesas
     expensesTransactions?.forEach((expense: any) => {
       const expenseDateField = expense.expiration_date
+      if (!expenseDateField) return
 
-      if (expenseDateField) {
-        const expenseDate = new Date(expenseDateField)
+      const expenseDate = new Date(expenseDateField)
+      if (isNaN(expenseDate.getTime())) return
 
-        if (!isNaN(expenseDate.getTime())) {
-          const month = format(expenseDate, 'yyyy-MM')
-          const category =
-            expense.category || expense.categoryName || 'Sem categoria'
+      const month = format(expenseDate, 'yyyy-MM')
+      const category =
+        expense.category || expense.categoryName || 'Sem categoria'
+      const amount = expense.amount / 100
+      if (!dadosPorMes[month]) {
+        dadosPorMes[month] = { gastos: {}, ganhos: {} }
+      }
+      if (!dadosPorMes[month].gastos[category]) {
+        dadosPorMes[month].gastos[category] = 0
+      }
+      dadosPorMes[month].gastos[category] = Number(
+        (dadosPorMes[month].gastos[category] + amount).toFixed(2),
+      )
+    })
 
-          if (!dadosPorMes[month]) {
-            dadosPorMes[month] = {}
-          }
-          if (!dadosPorMes[month][category]) {
-            dadosPorMes[month][category] = 0
-          }
-          dadosPorMes[month][category] += expense.amount
-        } else {
-          console.log('Data inválida para expense:', expenseDateField)
-        }
-      } else {
-        console.log('Expense sem data:', expense)
+    // Processar ganhos
+    gainsTransactions?.forEach((gain: any) => {
+      const gainDateField =
+        gain.date || gain.payment_date || gain.expiration_date
+      if (!gainDateField) return
+
+      const gainDate = new Date(gainDateField)
+      if (isNaN(gainDate.getTime())) return
+
+      const month = format(gainDate, 'yyyy-MM')
+      const category = gain.category || gain.categoryName || 'Sem categoria'
+      const amount = gain.amount / 100
+      if (!dadosPorMes[month]) {
+        dadosPorMes[month] = { gastos: {}, ganhos: {} }
+      }
+      if (!dadosPorMes[month].ganhos[category]) {
+        dadosPorMes[month].ganhos[category] = 0
+      }
+      dadosPorMes[month].ganhos[category] = Number(
+        (dadosPorMes[month].ganhos[category] + amount).toFixed(2),
+      )
+    })
+
+    function calcularScore(totalGasto: number, totalGanho: number) {
+      if (totalGanho <= 0) return 0
+      const ratio = totalGasto / totalGanho
+      let score = Math.round(1000 * Math.exp(-1.2 * (ratio - 0.8)))
+      if (score < 0) score = 0
+      if (score > 1000) score = 1000
+      return score
+    }
+
+    // Montar dados mensais
+    const monthlyScores = Object.entries(dadosPorMes).map(([month, data]) => {
+      const totalGasto = Number(
+        Object.values(data.gastos)
+          .reduce((a, b) => a + b, 0)
+          .toFixed(2),
+      )
+      const totalGanho = Number(
+        Object.values(data.ganhos)
+          .reduce((a, b) => a + b, 0)
+          .toFixed(2),
+      )
+      const score = calcularScore(Number(totalGasto), Number(totalGanho))
+
+      return {
+        month,
+        totalGasto,
+        totalGanho,
+        ratio: totalGanho > 0 ? (totalGasto / totalGanho).toFixed(2) : null,
+        categories: data.gastos,
+        score,
       }
     })
 
-    // Calcular score usando a fórmula especificada
-    const score = this.calcularScore(dadosPorMes)
-
-    const monthlyScores = Object.entries(dadosPorMes).map(
-      ([month, categories]) => {
-        const total = Object.values(categories).reduce(
-          (acc, val) => acc + val,
-          0,
-        )
-        const mediaEmReais = total / 100
-        let score = 1000 - mediaEmReais / 10
-        if (score < 0) score = 0
-        if (score > 1000) score = 1000
-        return {
-          month,
-          total,
-          categories,
-          score: Math.round(score),
-        }
-      },
+    // Ordenar meses para consistência
+    const orderedScores = monthlyScores.sort(
+      (a, b) => new Date(a.month).getTime() - new Date(b.month).getTime(),
     )
+    const scoreMedio =
+      orderedScores.reduce((acc, cur) => acc + cur.score, 0) /
+      orderedScores.length
+
     const userPrompt = {
       role: 'user' as const,
-      content: `Você receberá os dados de gastos do usuário já organizados por mês (totais e categorias). 
-O score financeiro já foi calculado usando a fórmula: 1000 - (média de gastos mensais em reais / 10).
-
-Sua tarefa é:
-
-1. Usar os dados fornecidos sem inventar valores adicionais.  
-2. Analisar a evolução dos gastos mês a mês com base nos totais.  
-3. Usar o score calculado (${score}) como referência inicial.  
-4. Para cada mês, crie:
-   - "score": número ajustado de acordo com os gastos em relação ao mês anterior
-   - "highlights": pontos positivos e negativos, com base nos totais e categorias daquele mês.  
-5. Gerar um resumo curto e motivador (máx. 3 frases). Se o score cair de forma consistente, alerte o usuário.  
-6. O tom deve ser simples, amigável e próximo (como Nubank/Inter usam).
-
-Dados do usuário (não invente novos valores, use apenas estes):
-${JSON.stringify(monthlyScores, null, 2)}
-
-Score calculado (base): ${score}
-
-Responda apenas em formato JSON:
-{
-  "score": ${score},
-  "evolution": [
+      content: `Você receberá os dados de ganhos e gastos do usuário já organizados por mês. 
+    O score financeiro de cada mês foi calculado com base na relação ganho/gasto, e varia entre 0 e 1000.
+    
+    Sua tarefa é:
+    1. NÃO recalcular os scores. Use apenas os valores fornecidos.
+    2. Analise a evolução mês a mês com base no total de ganhos, gastos e scores já calculados.
+    3. Gere para cada mês:
+       - "score": número informado
+       - "highlights": pontos positivos e negativos breves, com base nos totais e categorias daquele mês.
+    4. Gere um resumo curto e motivador (máx. 3 frases). Se o score cair de forma consistente, alerte o usuário.
+    5. O tom deve ser simples, amigável e próximo (como Nubank/Inter usam).
+    
+    Dados do usuário (não invente novos valores, use apenas estes):
+    ${JSON.stringify(orderedScores, null, 2)}
+    
+    Score médio: ${Math.round(scoreMedio)}
+    
+    Responda apenas em formato JSON, sem blocos de código:
     {
-      "month": "YYYY-MM",
-      "score": número,
-      "highlights": "texto"
+      "score": número (entre 0 e 1000),
+      "evolution": [
+        {
+          "month": "YYYY-MM",
+          "score": número,
+          "highlights": "texto"
+        }
+      ],
+      "summary": "resumo motivador"
+    }`,
     }
-  ],
-  "summary": "resumo motivador"
-}`,
-    }
+
     const systemPrompt = {
       role: 'system' as const,
-      content: `Você é um coach financeiro especializado em análise de gastos e pontuação financeira.`,
+      content: `Você é um coach financeiro especializado em ajudar usuários a entender e melhorar sua relação entre ganhos e gastos.`,
     }
 
     try {
       const response = await this.openai.chat.completions.create({
         model: 'gpt-4.1-mini',
-        temperature: 0.4,
+        temperature: 0.0,
         messages: [systemPrompt, userPrompt],
       })
 
       const content = response.choices[0]?.message?.content
-      if (!content) {
-        throw new Error('Resposta vazia da IA')
-      }
+      if (!content) throw new Error('Resposta vazia da IA')
 
-      // Extrair JSON do conteúdo, removendo blocos de código markdown se existirem
       let jsonContent = content.trim()
-
-      // Se o conteúdo está dentro de blocos de código markdown, extrair apenas o JSON
-      if (jsonContent.startsWith('```json')) {
-        jsonContent = jsonContent
-          .replace(/^```json\s*/, '')
-          .replace(/\s*```$/, '')
-      } else if (jsonContent.startsWith('```')) {
-        jsonContent = jsonContent.replace(/^```\s*/, '').replace(/\s*```$/, '')
+      if (jsonContent.startsWith('```')) {
+        jsonContent = jsonContent.replace(/^```json\s*|^```\s*|\s*```$/g, '')
       }
 
-      return JSON.parse(jsonContent)
+      const parsed = JSON.parse(jsonContent)
+      parsed.evolution = parsed.evolution.map((m: any) => ({
+        ...m,
+        score: Math.max(0, Math.min(1000, m.score)),
+      }))
+
+      return parsed
     } catch (error) {
       console.error('Erro ao criar financial-score completion:', error)
       throw new Error('Erro interno do servidor')
