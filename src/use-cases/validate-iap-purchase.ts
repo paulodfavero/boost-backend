@@ -4,12 +4,12 @@ import { env } from '@/env'
 
 // Mapeamento de produtos para planos
 const productToPlanMap: Record<string, string> = {
-  'boost.plus.monthly': 'PLUS',
-  'boost.plus.annual2': 'PLUS',
-  boostfinance: 'ESSENCIAL',
-  essencialannual: 'ESSENCIAL',
-  'boost.pro.monthly': 'PRO',
-  'boost.pro.annual2': 'PRO',
+  boost_essencial_monthly_14_90: 'ESSENCIAL',
+  boost_essencial_annual_129_90: 'ESSENCIAL',
+  boost_plus_monthly_24_90: 'PLUS',
+  boost_plus_annual_199_90: 'PLUS',
+  boost_pro_monthly_34_90: 'PRO',
+  boost_pro_annual_249_90: 'PRO',
 }
 
 interface ValidateIAPPurchaseRequest {
