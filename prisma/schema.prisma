@@ -8,32 +8,35 @@ datasource db {
 }
 
 model Organization {
-  id                       String            @id @default(dbgenerated("nanoid(11)"))
-  created_at               DateTime          @default(now())
+  id                       String               @id @default(dbgenerated("nanoid(11)"))
+  created_at               DateTime             @default(now())
   name                     String
   password                 String?
-  cnpj                     String?           @unique
-  cpf                      String?           @unique
-  email                    String?           @unique
+  cnpj                     String?              @unique
+  cpf                      String?              @unique
+  email                    String?              @unique
   stripe_customer_id       String?
-  apple_iap_transaction_id String?
-  updated_at               DateTime?         @default(now())
-  welcome_email_sent       Boolean           @default(false)
-  trial_start              DateTime?
+  updated_at               DateTime?            @default(now())
+  welcome_email_sent       Boolean              @default(false)
+  plan                     String               @default("FREE")
   trial_end                DateTime?
-  plan                     String            @default("FREE")
+  trial_start              DateTime?
+  apple_iap_transaction_id String?
+  AccessLog                AccessLog[]
   BankTypeAccount          BankTypeAccount[]
   Bank                     Bank[]
   Category                 Category[]
   Company                  Company[]
   Credit                   Credit[]
+  CreditsProjection        CreditsProjection[]
   Expense                  Expense[]
+  ExpensesProjection       ExpensesProjection[]
   Gain                     Gain[]
+  GainsProjection          GainsProjection[]
   Goals                    Goals[]
+  Investment               Investment[]
   Suggestion               Suggestion[]
   User                     User[]
-  Investment               Investment[]
-  AccessLog                AccessLog[]
   Wallet                   Wallet[]
 
   @@map("organizations")
@@ -169,44 +172,45 @@ model Company {
 }
 
 model Bank {
-  id              String            @id @default(dbgenerated("nanoid(11)"))
-  created_at      DateTime          @default(now())
-  item_id         String            @unique
-  name            String
-  primary_color   String
-  institution_url String
-  type            String
-  image_url       String
-  has_mfa         Boolean
-  products        String[]
-  status          String
-  last_updated_at DateTime?
-  organizationId  String
-  name_alias      String?
-  bankTypeAccount BankTypeAccount[]
-  organization    Organization      @relation(fields: [organizationId], references: [id])
-  Credit          Credit[]
-  expense         Expense[]
-  Gain            Gain[]
-  Investment      Investment[]
+  id                 String               @id @default(dbgenerated("nanoid(11)"))
+  created_at         DateTime             @default(now())
+  item_id            String               @unique
+  name               String
+  primary_color      String
+  institution_url    String
+  type               String
+  image_url          String
+  has_mfa            Boolean
+  products           String[]
+  status             String
+  last_updated_at    DateTime?
+  organizationId     String
+  name_alias         String?
+  bankTypeAccount    BankTypeAccount[]
+  organization       Organization         @relation(fields: [organizationId], references: [id])
+  Credit             Credit[]
+  CreditsProjection  CreditsProjection[]
+  expense            Expense[]
+  ExpensesProjection ExpensesProjection[]
+  Gain               Gain[]
+  GainsProjection    GainsProjection[]
+  Investment         Investment?
 
   @@map("banks")
 }
 
 model BankTypeAccount {
-  id                          String        @id @default(dbgenerated("nanoid(11)"))
-  created_at                  DateTime      @default(now())
+  id                          String               @id @default(dbgenerated("nanoid(11)"))
+  created_at                  DateTime             @default(now())
   type                        String
   subtype                     String
   name                        String
   marketing_name              String?
   owner                       String
   balance                     Float
-  balance_due_date_week_day   String?
-  balance_close_date_week_day String?
   currency_code               String
   tax_number                  String?
-  account_id                  String        @unique
+  account_id                  String               @unique
   item_id                     String
   number                      String
   last_updated_at             DateTime?
@@ -216,12 +220,17 @@ model BankTypeAccount {
   organizationId              String?
   bankId                      String?
   name_alias                  String?
-  is_bank_visible             Boolean?      @default(true)
-  bank                        Bank          @relation(fields: [bankItemId], references: [item_id])
-  organization                Organization? @relation(fields: [organizationId], references: [id])
+  is_bank_visible             Boolean?             @default(true)
+  balance_close_date_week_day String?
+  balance_due_date_week_day   String?
+  bank                        Bank                 @relation(fields: [bankItemId], references: [item_id])
+  organization                Organization?        @relation(fields: [organizationId], references: [id])
   Credit                      Credit[]
+  CreditsProjection           CreditsProjection[]
   expense                     Expense[]
+  ExpensesProjection          ExpensesProjection[]
   Gain                        Gain[]
+  GainsProjection             GainsProjection[]
 
   @@map("bankTypeAccount")
 }
@@ -304,16 +313,14 @@ model Goals {
 }
 
 model Investment {
-  id          String    @id @default(dbgenerated("nanoid(11)"))
-  created_at  DateTime  @default(now())
-  updated_at  DateTime? @default(now())
-  investments String    @db.Text
-
-  organization   Organization @relation(fields: [organizationId], references: [id])
+  id             String       @id @default(dbgenerated("nanoid(11)"))
+  created_at     DateTime     @default(now())
+  updated_at     DateTime?    @default(now())
+  investments    String
   organizationId String
-
-  bank   Bank?   @relation(fields: [bankId], references: [id])
-  bankId String? @unique
+  bankId         String?      @unique
+  bank           Bank?        @relation(fields: [bankId], references: [id])
+  organization   Organization @relation(fields: [organizationId], references: [id])
 
   @@map("investments")
 }
@@ -345,4 +352,88 @@ model Wallet {
   organization   Organization @relation(fields: [organizationId], references: [id])
 
   @@map("wallets")
+}
+
+model ExpensesProjection {
+  id                        String           @id @default(dbgenerated("nanoid(11)"))
+  created_at                DateTime         @default(now())
+  expiration_date           DateTime
+  purchase_date             DateTime?
+  balance_close_date        DateTime?
+  bank_transaction_id       String?          @unique
+  description               String
+  company                   String
+  category                  String?
+  amount                    Int
+  type_payment              String
+  operation_type            String?
+  payment_data              String?
+  installment_current       Int?
+  installment_total_payment Int?
+  paid                      Boolean          @default(false)
+  group_installment_id      String?
+  organizationId            String
+  bankId                    String?
+  bankTypeAccountId         String?
+  bank                      Bank?            @relation(fields: [bankId], references: [id])
+  bankTypeAccount           BankTypeAccount? @relation(fields: [bankTypeAccountId], references: [id])
+  organization              Organization     @relation(fields: [organizationId], references: [id])
+
+  @@map("expenses_projection")
+}
+
+model GainsProjection {
+  id                        String           @id @default(dbgenerated("nanoid(11)"))
+  created_at                DateTime         @default(now())
+  expiration_date           DateTime
+  purchase_date             DateTime?
+  balance_close_date        DateTime?
+  bank_transaction_id       String?          @unique
+  description               String
+  company                   String
+  category                  String?
+  amount                    Int
+  type_payment              String
+  operation_type            String?
+  payment_data              String?
+  installment_current       Int?
+  installment_total_payment Int?
+  paid                      Boolean          @default(false)
+  group_installment_id      String?
+  organizationId            String
+  bankId                    String?
+  bankTypeAccountId         String?
+  bank                      Bank?            @relation(fields: [bankId], references: [id])
+  bankTypeAccount           BankTypeAccount? @relation(fields: [bankTypeAccountId], references: [id])
+  organization              Organization     @relation(fields: [organizationId], references: [id])
+
+  @@map("gains_projection")
+}
+
+model CreditsProjection {
+  id                        String           @id @default(dbgenerated("nanoid(11)"))
+  created_at                DateTime         @default(now())
+  expiration_date           DateTime
+  purchase_date             DateTime?
+  balance_close_date        DateTime?
+  bank_transaction_id       String?          @unique
+  description               String
+  company                   String
+  category                  String?
+  amount                    Int
+  type_payment              String
+  operation_type            String?
+  payment_data              String?
+  installment_current       Int?
+  installment_total_payment Int?
+  paid                      Boolean          @default(false)
+  group_installment_id      String?
+  organizationId            String
+  bankId                    String?
+  bankTypeAccountId         String?
+  bank                      Bank?            @relation(fields: [bankId], references: [id])
+  bankTypeAccount           BankTypeAccount? @relation(fields: [bankTypeAccountId], references: [id])
+  organization              Organization     @relation(fields: [organizationId], references: [id])
+
+  @@map("credits_projection")
 }

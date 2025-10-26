@@ -11,6 +11,7 @@
     "start": "node dist/server.js",
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "tsup src && mkdir -p dist/prisma && cp prisma/schema.prisma dist/prisma/",
+    "deploy": "prisma migrate deploy && npm run build",
     "postinstall": "prisma generate"
   },
   "keywords": [],
