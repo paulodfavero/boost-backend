@@ -27,16 +27,13 @@ export async function create(request: FastifyRequest, reply: FastifyReply) {
     console.error('Erro no financial-score:', error)
 
     // Se for erro de validação do Zod, retornar erro 400
-    if (error instanceof z.ZodError) {
+    if (error instanceof z.ZodError || error instanceof Error) {
       return reply.status(400).send({
         error: 'Dados inválidos',
-        details: error.errors,
+        details: error instanceof z.ZodError ? error.errors : error.message,
       })
     }
 
     return reply.status(500).send({ error: 'Erro interno do servidor' })
   }
 }
-
-
-
