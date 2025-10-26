@@ -17,14 +17,14 @@ export async function search(request: FastifyRequest, reply: FastifyReply) {
   }
 
   const searchCategoriesQuerySchema = z.object({
-    a: z.string(),
+    organizationId: z.string(),
   })
 
-  const { a } = searchCategoriesQuerySchema.parse(request.query)
+  const { organizationId } = searchCategoriesQuerySchema.parse(request.query)
   const searchCategoryUseCase = makeSearchCategoryUseCase()
 
   const data = await searchCategoryUseCase.execute({
-    query: a,
+    organizationId,
   })
 
   // Salvar no cache
