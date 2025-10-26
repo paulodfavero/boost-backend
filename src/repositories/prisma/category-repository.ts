@@ -3,10 +3,13 @@ import { CategoriesRepository } from '../category-repository'
 import { Prisma } from '@prisma/client'
 
 export class PrismaCategoriesRepository implements CategoriesRepository {
-  async searchMany(organizationId: string) {
+  async searchMany(query: string) {
     const categories = await prisma.category.findMany({
       where: {
-        organizationId,
+        name: {
+          contains: query,
+          mode: 'insensitive',
+        },
       },
     })
 
@@ -19,6 +22,16 @@ export class PrismaCategoriesRepository implements CategoriesRepository {
     })
 
     return category
+  }
+
+  async delete(categoryId: string) {
+    const result = await prisma.category.delete({
+      where: {
+        id: categoryId,
+      },
+    })
+
+    return result
   }
 
   async deleteManyByOrganization(organizationId: string) {
