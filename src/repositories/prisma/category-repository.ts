@@ -3,13 +3,20 @@ import { CategoriesRepository } from '../category-repository'
 import { Prisma } from '@prisma/client'
 
 export class PrismaCategoriesRepository implements CategoriesRepository {
-  async searchMany(query: string) {
+  async searchMany(query: string, organizationId: string) {
     const categories = await prisma.category.findMany({
       where: {
-        name: {
-          contains: query,
-          mode: 'insensitive',
-        },
+        AND: [
+          {
+            name: {
+              contains: query,
+              mode: 'insensitive',
+            },
+          },
+          {
+            organizationId,
+          },
+        ],
       },
     })
 
