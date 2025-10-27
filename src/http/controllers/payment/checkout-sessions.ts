@@ -6,11 +6,26 @@ const stripe = new Stripe(env.STRIPE_SECRET_KEY, {
   apiVersion: '2025-07-30.basil',
 })
 
+// Função para identificar se um priceId é de plano mensal
+function isMonthlyPlan(priceId: string): boolean {
+  // Lista dos priceIds de planos mensais (sem _ANNUAL)
+  const monthlyPlanIds = [
+    env.STRIPE_PRO_PLAN_ID,
+    env.STRIPE_PLUS_PLAN_ID,
+    env.STRIPE_ESSENCIAL_PLAN_ID,
+    env.STRIPE_PRO_PLAN_ID_OLD,
+    env.STRIPE_PLUS_PLAN_ID_OLD,
+  ].filter(Boolean) // Remove valores undefined
+
+  return monthlyPlanIds.includes(priceId)
+}
+
 interface CheckoutSessionRequest {
   email: string
   priceId: string
   organizationId: string
   origin: string
+  promotionCode?: string // Código promocional opcional
 }
 
 export async function createCheckoutSession(
@@ -18,12 +33,24 @@ export async function createCheckoutSession(
   reply: FastifyReply,
 ) {
   try {
-    const { email, priceId, organizationId, origin } = request.body
+    const { email, priceId, organizationId, origin, promotionCode } =
+      request.body
 
     // Validate required fields
     if (!email || !priceId) {
       return reply.status(400).send({
         error: 'E-mail e priceId são obrigatórios',
+      })
+    }
+
+    // Verificar se é um plano mensal para permitir cupons
+    const isMonthly = isMonthlyPlan(priceId)
+
+    // Se tentar usar cupom em plano anual, retornar erro
+    if (promotionCode && !isMonthly) {
+      return reply.status(400).send({
+        error:
+          'Cupons de desconto são válidos apenas para planos mensais. Para planos anuais, você já possui um desconto especial.',
       })
     }
 
@@ -48,7 +75,7 @@ export async function createCheckoutSession(
       //     coupon: '{{COUPON_ID}}',
       //   },
       // ],
-      allow_promotion_codes: true,
+      allow_promotion_codes: isMonthly, // Permitir cupons apenas para planos mensais
       locale: 'pt-BR',
       success_url: `${validOrigin}/plans/success?sessionId={CHECKOUT_SESSION_ID}&organizationId=${organizationId}`,
       cancel_url: `${validOrigin}/plans?canceled=true`,
