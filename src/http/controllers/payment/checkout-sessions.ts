@@ -7,17 +7,45 @@ const stripe = new Stripe(env.STRIPE_SECRET_KEY, {
 })
 
 // Função para identificar se um priceId é de plano mensal
-function isMonthlyPlan(priceId: string): boolean {
-  // Lista dos priceIds de planos mensais (sem _ANNUAL)
-  const monthlyPlanIds = [
-    env.STRIPE_PRO_PLAN_ID,
-    env.STRIPE_PLUS_PLAN_ID,
-    env.STRIPE_ESSENCIAL_PLAN_ID,
-    env.STRIPE_PRO_PLAN_ID_OLD,
-    env.STRIPE_PLUS_PLAN_ID_OLD,
-  ].filter(Boolean) // Remove valores undefined
+async function isMonthlyPlan(priceId: string): Promise<boolean> {
+  try {
+    // Buscar o price no Stripe para verificar o intervalo de cobrança
+    const price = await stripe.prices.retrieve(priceId)
 
-  return monthlyPlanIds.includes(priceId)
+    // Verificar se é um plano de assinatura recorrente
+    if (price.type === 'recurring') {
+      // Se o intervalo for 'month', é mensal
+      return price.recurring?.interval === 'month'
+    }
+
+    // Se não for recorrente, não é um plano de assinatura válido
+    return false
+  } catch (error) {
+    console.error('Erro ao verificar price no Stripe:', error)
+
+    // Fallback: usar lista de planos mensais conhecidos
+    const monthlyPlanIds = [
+      env.STRIPE_PRO_PLAN_ID,
+      env.STRIPE_PLUS_PLAN_ID,
+      env.STRIPE_ESSENCIAL_PLAN_ID,
+      env.STRIPE_PRO_PLAN_ID_OLD,
+      env.STRIPE_PLUS_PLAN_ID_OLD,
+    ].filter(Boolean)
+
+    const annualPlanIds = [
+      env.STRIPE_PRO_PLAN_ID_ANNUAL,
+      env.STRIPE_PLUS_PLAN_ID_ANNUAL,
+      env.STRIPE_ESSENCIAL_PLAN_ID_ANNUAL,
+    ].filter(Boolean)
+
+    // Se for um plano anual conhecido, definitivamente não é mensal
+    if (annualPlanIds.includes(priceId)) {
+      return false
+    }
+
+    // Se for um plano mensal conhecido, retorna true
+    return monthlyPlanIds.includes(priceId)
+  }
 }
 
 interface CheckoutSessionRequest {
@@ -44,7 +72,11 @@ export async function createCheckoutSession(
     }
 
     // Verificar se é um plano mensal para permitir cupons
-    const isMonthly = isMonthlyPlan(priceId)
+    const isMonthly = await isMonthlyPlan(priceId)
+
+    // Log para debug
+    console.log(`🔍 PriceId recebido: ${priceId}`)
+    console.log(`🔍 É plano mensal: ${isMonthly}`)
 
     // Se tentar usar cupom em plano anual, retornar erro
     if (promotionCode && !isMonthly) {
