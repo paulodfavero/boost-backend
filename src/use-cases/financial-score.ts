@@ -1,5 +1,5 @@
 import { OpenAI } from 'openai'
-import { format, subMonths } from 'date-fns'
+import { format, subMonths, lastDayOfMonth } from 'date-fns'
 import { OrganizationsRepository } from '@/repositories/organization-repository'
 import { ExpensesRepository } from '@/repositories/expense-repository'
 import { CreditsRepository } from '@/repositories/credit-repository'
@@ -58,11 +58,16 @@ export class FinancialScoreUseCase {
       throw new Error('Organização não encontrada')
     }
 
-    // Buscar despesas dos últimos 12 meses (sem filtro de mês)
+    // Buscar despesas dos últimos 12 meses anteriores ao mês anterior
+    // Exemplo: estamos em 03/11, então pega de 11/2023 até 10/2024 (12 meses completos)
+    // O mês atual não deve ser incluído pois ainda não tem todos os gastos e ganhos computados
     const currentDate = new Date()
-    const twelveMonthsAgo = subMonths(currentDate, 12)
-    const startDate = format(twelveMonthsAgo, 'yyyy-MM-dd')
-    const endDate = format(currentDate, 'yyyy-MM-dd')
+    const previousMonth = subMonths(currentDate, 1)
+    const lastDayOfPreviousMonth = lastDayOfMonth(previousMonth)
+    // 12 meses antes do mês anterior (11 meses antes + o próprio mês anterior = 12 meses)
+    const firstDayOfTwelveMonthsAgo = subMonths(previousMonth, 11)
+    const startDate = format(firstDayOfTwelveMonthsAgo, 'yyyy-MM-01')
+    const endDate = format(lastDayOfPreviousMonth, 'yyyy-MM-dd')
 
     const gainsTransactions = await this.gainsRepository.searchMany(
       organizationId,
@@ -159,7 +164,7 @@ export class FinancialScoreUseCase {
       return score
     }
 
-    // Montar dados mensais
+    // Montar dados mensais (apenas meses completos, até o mês anterior)
     const monthlyScores = Object.entries(dadosPorMes).map(([month, data]) => {
       const totalGasto = Number(
         Object.values(data.gastos)

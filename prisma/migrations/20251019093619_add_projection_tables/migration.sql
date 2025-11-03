@@ -111,3 +111,4 @@ ALTER TABLE "credits_projection" ADD CONSTRAINT "credits_projection_bankTypeAcco
 
 -- AddForeignKey
 ALTER TABLE "credits_projection" ADD CONSTRAINT "credits_projection_organizationId_fkey" FOREIGN KEY ("organizationId") REFERENCES "organizations"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
