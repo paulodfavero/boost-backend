@@ -53,7 +53,6 @@ interface CheckoutSessionRequest {
   priceId: string
   organizationId: string
   origin: string
-  promotionCode?: string // Código promocional opcional
 }
 
 export async function createCheckoutSession(
@@ -61,8 +60,7 @@ export async function createCheckoutSession(
   reply: FastifyReply,
 ) {
   try {
-    const { email, priceId, organizationId, origin, promotionCode } =
-      request.body
+    const { email, priceId, organizationId, origin } = request.body
 
     // Validate required fields
     if (!email || !priceId) {
@@ -78,8 +76,8 @@ export async function createCheckoutSession(
     console.log(`🔍 PriceId recebido: ${priceId}`)
     console.log(`🔍 É plano mensal: ${isMonthly}`)
 
-    // Se tentar usar cupom em plano anual, retornar erro
-    if (promotionCode && !isMonthly) {
+    // Se NÃO for plano mensal, retornar erro imediatamente
+    if (!isMonthly) {
       return reply.status(400).send({
         error:
           'Cupons de desconto são válidos apenas para planos mensais. Para planos anuais, você já possui um desconto especial.',
@@ -91,7 +89,7 @@ export async function createCheckoutSession(
     if (!validOrigin) {
       validOrigin = env.SITE_URL
     }
-
+    console.log('allow_promotion_codes', false)
     // Create Checkout Sessions from body params.
     const session = await stripe.checkout.sessions.create({
       customer_email: email,
@@ -107,7 +105,7 @@ export async function createCheckoutSession(
       //     coupon: '{{COUPON_ID}}',
       //   },
       // ],
-      allow_promotion_codes: isMonthly, // Permitir cupons apenas para planos mensais
+      allow_promotion_codes: false, // Permitir cupons apenas para planos mensais
       locale: 'pt-BR',
       success_url: `${validOrigin}/plans/success?sessionId={CHECKOUT_SESSION_ID}&organizationId=${organizationId}`,
       cancel_url: `${validOrigin}/plans?canceled=true`,
