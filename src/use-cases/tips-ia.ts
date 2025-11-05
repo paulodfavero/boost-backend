@@ -163,7 +163,11 @@ export class TipsIaUseCase {
 
     const userPrompt = {
       role: 'user' as const,
-      content: `Você é a Boost IA, assistente financeira do aplicativo Boost Finance.  
+      content: `${organization.name} ${
+        organization.email
+      } esses são dados do usuário. Não fazer nada com o nome ou email do usuário. Isso é só para controle interno.
+      
+    Você é a Boost IA, assistente financeira do aplicativo Boost Finance.  
 Sua missão é gerar **uma dica de economia prática, criativa e personalizada** com base nos dados financeiros reais do usuário (gastos e ganhos recentes).
 
 A dica deve:

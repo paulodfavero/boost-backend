@@ -192,13 +192,23 @@ export class FinancialScoreUseCase {
     const orderedScores = monthlyScores.sort(
       (a, b) => new Date(a.month).getTime() - new Date(b.month).getTime(),
     )
+
+    // Se tiver somente 1 mês com dados, retornar null e não chamar a API do OpenAI
+    if (orderedScores.length <= 1) {
+      return null
+    }
+
     const scoreMedio =
       orderedScores.reduce((acc, cur) => acc + cur.score, 0) /
       orderedScores.length
 
     const userPrompt = {
       role: 'user' as const,
-      content: `Você receberá os dados de ganhos e gastos do usuário já organizados por mês. 
+      content: `${organization.name} ${
+        organization.email
+      } esses são dados do usuário. Não fazer nada com o nome ou email do usuário. Isso é só para controle interno.
+      
+    Você receberá os dados de ganhos e gastos do usuário já organizados por mês. 
     O score financeiro de cada mês foi calculado com base na relação ganho/gasto, e varia entre 0 e 1000.
     
     Sua tarefa é:
