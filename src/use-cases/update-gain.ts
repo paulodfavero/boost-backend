@@ -1,5 +1,6 @@
 import { GainsRepository } from '@/repositories/gain-repository'
 import { OrganizationsRepository } from '@/repositories/organization-repository'
+import { translateCategory } from '@/lib/category-translation'
 
 import { OrganizationNotFound } from './errors/organization-not-found-error'
 
@@ -48,10 +49,13 @@ export class UpdateGainUseCase {
       installmentTotalPayment,
     } = reqBody
 
+    // Translate category from English to Portuguese
+    const translatedCategory = translateCategory(category)
+
     const dataReturn = {
       id,
       description,
-      category,
+      category: translatedCategory,
       amount,
       paid,
       installment_current: installmentCurrent,
