@@ -1,5 +1,6 @@
 
 import { OrganizationsRepository } from '@/repositories/organization-repository'
+import { translateCategory } from '@/lib/category-translation'
 
 import { OrganizationNotFound } from './errors/organization-not-found-error'
 import { CreditsRepository } from '@/repositories/credit-repository'
@@ -49,10 +50,13 @@ export class UpdateCreditUseCase {
       installmentTotalPayment,
     } = reqBody
 
+    // Translate category from English to Portuguese
+    const translatedCategory = translateCategory(category)
+
     const dataReturn = {
       id,
       description,
-      category,
+      category: translatedCategory,
       amount,
       paid,
       installment_current: installmentCurrent,
