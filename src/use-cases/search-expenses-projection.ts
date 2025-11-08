@@ -1,7 +1,6 @@
 import { addMonths, format, subMonths } from 'date-fns'
 
 import { ExpensesProjectionRepository } from '@/repositories/expenses-projection-repository'
-import { GainsProjectionRepository } from '@/repositories/gains-projection-repository'
 import { BanksTypeAccountRepository } from '@/repositories/bank-repository'
 
 interface SearchExpensesProjectionUseCaseRequest {
@@ -14,7 +13,6 @@ interface SearchExpensesProjectionUseCaseRequest {
 export class SearchExpensesProjectionUseCase {
   constructor(
     private ExpensesProjectionRepository: ExpensesProjectionRepository,
-    private GainsProjectionRepository: GainsProjectionRepository,
     private BankTypeAccountRepository: BanksTypeAccountRepository,
   ) {}
 
@@ -24,19 +22,12 @@ export class SearchExpensesProjectionUseCase {
     bankId,
     isSamePersonTransfer = false,
   }: SearchExpensesProjectionUseCaseRequest): Promise<object> {
-    let totalGains = 0
-    let receivedGains = 0
-
     let totalExpenses = 0
     let receivedExpenses = 0
 
     let previousMonthTotalExpenses = 0
     let previousMonthReceivedExpenses = 0
-    let previousMonthTotalGains = 0
-    let previousMonthReceivedGains = 0
 
-    let nextMonthReceivedGains = 0
-    let nextMonthTotalGains = 0
     let nextMonthReceivedExpenses = 0
     let nextMonthTotalExpenses = 0
 
@@ -48,28 +39,12 @@ export class SearchExpensesProjectionUseCase {
       date,
       bankId,
     )
-    const currentGain = await this.GainsProjectionRepository.searchMany(
-      organizationId,
-      date,
-      bankId,
-    )
     const previousExpense = await this.ExpensesProjectionRepository.searchMany(
       organizationId,
       previousMonth,
       bankId,
     )
-
     const nextExpense = await this.ExpensesProjectionRepository.searchMany(
-      organizationId,
-      nextMonth,
-      bankId,
-    )
-    const previousGain = await this.GainsProjectionRepository.searchMany(
-      organizationId,
-      previousMonth,
-      bankId,
-    )
-    const nextGain = await this.GainsProjectionRepository.searchMany(
       organizationId,
       nextMonth,
       bankId,
@@ -86,26 +61,9 @@ export class SearchExpensesProjectionUseCase {
       return true
     })
 
-    previousGain.map(({ amount, paid }) => {
-      previousMonthTotalGains += amount
-      if (paid) previousMonthReceivedGains += amount
-      return true
-    })
-    nextGain.map(({ amount, paid }) => {
-      nextMonthTotalGains += amount
-      if (paid) nextMonthReceivedGains += amount
-      return true
-    })
-
     expensesFormated.map(({ amount, paid }) => {
       totalExpenses += amount
       if (paid) receivedExpenses += amount
-      return true
-    })
-
-    currentGain.map(({ amount, paid }) => {
-      totalGains += amount
-      if (paid) receivedGains += amount
       return true
     })
 
@@ -121,20 +79,12 @@ export class SearchExpensesProjectionUseCase {
 
     const totalExpensesFormatted = (totalExpenses / 100).toFixed(2)
     const receivedExpensesFormatted = (receivedExpenses / 100).toFixed(2)
-    const totalGainsFormatted = (totalGains / 100).toFixed(2)
-    const receivedGainsFormatted = (receivedGains / 100).toFixed(2)
 
     const previousMonthTotalExpensesFormatted = (
       previousMonthTotalExpenses / 100
     ).toFixed(2)
     const previousMonthReceivedExpensesFormatted = (
       previousMonthReceivedExpenses / 100
-    ).toFixed(2)
-    const previousMonthTotalGainsFormatted = (
-      previousMonthTotalGains / 100
-    ).toFixed(2)
-    const previousMonthReceivedGainsFormatted = (
-      previousMonthReceivedGains / 100
     ).toFixed(2)
 
     const nextMonthTotalExpensesFormatted = (
@@ -143,28 +93,17 @@ export class SearchExpensesProjectionUseCase {
     const nextMonthReceivedExpensesFormatted = (
       nextMonthReceivedExpenses / 100
     ).toFixed(2)
-    const nextMonthTotalGainsFormatted = (nextMonthTotalGains / 100).toFixed(2)
-    const nextMonthReceivedGainsFormatted = (
-      nextMonthReceivedGains / 100
-    ).toFixed(2)
 
     return {
       expenses: expensesFormated,
-      gains: currentGain,
       banks,
       totalBalance: totalBalanceFormatted,
       totalExpenses: totalExpensesFormatted,
       receivedExpenses: receivedExpensesFormatted,
-      totalGains: totalGainsFormatted,
-      receivedGains: receivedGainsFormatted,
       previousMonthTotalExpenses: previousMonthTotalExpensesFormatted,
       previousMonthReceivedExpenses: previousMonthReceivedExpensesFormatted,
-      previousMonthTotalGains: previousMonthTotalGainsFormatted,
-      previousMonthReceivedGains: previousMonthReceivedGainsFormatted,
       nextMonthTotalExpenses: nextMonthTotalExpensesFormatted,
       nextMonthReceivedExpenses: nextMonthReceivedExpensesFormatted,
-      nextMonthTotalGains: nextMonthTotalGainsFormatted,
-      nextMonthReceivedGains: nextMonthReceivedGainsFormatted,
     }
   }
 }

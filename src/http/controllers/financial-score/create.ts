@@ -37,5 +37,3 @@ export async function create(request: FastifyRequest, reply: FastifyReply) {
     return reply.status(500).send({ error: 'Erro interno do servidor' })
   }
 }
-
-

@@ -24,6 +24,13 @@ import { financialScoreRoutes } from './http/controllers/financial-score/routes'
 import { accessLogRoutes } from './http/controllers/access-log/routes'
 import { cacheRoutes } from './http/controllers/cache/routes'
 import { walletRoutes } from './http/controllers/wallet/routes'
+import { creditsProjectionRoutes } from './http/controllers/credits-projection/routes'
+import { expensesProjectionRoutes } from './http/controllers/expenses-projection/routes'
+import { gainsProjectionRoutes } from './http/controllers/gains-projection/routes'
+import { expensesRecurrentRoutes } from './http/controllers/expenses-recurrent/routes'
+import { creditsRecurrentRoutes } from './http/controllers/credits-recurrent/routes'
+import { gainsRecurrentRoutes } from './http/controllers/gains-recurrent/routes'
+import { financialProjectionRoutes } from './http/controllers/financial-projection/routes'
 
 const isDevelopment = process.env.NODE_ENV === 'dev'
 
@@ -159,3 +166,10 @@ app.register(financialScoreRoutes)
 app.register(accessLogRoutes)
 app.register(cacheRoutes)
 app.register(walletRoutes)
+app.register(creditsProjectionRoutes)
+app.register(expensesProjectionRoutes)
+app.register(gainsProjectionRoutes)
+app.register(expensesRecurrentRoutes)
+app.register(creditsRecurrentRoutes)
+app.register(gainsRecurrentRoutes)
+app.register(financialProjectionRoutes)

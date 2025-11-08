@@ -1,0 +1,30 @@
+import { FastifyReply, FastifyRequest } from 'fastify'
+import { z } from 'zod'
+import { makeSearchRecurrentExpensesUseCase } from '@/use-cases/factories/make-search-recurrent-expenses-use-case'
+
+export async function search(request: FastifyRequest, reply: FastifyReply) {
+  const searchRecurrentExpensesQuerySchema = z.object({
+    a: z.string(),
+    bankId: z.string().nullish(),
+    isSamePersonTransfer: z
+      .string()
+      .optional()
+      .transform((val) => val === 'true'),
+  })
+
+  const { a, bankId, isSamePersonTransfer } =
+    searchRecurrentExpensesQuerySchema.parse(request.query)
+
+  try {
+    const searchRecurrentExpensesUseCase = makeSearchRecurrentExpensesUseCase()
+    const data = await searchRecurrentExpensesUseCase.execute({
+      organizationId: a,
+      bankId: bankId || undefined,
+      isSamePersonTransfer: isSamePersonTransfer || false,
+    })
+
+    return reply.status(200).send(data)
+  } catch (err) {
+    return reply.status(409).send({ message: err })
+  }
+}
