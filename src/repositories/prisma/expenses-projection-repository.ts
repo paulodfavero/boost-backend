@@ -115,6 +115,3 @@ export class PrismaExpensesProjectionRepository
     return expenseProjection
   }
 }
-
-
-

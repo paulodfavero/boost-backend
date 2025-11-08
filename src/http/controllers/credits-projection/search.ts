@@ -25,7 +25,20 @@ export async function search(request: FastifyRequest, reply: FastifyReply) {
 
     return reply.status(200).send(data)
   } catch (err) {
-    return reply.status(409).send({ message: err })
+    console.error('Erro na busca de credits-projection:', err)
+
+    // Se for erro de validação do Zod, retornar erro 400
+    if (err instanceof z.ZodError) {
+      return reply.status(400).send({
+        error: 'Dados de consulta inválidos',
+        details: err.errors,
+      })
+    }
+
+    return reply.status(500).send({
+      error: 'Erro interno do servidor na busca de credits-projection',
+      message: err instanceof Error ? err.message : 'Erro desconhecido',
+    })
   }
 }
 
@@ -51,6 +64,22 @@ export async function searchCreditsProjectionByOrganizationId(
 
     return reply.status(200).send(data)
   } catch (err) {
-    return reply.status(409).send({ message: err })
+    console.error(
+      'Erro na busca de credits-projection por organizationId:',
+      err,
+    )
+
+    // Se for erro de validação do Zod, retornar erro 400
+    if (err instanceof z.ZodError) {
+      return reply.status(400).send({
+        error: 'Dados de consulta inválidos',
+        details: err.errors,
+      })
+    }
+
+    return reply.status(500).send({
+      error: 'Erro interno do servidor na busca de credits-projection',
+      message: err instanceof Error ? err.message : 'Erro desconhecido',
+    })
   }
 }

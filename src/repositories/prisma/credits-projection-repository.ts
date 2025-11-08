@@ -162,6 +162,3 @@ export class PrismaCreditsProjectionRepository
     return creditProjection
   }
 }
-
-
-
