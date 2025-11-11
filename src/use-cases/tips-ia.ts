@@ -201,16 +201,16 @@ Exemplo 3:
 - Tipo de dica a gerar: **${selectedTheme}**  
 
 ### Saída esperada:
-Uma dica curta e natural, no formato:
-> texto da dica
+⚠️ A resposta deve ter **no máximo 180 caracteres**, em **uma frase única** no formato:
+texto da dica
 Nada mais além disso.
 `,
     }
 
     try {
       const response = await this.openai.chat.completions.create({
-        model: 'gpt-4.1-mini',
-        temperature: 0.2,
+        model: 'gpt-5-mini',
+        temperature: 1,
         messages: [systemPrompt, userPrompt],
       })
       const content = response.choices[0]?.message?.content
