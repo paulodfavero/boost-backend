@@ -203,10 +203,8 @@ export const getUserPlanByCustomerId = async (
   try {
     // Obtém informações do cliente
     const customer = await getCustomerById(customerId)
-    console.log('🔍 Customer:', customer)
     // Obtém a assinatura ativa
     const subscription = await getActiveSubscription(customerId)
-    console.log('🔍 Subscription:', subscription)
     // Determina o tipo de plano
     const planType = subscription
       ? getPlanTypeFromSubscription(subscription)
