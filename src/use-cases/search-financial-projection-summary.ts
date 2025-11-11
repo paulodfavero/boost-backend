@@ -40,7 +40,6 @@ export class SearchFinancialProjectionSummaryUseCase {
     const startDate = startMonth
       ? parse(startMonth, 'y/MM', new Date())
       : nextMonth
-
     // Calculate end month
     const endDate = addMonths(startDate, months - 1)
 
@@ -73,18 +72,6 @@ export class SearchFinancialProjectionSummaryUseCase {
       ),
     ])
 
-    // Filter only future projections (expiration_date >= today)
-    const todayStart = startOfMonth(today)
-    const futureExpenses = expenses.filter(
-      (exp) => new Date(exp.expiration_date) >= todayStart,
-    )
-    const futureGains = gains.filter(
-      (gain) => new Date(gain.expiration_date) >= todayStart,
-    )
-    const futureCredits = credits.filter(
-      (credit) => new Date(credit.expiration_date) >= todayStart,
-    )
-
     // Group transactions by month
     const monthlyMap = new Map<string, MonthlyData>()
 
@@ -107,7 +94,7 @@ export class SearchFinancialProjectionSummaryUseCase {
     }
 
     // Aggregate expenses by month
-    futureExpenses.forEach((expense) => {
+    expenses.forEach((expense) => {
       const month = format(new Date(expense.expiration_date), 'y/MM')
       const monthData = monthlyMap.get(month)
       if (monthData) {
@@ -117,7 +104,7 @@ export class SearchFinancialProjectionSummaryUseCase {
     })
 
     // Aggregate gains by month
-    futureGains.forEach((gain) => {
+    gains.forEach((gain) => {
       const month = format(new Date(gain.expiration_date), 'y/MM')
       const monthData = monthlyMap.get(month)
       if (monthData) {
@@ -127,7 +114,7 @@ export class SearchFinancialProjectionSummaryUseCase {
     })
 
     // Aggregate credits by month
-    futureCredits.forEach((credit) => {
+    credits.forEach((credit) => {
       const month = format(new Date(credit.expiration_date), 'y/MM')
       const monthData = monthlyMap.get(month)
       if (monthData) {
