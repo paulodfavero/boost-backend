@@ -246,8 +246,8 @@ export class FinancialScoreUseCase {
 
     try {
       const response = await this.openai.chat.completions.create({
-        model: 'gpt-4.1-mini',
-        temperature: 0.0,
+        model: 'gpt-5-mini',
+        temperature: 1,
         messages: [systemPrompt, userPrompt],
       })
 
