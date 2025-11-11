@@ -24,13 +24,36 @@ export async function create(request: FastifyRequest, reply: FastifyReply) {
 
     return reply.status(200).send(result)
   } catch (error) {
-    console.error('Erro no financial-score:', error)
+    // Log detalhado do erro para debug
+    console.error('=== ERRO NO FINANCIAL-SCORE ===')
+    console.error('Timestamp:', new Date().toISOString())
+    console.error('Error type:', error?.constructor?.name)
+    console.error(
+      'Error message:',
+      error instanceof Error ? error.message : String(error),
+    )
+    console.error('Error stack:', error instanceof Error ? error.stack : 'N/A')
+    if (error instanceof z.ZodError) {
+      console.error(
+        'Zod validation errors:',
+        JSON.stringify(error.errors, null, 2),
+      )
+    }
+    console.error('Request body:', JSON.stringify(request.body, null, 2))
+    console.error('===============================')
 
     // Se for erro de validação do Zod, retornar erro 400
-    if (error instanceof z.ZodError || error instanceof Error) {
+    if (error instanceof z.ZodError) {
       return reply.status(400).send({
         error: 'Dados inválidos',
-        details: error instanceof z.ZodError ? error.errors : error.message,
+        details: error.errors,
+      })
+    }
+
+    // Se for erro do use case (ex: organização não encontrada)
+    if (error instanceof Error) {
+      return reply.status(400).send({
+        error: error.message || 'Erro na requisição',
       })
     }
 
