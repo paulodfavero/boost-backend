@@ -35,7 +35,7 @@ export async function update(request: FastifyRequest, reply: FastifyReply) {
     return reply.status(200).send(goal)
   } catch (err) {
     return reply.status(404).send({
-      message: `❌ ERROR ${err}`,
+      message: err,
     })
   }
 }

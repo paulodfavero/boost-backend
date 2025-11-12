@@ -17,7 +17,7 @@ export async function remove(request: FastifyRequest, reply: FastifyReply) {
     return reply.status(204).send()
   } catch (err) {
     return reply.status(404).send({
-      message: `❌ ERROR ${err}`,
+      message: err,
     })
   }
 }

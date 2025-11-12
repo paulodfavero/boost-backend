@@ -42,7 +42,7 @@ export async function create(request: FastifyRequest, reply: FastifyReply) {
   } catch (err) {
     // if (err instanceof SubsubcategoryAlreadyExistsError) {
     return reply.status(501).send({
-      message: `❌ ERROR TO CREATE SUBCATEGORY ${err}`,
+      message: err,
     })
     // }
     // throw err
@@ -75,7 +75,7 @@ export async function createMany(request: FastifyRequest, reply: FastifyReply) {
   } catch (err) {
     // if (err instanceof SubsubcategoryAlreadyExistsError) {
     return reply.status(501).send({
-      message: `❌ ERROR TO CREATE SUBCATEGORY ${err}`,
+      message: err,
     })
     // }
     // throw err

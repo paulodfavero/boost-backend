@@ -81,7 +81,7 @@ export async function create(request: FastifyRequest, reply: FastifyReply) {
   } catch (err) {
     // if (err instanceof OrganizationAlreadyExistsError) {
     return reply.status(501).send({
-      message: `❌ ERROR ${err}`,
+      message: err,
     })
     // }
     // throw err
