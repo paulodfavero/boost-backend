@@ -42,7 +42,7 @@ export async function create(request: FastifyRequest, reply: FastifyReply) {
     return reply.status(201).send(goal)
   } catch (err) {
     return reply.status(501).send({
-      message: `❌ ERROR ${err}`,
+      message: err,
     })
   }
 }

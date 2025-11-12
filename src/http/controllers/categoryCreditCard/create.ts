@@ -29,7 +29,7 @@ export async function create(request: FastifyRequest, reply: FastifyReply) {
   } catch (err) {
     // if (err instanceof CategoryAlreadyExistsError) {
     return reply.status(501).send({
-      message: `❌ ERROR TO CREATE CATEGORY ${err}`,
+      message: err,
     })
     // }
     // throw err
@@ -57,7 +57,7 @@ export async function createMany(request: FastifyRequest, reply: FastifyReply) {
   } catch (err) {
     // if (err instanceof CategoryAlreadyExistsError) {
     return reply.status(501).send({
-      message: `❌ ERROR TO CREATE CATEGORY ${err}`,
+      message: err,
     })
     // }
     // throw err
