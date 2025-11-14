@@ -50,6 +50,8 @@ export async function create(request: FastifyRequest, reply: FastifyReply) {
 
     // Invalidar cache de créditos após criação
     invalidateCache('credits-projection')
+    // Invalidar cache de financial projection month details
+    invalidateCache('financial-projection-month-details')
 
     return reply.status(201).send(data)
   } catch (err) {

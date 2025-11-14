@@ -2,11 +2,27 @@ import { FastifyReply, FastifyRequest } from 'fastify'
 import { z } from 'zod'
 
 import { makeSearchFinancialProjectionMonthDetailsUseCase } from '@/use-cases/factories/make-search-financial-projection-month-details-use-case'
+import {
+  cacheMiddleware,
+  saveToCache,
+  cacheConfigs,
+} from '@/http/middlewares/cache'
 
 export async function monthDetails(
   request: FastifyRequest,
   reply: FastifyReply,
 ) {
+  // Aplicar middleware de cache
+  await cacheMiddleware(cacheConfigs.financialProjectionMonthDetails)(
+    request,
+    reply,
+  )
+
+  // Se o cache retornou dados, a função já foi finalizada
+  if (reply.sent) {
+    return
+  }
+
   const searchFinancialProjectionMonthDetailsQuerySchema = z.object({
     organizationId: z.string(),
     month: z.string(),
@@ -22,6 +38,9 @@ export async function monthDetails(
       organizationId,
       month,
     })
+
+    // Salvar no cache
+    saveToCache(request, data, cacheConfigs.financialProjectionMonthDetails)
 
     return reply.status(200).send(data)
   } catch (err) {

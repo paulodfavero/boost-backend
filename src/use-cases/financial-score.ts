@@ -4,6 +4,7 @@ import { OrganizationsRepository } from '@/repositories/organization-repository'
 import { ExpensesRepository } from '@/repositories/expense-repository'
 import { CreditsRepository } from '@/repositories/credit-repository'
 import { GainsRepository } from '@/repositories/gain-repository'
+import { FinancialScoreRepository } from '@/repositories/financial-score-repository'
 
 interface FinancialScoreUseCaseRequest {
   organizationId: string
@@ -17,6 +18,7 @@ export class FinancialScoreUseCase {
     private expensesRepository: ExpensesRepository,
     private creditsRepository: CreditsRepository,
     private gainsRepository: GainsRepository,
+    private financialScoreRepository: FinancialScoreRepository,
   ) {
     this.openai = new OpenAI({
       apiKey: process.env.OPENAI_API_KEY,
@@ -48,7 +50,14 @@ export class FinancialScoreUseCase {
     return Math.round(score)
   }
 
-  async execute({ organizationId }: FinancialScoreUseCaseRequest) {
+  private isSameMonth(date1: Date, date2: Date): boolean {
+    return (
+      date1.getFullYear() === date2.getFullYear() &&
+      date1.getMonth() === date2.getMonth()
+    )
+  }
+
+  private async calculateAndSaveScore(organizationId: string) {
     // Buscar dados da organização
     const organization = await this.organizationsRepository.findById(
       organizationId,
@@ -265,10 +274,52 @@ export class FinancialScoreUseCase {
         score: Math.max(0, Math.min(1000, m.score)),
       }))
 
+      // Salvar ou atualizar no banco
+      const existingScore =
+        await this.financialScoreRepository.findByOrganizationId(organizationId)
+
+      if (existingScore) {
+        await this.financialScoreRepository.update(organizationId, {
+          score: parsed.score,
+          evolution: parsed.evolution,
+          summary: parsed.summary,
+        })
+      } else {
+        await this.financialScoreRepository.create({
+          organizationId,
+          score: parsed.score,
+          evolution: parsed.evolution,
+          summary: parsed.summary,
+        })
+      }
+
       return parsed
     } catch (error) {
       console.error('Erro ao criar financial-score completion:', error)
       throw new Error('Erro interno do servidor')
     }
+  }
+
+  async execute({ organizationId }: FinancialScoreUseCaseRequest) {
+    // Verificar se existe registro no banco
+    const existingScore =
+      await this.financialScoreRepository.findByOrganizationId(organizationId)
+
+    const currentDate = new Date()
+
+    // Se existe registro e é do mês atual → retornar cache
+    if (
+      existingScore &&
+      this.isSameMonth(existingScore.created_at, currentDate)
+    ) {
+      return {
+        score: existingScore.score,
+        evolution: existingScore.evolution,
+        summary: existingScore.summary,
+      }
+    }
+
+    // Se não existe ou é de mês anterior → recalcular
+    return await this.calculateAndSaveScore(organizationId)
   }
 }

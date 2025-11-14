@@ -26,6 +26,8 @@ export async function deleteTransaction(
 
   // Invalidar cache de ganhos após exclusão
   invalidateCache('gains-projection')
+  // Invalidar cache de financial projection month details
+  invalidateCache('financial-projection-month-details')
 
   return reply.status(201).send(data)
 }

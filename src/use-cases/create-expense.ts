@@ -2,7 +2,10 @@ import { addMonths, format } from 'date-fns'
 
 import { ExpensesRepository } from '@/repositories/expense-repository'
 import { OrganizationsRepository } from '@/repositories/organization-repository'
-import { translateCategory } from '@/lib/category-translation'
+import {
+  translateCategory,
+  normalizeCategory,
+} from '@/lib/category-translation'
 
 import { OrganizationNotFound } from './errors/organization-not-found-error'
 
@@ -120,6 +123,9 @@ export class CreateExpenseUseCase {
       // Translate category from English to Portuguese
       const translatedCategory = translateCategory(validatedCategory)
 
+      // Normalize category to ensure it's never null or empty
+      const normalizedCategory = normalizeCategory(translatedCategory)
+
       const expiration_date = format(new Date(expirationDate), 'y/MM/dd')
       const type_payment = typePayment
       const installment_current = installmentCurrent || null
@@ -146,7 +152,7 @@ export class CreateExpenseUseCase {
             organizationId,
             bankTypeAccountId,
             description,
-            category: translatedCategory,
+            category: normalizedCategory,
             amount,
             paid,
             bankId,
@@ -174,7 +180,7 @@ export class CreateExpenseUseCase {
           {
             bank_transaction_id: bankTransactionId,
             description,
-            category: translatedCategory,
+            category: normalizedCategory,
             amount: amountInstallment || amount,
             paid: paidCurrent,
             expiration_date: newExpirationDate,

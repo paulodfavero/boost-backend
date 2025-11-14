@@ -1,6 +1,9 @@
 
 import { OrganizationsRepository } from '@/repositories/organization-repository'
-import { translateCategory } from '@/lib/category-translation'
+import {
+  translateCategory,
+  normalizeCategory,
+} from '@/lib/category-translation'
 
 import { OrganizationNotFound } from './errors/organization-not-found-error'
 import { CreditsRepository } from '@/repositories/credit-repository'
@@ -53,10 +56,13 @@ export class UpdateCreditUseCase {
     // Translate category from English to Portuguese
     const translatedCategory = translateCategory(category)
 
+    // Normalize category to ensure it's never null or empty
+    const normalizedCategory = normalizeCategory(translatedCategory)
+
     const dataReturn = {
       id,
       description,
-      category: translatedCategory,
+      category: normalizedCategory,
       amount,
       paid,
       installment_current: installmentCurrent,

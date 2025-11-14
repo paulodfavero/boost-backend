@@ -1,5 +1,6 @@
 import { ExpensesProjectionRepository } from '@/repositories/expenses-projection-repository'
 import { OrganizationsRepository } from '@/repositories/organization-repository'
+import { normalizeCategory } from '@/lib/category-translation'
 
 import { OrganizationNotFound } from './errors/organization-not-found-error'
 
@@ -48,10 +49,13 @@ export class UpdateExpensesProjectionUseCase {
       installmentTotalPayment,
     } = reqBody
 
+    // Normalize category to ensure it's never null or empty
+    const normalizedCategory = normalizeCategory(category)
+
     const dataReturn = {
       id,
       description,
-      category,
+      category: normalizedCategory,
       amount,
       paid,
       installment_current: installmentCurrent,

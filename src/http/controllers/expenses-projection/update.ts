@@ -35,6 +35,8 @@ export async function update(request: FastifyRequest, reply: FastifyReply) {
 
   // Invalidar cache de despesas após atualização
   invalidateCache('expenses-projection')
+  // Invalidar cache de financial projection month details
+  invalidateCache('financial-projection-month-details')
 
   return reply.status(201).send(data)
 }
