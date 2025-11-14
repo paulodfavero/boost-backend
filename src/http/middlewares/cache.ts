@@ -16,6 +16,8 @@ const CACHE_FEATURE_FLAGS = {
   ENABLE_CACHE_CREDITS: process.env.ENABLE_CACHE_CREDITS === 'true',
   ENABLE_CACHE_RESULTS: process.env.ENABLE_CACHE_RESULTS === 'true',
   ENABLE_CACHE_SUBCATEGORIES: process.env.ENABLE_CACHE_SUBCATEGORIES === 'true',
+  ENABLE_CACHE_FINANCIAL_PROJECTION:
+    process.env.ENABLE_CACHE_FINANCIAL_PROJECTION === 'true',
 
   // Cache de transações (mais crítico)
   ENABLE_CACHE_TRANSACTIONS: process.env.ENABLE_CACHE_TRANSACTIONS === 'true',
@@ -289,6 +291,21 @@ export const cacheConfigs = {
     keyGenerator: (request: FastifyRequest) => {
       const query = request.query as { a?: string }
       return `subcategories:${query.a || 'all'}`
+    },
+  },
+
+  // Cache para financial projection month details - 5 minutos (dados semi-dinâmicos)
+  financialProjectionMonthDetails: {
+    ttl: 5 * 60 * 1000,
+    enabled: isCacheEnabledForEndpoint('ENABLE_CACHE_FINANCIAL_PROJECTION'),
+    keyGenerator: (request: FastifyRequest) => {
+      const query = request.query as {
+        organizationId?: string
+        month?: string
+      }
+      return `financial-projection-month-details:${
+        query.organizationId || 'all'
+      }:${query.month || 'all'}`
     },
   },
 }

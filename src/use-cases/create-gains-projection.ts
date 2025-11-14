@@ -2,6 +2,7 @@ import { addMonths, format } from 'date-fns'
 
 import { GainsProjectionRepository } from '@/repositories/gains-projection-repository'
 import { OrganizationsRepository } from '@/repositories/organization-repository'
+import { normalizeCategory } from '@/lib/category-translation'
 
 import { OrganizationNotFound } from './errors/organization-not-found-error'
 
@@ -72,6 +73,9 @@ export class CreateGainsProjectionUseCase {
         bankId,
       } = transaction
 
+      // Normalize category to ensure it's never null or empty
+      const normalizedCategory = normalizeCategory(category)
+
       const expiration_date = format(new Date(expirationDate), 'y/MM/dd')
       const type_payment = typePayment
       const installment_current = installmentCurrent || null
@@ -98,7 +102,7 @@ export class CreateGainsProjectionUseCase {
             organizationId,
             bankTypeAccountId,
             description,
-            category,
+            category: normalizedCategory,
             amount,
             paid,
             bankId,
@@ -125,7 +129,7 @@ export class CreateGainsProjectionUseCase {
           {
             bank_transaction_id: bankTransactionId,
             description,
-            category,
+            category: normalizedCategory,
             amount: amountInstallment || amount,
             paid: paidCurrent,
             expiration_date: newExpirationDate,

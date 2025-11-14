@@ -899,3 +899,17 @@ export function translateCategory(category: string | null | undefined): string {
   // If not found, return the original category (might already be in Portuguese or custom)
   return category
 }
+
+/**
+ * Normalizes a category to ensure it's never null or empty.
+ * If the category is null, undefined, or empty string, returns "Sem categoria".
+ *
+ * @param category - The category to normalize
+ * @returns The normalized category (never null or empty)
+ */
+export function normalizeCategory(category: string | null | undefined): string {
+  if (!category || category.trim() === '') {
+    return 'Sem categoria'
+  }
+  return category
+}

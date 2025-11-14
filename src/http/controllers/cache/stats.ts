@@ -20,6 +20,8 @@ export async function getCacheStats(
     ENABLE_CACHE_GAINS: process.env.ENABLE_CACHE_GAINS === 'true',
     ENABLE_CACHE_CREDITS: process.env.ENABLE_CACHE_CREDITS === 'true',
     ENABLE_CACHE_RESULTS: process.env.ENABLE_CACHE_RESULTS === 'true',
+    ENABLE_CACHE_FINANCIAL_PROJECTION:
+      process.env.ENABLE_CACHE_FINANCIAL_PROJECTION === 'true',
     ENABLE_CACHE_TRANSACTIONS: process.env.ENABLE_CACHE_TRANSACTIONS === 'true',
   }
 

@@ -38,6 +38,7 @@ model Organization {
   Suggestion               Suggestion[]
   User                     User[]
   Wallet                   Wallet[]
+  FinancialScore           FinancialScore[]
 
   @@map("organizations")
 }
@@ -310,6 +311,19 @@ model Goals {
   organization    Organization @relation(fields: [organizationId], references: [id])
 
   @@map("goals")
+}
+
+model FinancialScore {
+  id             String       @id @default(dbgenerated("nanoid(11)"))
+  created_at     DateTime     @default(now())
+  updated_at     DateTime?    @default(now())
+  score          Int
+  evolution      Json
+  summary        String
+  organizationId String       @unique
+  organization   Organization @relation(fields: [organizationId], references: [id])
+
+  @@map("financial_scores")
 }
 
 model Investment {

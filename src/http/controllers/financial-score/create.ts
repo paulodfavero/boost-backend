@@ -52,6 +52,7 @@ export async function create(request: FastifyRequest, reply: FastifyReply) {
 
     // Se for erro do use case (ex: organização não encontrada)
     if (error instanceof Error) {
+      console.error('Erro no financial-score:', error)
       return reply.status(400).send({
         error: error.message || 'Erro na requisição',
       })
