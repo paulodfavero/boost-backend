@@ -92,14 +92,26 @@ export class PrismaBanksRepository implements BanksRepository {
     return credit
   }
 
-  async updateNameAlias(data: { bankId: string; nameAlias?: string }) {
+  async updateNameAlias(data: {
+    bankId: string
+    nameAlias?: string
+    lastUpdatedAt?: string
+  }) {
+    const updateData: any = {}
+
+    if (data.nameAlias !== undefined) {
+      updateData.name_alias = data.nameAlias
+    }
+
+    if (data.lastUpdatedAt) {
+      updateData.last_updated_at = data.lastUpdatedAt
+    }
+
     const bank = await prisma.bank.update({
       where: {
         id: data.bankId,
       },
-      data: {
-        name_alias: data.nameAlias,
-      } as any,
+      data: updateData,
     })
 
     return bank

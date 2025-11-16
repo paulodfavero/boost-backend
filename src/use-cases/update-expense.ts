@@ -18,6 +18,7 @@ interface ExpenseRepository {
   installmentCurrent?: number | null
   installmentTotalPayment?: number | null
   paid?: boolean
+  isHidden?: boolean
 }
 
 interface ExpenseType {
@@ -45,6 +46,7 @@ export class UpdateExpenseUseCase {
       category,
       amount,
       paid,
+      isHidden,
       expirationDate,
       company,
       typePayment,
@@ -52,24 +54,33 @@ export class UpdateExpenseUseCase {
       installmentTotalPayment,
     } = reqBody
 
-    // Translate category from English to Portuguese
-    const translatedCategory = translateCategory(category)
+    // Only process category if it was provided in the request
+    let processedCategory: string | undefined
+    if (category !== undefined) {
+      // Translate category from English to Portuguese
+      const translatedCategory = translateCategory(category)
+      // Normalize category to ensure it's never null or empty
+      processedCategory = normalizeCategory(translatedCategory)
+    }
+    console.log('expirationDate', expirationDate)
 
-    // Normalize category to ensure it's never null or empty
-    const normalizedCategory = normalizeCategory(translatedCategory)
-
-    const dataReturn = {
+    const dataReturn: any = {
       id,
       description,
-      category: normalizedCategory,
       amount,
       paid,
+      isHidden,
       installment_current: installmentCurrent,
       expiration_date: expirationDate,
       company,
       type_payment: typePayment,
       installment_total_payment: installmentTotalPayment,
       organizationId,
+    }
+
+    // Only include category if it was provided
+    if (processedCategory !== undefined) {
+      dataReturn.category = processedCategory
     }
 
     const response = await this.expensesRepository.update(dataReturn)

@@ -60,6 +60,7 @@ model Expense {
   installment_current       Int?
   installment_total_payment Int?
   paid                      Boolean          @default(false)
+  isHidden                  Boolean          @default(false)
   group_installment_id      String?
   organizationId            String
   bankId                    String?
@@ -88,6 +89,7 @@ model Gain {
   installment_current       Int?
   installment_total_payment Int?
   paid                      Boolean          @default(false)
+  isHidden                  Boolean          @default(false)
   group_installment_id      String?
   organizationId            String
   bankId                    String?
@@ -116,6 +118,7 @@ model Credit {
   installment_current       Int?
   installment_total_payment Int?
   paid                      Boolean          @default(false)
+  isHidden                  Boolean          @default(false)
   group_installment_id      String?
   organizationId            String
   bankId                    String?
@@ -385,6 +388,7 @@ model ExpensesProjection {
   installment_current       Int?
   installment_total_payment Int?
   paid                      Boolean          @default(false)
+  isHidden                  Boolean          @default(false)
   group_installment_id      String?
   organizationId            String
   bankId                    String?
@@ -413,6 +417,7 @@ model GainsProjection {
   installment_current       Int?
   installment_total_payment Int?
   paid                      Boolean          @default(false)
+  isHidden                  Boolean          @default(false)
   group_installment_id      String?
   organizationId            String
   bankId                    String?
@@ -441,6 +446,7 @@ model CreditsProjection {
   installment_current       Int?
   installment_total_payment Int?
   paid                      Boolean          @default(false)
+  isHidden                  Boolean          @default(false)
   group_installment_id      String?
   organizationId            String
   bankId                    String?

@@ -50,7 +50,11 @@ export interface BanksRepository {
   update(data: CreateBankUseCaseResponse): Promise<Bank>
   create(data: CreateBankUseCaseResponse): Promise<Bank>
   delete(bankId: string): Promise<object>
-  updateNameAlias(data: { bankId: string; nameAlias?: string }): Promise<Bank>
+  updateNameAlias(data: {
+    bankId: string
+    nameAlias?: string
+    lastUpdatedAt?: string
+  }): Promise<Bank>
   deleteManyByOrganization(organizationId: string): Promise<object>
 }
 export interface BanksTypeAccountRepository {

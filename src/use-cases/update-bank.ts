@@ -9,6 +9,7 @@ interface UpdateBankUseCaseRequest {
   bankId: string
   organizationId: string
   nameAlias?: string
+  lastUpdatedAt?: string
 }
 
 export class UpdateBankUseCase {
@@ -21,6 +22,7 @@ export class UpdateBankUseCase {
     bankId,
     organizationId,
     nameAlias,
+    lastUpdatedAt,
   }: UpdateBankUseCaseRequest): Promise<object> {
     const organization = await this.organizationsRepository.findById(
       organizationId,
@@ -33,6 +35,7 @@ export class UpdateBankUseCase {
     const response = await this.banksRepository.updateNameAlias({
       bankId,
       nameAlias,
+      lastUpdatedAt,
     })
 
     return response

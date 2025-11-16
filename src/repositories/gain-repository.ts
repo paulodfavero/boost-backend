@@ -12,6 +12,7 @@ interface GainUpdateRepository {
   installmentCurrent?: number | null
   installmentTotalPayment?: number | null
   paid?: boolean
+  isHidden?: boolean
   organizationId: string
 }
 

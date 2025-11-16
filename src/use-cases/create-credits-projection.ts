@@ -52,6 +52,25 @@ export class CreateCreditsProjectionUseCase {
     )
     if (!organization) throw new OrganizationNotFound()
 
+    // Create a map to group recurrent transactions by description + category
+    // Use group_installment_id for recurrent items
+    const recurrentGroupsMap = new Map<string, string>()
+
+    // First pass: identify recurrent groups and generate IDs
+    transactions.forEach((transaction: CreditProjectionRepository) => {
+      if (transaction.typePayment === 'recurrent') {
+        const normalizedCategory = normalizeCategory(transaction.category)
+        const groupKey = `${transaction.description}|${normalizedCategory}`
+
+        if (!recurrentGroupsMap.has(groupKey)) {
+          recurrentGroupsMap.set(
+            groupKey,
+            Math.floor(Date.now() * Math.random()).toString(12),
+          )
+        }
+      }
+    })
+
     transactions.map((transaction: CreditProjectionRepository) => {
       const {
         bankTransactionId,
@@ -80,6 +99,12 @@ export class CreateCreditsProjectionUseCase {
       const type_payment = typePayment
       const installment_current = installmentCurrent || null
       const installment_total_payment = installmentTotalPayment
+      const isRecurrent = type_payment === 'recurrent'
+
+      // Get group_installment_id from map if recurrent, otherwise generate new one for installments
+      const groupInstallmentIdForRecurrent = isRecurrent
+        ? recurrentGroupsMap.get(`${description}|${normalizedCategory}`) || null
+        : null
 
       if (bankTransactionId || !installment_total_payment) {
         const companyName = transaction.company
@@ -99,6 +124,7 @@ export class CreateCreditsProjectionUseCase {
             payment_data: paymentData,
             installment_current,
             installment_total_payment,
+            group_installment_id: groupInstallmentIdForRecurrent,
             organizationId,
             bankTypeAccountId,
             description,
@@ -109,9 +135,10 @@ export class CreateCreditsProjectionUseCase {
           },
         ])
       }
-      const groupInstallmentId = Math.floor(
-        Date.now() * Math.random(),
-      ).toString(12)
+      // For installments, use recurrent group ID if exists, otherwise generate new one
+      const groupInstallmentId =
+        groupInstallmentIdForRecurrent ||
+        Math.floor(Date.now() * Math.random()).toString(12)
       for (let index = 0; index < installmentTotalPayment; index++) {
         const newExpirationDate = addMonths(new Date(expiration_date), index)
         const paidCurrent = index === 0 ? paid : false

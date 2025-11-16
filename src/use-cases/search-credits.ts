@@ -134,31 +134,41 @@ export class SearchCreditUseCase {
       nextMonth,
       bankId,
     )
-    previousExpense.map(({ amount, paid }) => {
-      previousMonthTotalExpenses += amount
-      if (paid) previousMonthReceivedExpenses += amount
+    previousExpense.map(({ amount, paid, isHidden }) => {
+      if (!isHidden) {
+        previousMonthTotalExpenses += amount
+        if (paid) previousMonthReceivedExpenses += amount
+      }
       return true
     })
-    nextExpense.map(({ amount, paid }) => {
-      nextMonthTotalExpenses += amount
-      if (paid) nextMonthReceivedExpenses += amount
-      return true
-    })
-
-    previousCredit.map(({ amount, paid }) => {
-      previousMonthTotalCredits += amount
-      if (paid) previousMonthReceivedCredits += amount
-      return true
-    })
-    nextCredit.map(({ amount, paid }) => {
-      nextMonthTotalCredits += amount
-      if (paid) nextMonthReceivedCredits += amount
+    nextExpense.map(({ amount, paid, isHidden }) => {
+      if (!isHidden) {
+        nextMonthTotalExpenses += amount
+        if (paid) nextMonthReceivedExpenses += amount
+      }
       return true
     })
 
-    currentExpense.map(({ amount, paid }) => {
-      totalExpenses += amount
-      if (paid) receivedExpenses += amount
+    previousCredit.map(({ amount, paid, isHidden }) => {
+      if (!isHidden) {
+        previousMonthTotalCredits += amount
+        if (paid) previousMonthReceivedCredits += amount
+      }
+      return true
+    })
+    nextCredit.map(({ amount, paid, isHidden }) => {
+      if (!isHidden) {
+        nextMonthTotalCredits += amount
+        if (paid) nextMonthReceivedCredits += amount
+      }
+      return true
+    })
+
+    currentExpense.map(({ amount, paid, isHidden }) => {
+      if (!isHidden) {
+        totalExpenses += amount
+        if (paid) receivedExpenses += amount
+      }
       return true
     })
     // Map para armazenar os cálculos de balance por bankTypeAccountId
@@ -170,13 +180,56 @@ export class SearchCreditUseCase {
         balanceCloseDate: string | null
       }
     >()
+    // Process all months for balance calculations
     const prevCurrentNextCreditsTransactions = [
       ...previousCredit,
       ...creditsFormated,
       ...nextCredit,
     ]
-    const credits = await Promise.all(
+
+    // Process all transactions for balance calculations
+    await Promise.all(
       prevCurrentNextCreditsTransactions.map(
+        async ({
+          id,
+          expiration_date,
+          amount,
+          bankTypeAccountId,
+          isHidden,
+        }) => {
+          if (isHidden) return
+
+          const bankTypeAccount = bankTypeAccountId
+            ? await this.BankTypeAccountRepository.findById(bankTypeAccountId)
+            : null
+
+          const getBalances = this.calculateBalanceDueDate(
+            bankTypeAccount,
+            date,
+          )
+
+          // Armazena o valor calculado no Map com as datas, somando os amounts
+          const existingBalance = balanceAmountMap.get(bankTypeAccountId ?? '')
+          if (existingBalance) {
+            balanceAmountMap.set(bankTypeAccountId ?? '', {
+              balanceAmount: existingBalance.balanceAmount + amount,
+              balanceDueDate: getBalances?.balanceDueDate || null,
+              balanceCloseDate: getBalances?.balanceCloseDate || null,
+            })
+          } else {
+            balanceAmountMap.set(bankTypeAccountId ?? '', {
+              balanceAmount: amount,
+              balanceDueDate: getBalances?.balanceDueDate || null,
+              balanceCloseDate: getBalances?.balanceCloseDate || null,
+            })
+          }
+        },
+      ),
+    )
+
+    // Process only current month credits for the result
+    const credits = await Promise.all(
+      creditsFormated.map(
         async ({
           id,
           expiration_date,
@@ -190,11 +243,14 @@ export class SearchCreditUseCase {
           installment_total_payment,
           group_installment_id,
           paid,
+          isHidden,
           bankId,
           bankTypeAccountId,
         }) => {
-          totalCredits += amount
-          if (paid) receivedCredits += amount
+          if (!isHidden) {
+            totalCredits += amount
+            if (paid) receivedCredits += amount
+          }
 
           const bankTypeAccount = bankTypeAccountId
             ? await this.BankTypeAccountRepository.findById(bankTypeAccountId)
@@ -257,22 +313,6 @@ export class SearchCreditUseCase {
             }
           }
 
-          // Armazena o valor calculado no Map com as datas, somando os amounts
-          const existingBalance = balanceAmountMap.get(bankTypeAccountId ?? '')
-          if (existingBalance) {
-            balanceAmountMap.set(bankTypeAccountId ?? '', {
-              balanceAmount: existingBalance.balanceAmount + amount,
-              balanceDueDate: getBalances?.balanceDueDate || null,
-              balanceCloseDate: getBalances?.balanceCloseDate || null,
-            })
-          } else {
-            balanceAmountMap.set(bankTypeAccountId ?? '', {
-              balanceAmount: amount,
-              balanceDueDate: getBalances?.balanceDueDate || null,
-              balanceCloseDate: getBalances?.balanceCloseDate || null,
-            })
-          }
-
           return {
             id,
             expirationDate: expiration_date,
@@ -286,6 +326,7 @@ export class SearchCreditUseCase {
             installmentTotalPayment: installment_total_payment,
             groupInstallmentId: group_installment_id,
             paid,
+            isHidden,
             bank,
             bankName: (bank as any)?.name ?? null,
             bankTypeAccount,
@@ -336,6 +377,7 @@ export class SearchCreditUseCase {
           installment_total_payment,
           group_installment_id,
           paid,
+          isHidden,
           bankId,
           bankTypeAccountId,
         }) => {
@@ -392,6 +434,7 @@ export class SearchCreditUseCase {
             installmentTotalPayment: installment_total_payment,
             groupInstallmentId: group_installment_id,
             paid,
+            isHidden,
             bank,
             bankName: (bank as any)?.name ?? null,
             bankTypeAccount,

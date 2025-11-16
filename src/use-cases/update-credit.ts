@@ -1,4 +1,3 @@
-
 import { OrganizationsRepository } from '@/repositories/organization-repository'
 import {
   translateCategory,
@@ -19,6 +18,7 @@ interface CreditRepository {
   installmentCurrent?: number | null
   installmentTotalPayment?: number | null
   paid?: boolean
+  isHidden?: boolean
 }
 
 interface CreditType {
@@ -46,6 +46,7 @@ export class UpdateCreditUseCase {
       category,
       amount,
       paid,
+      isHidden,
       expirationDate,
       company,
       typePayment,
@@ -53,24 +54,31 @@ export class UpdateCreditUseCase {
       installmentTotalPayment,
     } = reqBody
 
-    // Translate category from English to Portuguese
-    const translatedCategory = translateCategory(category)
-
-    // Normalize category to ensure it's never null or empty
-    const normalizedCategory = normalizeCategory(translatedCategory)
-
-    const dataReturn = {
+    // Only process category if it was provided in the request
+    let processedCategory: string | undefined
+    if (category !== undefined) {
+      // Translate category from English to Portuguese
+      const translatedCategory = translateCategory(category)
+      // Normalize category to ensure it's never null or empty
+      processedCategory = normalizeCategory(translatedCategory)
+    }
+    const dataReturn: any = {
       id,
       description,
-      category: normalizedCategory,
       amount,
       paid,
-      installment_current: installmentCurrent,
-      expiration_date: expirationDate,
+      isHidden,
+      installmentCurrent,
+      expirationDate,
       company,
-      type_payment: typePayment,
-      installment_total_payment: installmentTotalPayment,
+      typePayment,
+      installmentTotalPayment,
       organizationId,
+    }
+
+    // Only include category if it was provided
+    if (processedCategory !== undefined) {
+      dataReturn.category = processedCategory
     }
 
     const response = await this.creditsRepository.update(dataReturn)

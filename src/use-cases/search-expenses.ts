@@ -84,31 +84,41 @@ export class SearchExpenseUseCase {
       bankId,
     )
 
-    previousExpense.map(({ amount, paid }) => {
-      previousMonthTotalExpenses += amount
-      if (paid) previousMonthReceivedExpenses += amount
+    previousExpense.map(({ amount, paid, isHidden }) => {
+      if (!isHidden) {
+        previousMonthTotalExpenses += amount
+        if (paid) previousMonthReceivedExpenses += amount
+      }
       return true
     })
-    nextExpense.map(({ amount, paid }) => {
-      nextMonthTotalExpenses += amount
-      if (paid) nextMonthReceivedExpenses += amount
-      return true
-    })
-
-    previousGain.map(({ amount, paid }) => {
-      previousMonthTotalGains += amount
-      if (paid) previousMonthReceivedGains += amount
-      return true
-    })
-    nextGain.map(({ amount, paid }) => {
-      nextMonthTotalGains += amount
-      if (paid) nextMonthReceivedGains += amount
+    nextExpense.map(({ amount, paid, isHidden }) => {
+      if (!isHidden) {
+        nextMonthTotalExpenses += amount
+        if (paid) nextMonthReceivedExpenses += amount
+      }
       return true
     })
 
-    currentGain.map(({ amount, paid }) => {
-      totalGains += amount
-      if (paid) receivedGains += amount
+    previousGain.map(({ amount, paid, isHidden }) => {
+      if (!isHidden) {
+        previousMonthTotalGains += amount
+        if (paid) previousMonthReceivedGains += amount
+      }
+      return true
+    })
+    nextGain.map(({ amount, paid, isHidden }) => {
+      if (!isHidden) {
+        nextMonthTotalGains += amount
+        if (paid) nextMonthReceivedGains += amount
+      }
+      return true
+    })
+
+    currentGain.map(({ amount, paid, isHidden }) => {
+      if (!isHidden) {
+        totalGains += amount
+        if (paid) receivedGains += amount
+      }
       return true
     })
 
@@ -139,11 +149,14 @@ export class SearchExpenseUseCase {
           installment_total_payment,
           group_installment_id,
           paid,
+          isHidden,
           bankId,
           bankTypeAccountId,
         }) => {
-          totalExpenses += amount
-          if (paid) receivedExpenses += amount
+          if (!isHidden) {
+            totalExpenses += amount
+            if (paid) receivedExpenses += amount
+          }
 
           const bankTypeAccount = bankTypeAccountId
             ? await this.BankTypeAccountRepository.findById(bankTypeAccountId)
@@ -167,6 +180,7 @@ export class SearchExpenseUseCase {
             installmentTotalPayment: installment_total_payment,
             groupInstallmentId: group_installment_id,
             paid,
+            isHidden,
             bank,
             bankTypeAccount,
           }
