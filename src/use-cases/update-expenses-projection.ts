@@ -15,19 +15,6 @@ interface ExpenseProjectionRepository {
   installmentCurrent?: number | null
   installmentTotalPayment?: number | null
   paid?: boolean | null
-}
-
-interface ExpenseProjectionRepository {
-  id: string
-  expirationDate?: string | Date | null
-  description?: string | null
-  company?: string | null
-  category?: string | null
-  amount?: number | null
-  typePayment?: string | null
-  installmentCurrent?: number | null
-  installmentTotalPayment?: number | null
-  paid?: boolean | null
   isHidden?: boolean | null
   updateAllInGroup?: boolean
 }
@@ -102,8 +89,12 @@ export class UpdateExpensesProjectionUseCase {
       }
 
       // Update all transactions in the group (excluding item-specific fields)
-      const { id: _, expirationDate, installmentCurrent, ...groupData } =
-        dataReturn
+      const {
+        id: _,
+        expirationDate,
+        installmentCurrent,
+        ...groupData
+      } = dataReturn
 
       return await this.expensesProjectionRepository.updateManyByGroupId(
         transaction.group_installment_id,
