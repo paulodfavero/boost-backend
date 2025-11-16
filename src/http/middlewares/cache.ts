@@ -34,7 +34,8 @@ interface CacheOptions {
   ttl?: number // Time to live em millisegundos
   keyGenerator?: (request: FastifyRequest) => string
   skipCache?: (request: FastifyRequest) => boolean
-  enabled?: boolean // Se o cache está habilitado para este endpoint
+  enabled?: boolean | (() => boolean) // Se o cache está habilitado para este endpoint (pode ser função para verificar em runtime)
+  endpointFlag?: keyof typeof CACHE_FEATURE_FLAGS // Flag do endpoint para verificação em runtime
 }
 
 // Gerador de chave padrão baseado na URL e query params
@@ -53,17 +54,26 @@ export function cacheMiddleware(options: CacheOptions = {}) {
     keyGenerator = defaultKeyGenerator,
     skipCache = () => false,
     enabled = true,
+    endpointFlag,
   } = options
 
   return async (request: FastifyRequest, reply: FastifyReply) => {
-    // Verificar se cache global está habilitado
-    if (!CACHE_FEATURE_FLAGS.ENABLE_CACHE) {
+    // Verificar se cache global está habilitado (em runtime)
+    if (process.env.ENABLE_CACHE !== 'true') {
       reply.header('X-Cache-Enabled', 'false')
       return
     }
 
-    // Verificar se cache está habilitado para este endpoint específico
-    if (!enabled) {
+    // Verificar se cache está habilitado para este endpoint específico (em runtime)
+    let isEnabled = enabled
+    if (typeof enabled === 'function') {
+      isEnabled = enabled()
+    } else if (endpointFlag) {
+      // Se endpointFlag foi fornecido, verificar em runtime
+      isEnabled = isCacheEnabledForEndpoint(endpointFlag)
+    }
+
+    if (!isEnabled) {
       reply.header('X-Cache-Enabled', 'false')
       return
     }
@@ -109,8 +119,8 @@ export function saveToCache(
   data: any,
   options: CacheOptions = {},
 ) {
-  // Verificar se cache global está habilitado
-  if (!CACHE_FEATURE_FLAGS.ENABLE_CACHE) {
+  // Verificar se cache global está habilitado (em runtime)
+  if (process.env.ENABLE_CACHE !== 'true') {
     return
   }
 
@@ -119,10 +129,19 @@ export function saveToCache(
     keyGenerator = defaultKeyGenerator,
     skipCache = () => false,
     enabled = true,
+    endpointFlag,
   } = options
 
-  // Verificar se cache está habilitado para este endpoint específico
-  if (!enabled) {
+  // Verificar se cache está habilitado para este endpoint específico (em runtime)
+  let isEnabled = enabled
+  if (typeof enabled === 'function') {
+    isEnabled = enabled()
+  } else if (endpointFlag) {
+    // Se endpointFlag foi fornecido, verificar em runtime
+    isEnabled = isCacheEnabledForEndpoint(endpointFlag)
+  }
+
+  if (!isEnabled) {
     return
   }
 
@@ -220,7 +239,8 @@ export const cacheConfigs = {
   // Cache para despesas - 3 minutos (dados semi-dinâmicos)
   expenses: {
     ttl: 5 * 60 * 1000,
-    enabled: isCacheEnabledForEndpoint('ENABLE_CACHE_EXPENSES'),
+    enabled: true, // Será verificado em runtime via endpointFlag
+    endpointFlag: 'ENABLE_CACHE_EXPENSES',
     keyGenerator: (request: FastifyRequest) => {
       const query = request.query as {
         a?: string
