@@ -208,6 +208,55 @@ export class SearchCreditUseCase {
             date,
           )
 
+          // Aplicar a mesma lógica do balance: só soma transações que estão na conta
+          if (expiration_date && getBalances?.balanceCloseDate) {
+            if (getBalances.balanceCloseDate > getBalances.balanceDueDate) {
+              const expirationDate = new Date(
+                format(new Date(expiration_date), 'yyyy/MM/dd'),
+              )
+              const previousMonthCloseDate = new Date(
+                subMonths(new Date(getBalances.balanceCloseDate), 2),
+              )
+              const nextMonthCloseDate = new Date(
+                subMonths(
+                  addDays(new Date(getBalances.balanceCloseDate), 1),
+                  1,
+                ),
+              )
+
+              if (
+                !(
+                  isAfter(expirationDate, previousMonthCloseDate) &&
+                  isBefore(expirationDate, nextMonthCloseDate)
+                )
+              ) {
+                return
+              }
+            }
+            if (getBalances.balanceCloseDate < getBalances.balanceDueDate) {
+              const isBeforeCloseDate = isBefore(
+                new Date(format(new Date(expiration_date), 'yyyy/MM/dd')),
+                new Date(
+                  format(new Date(getBalances.balanceCloseDate), 'yyyy/MM/dd'),
+                ),
+              )
+              // Condição 2: isAfter - transação deve estar após (data de fechamento - 1 mês - 1 dia)
+              const isAfterCloseDateMinusMonthAndDay = isAfter(
+                new Date(format(new Date(expiration_date), 'yyyy/MM/dd')),
+                new Date(
+                  subMonths(
+                    subDays(new Date(getBalances.balanceCloseDate), 1),
+                    1,
+                  ),
+                ),
+              )
+              // Se não atender a ambas as condições, não soma a transação
+              if (!(isBeforeCloseDate && isAfterCloseDateMinusMonthAndDay)) {
+                return
+              }
+            }
+          }
+
           // Armazena o valor calculado no Map com as datas, somando os amounts
           const existingBalance = balanceAmountMap.get(bankTypeAccountId ?? '')
           if (existingBalance) {
