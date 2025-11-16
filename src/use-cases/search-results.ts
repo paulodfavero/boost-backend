@@ -102,12 +102,15 @@ export class SearchResultsUseCase {
       filteredByMonthExpenses,
     ).reduce((acc, [month, transactions]) => {
       const total = transactions.reduce(
-        (sum, transaction) => sum + transaction.amount,
+        (sum, transaction) =>
+          transaction.isHidden ? sum : sum + transaction.amount,
         0,
       )
       const paidTotal = transactions.reduce(
         (sum, transaction) =>
-          transaction.paid ? sum + transaction.amount : sum,
+          transaction.paid && !transaction.isHidden
+            ? sum + transaction.amount
+            : sum,
         0,
       )
 
@@ -165,12 +168,15 @@ export class SearchResultsUseCase {
     const monthlyTotalsGains = Object.entries(filteredByMonthGains).reduce(
       (acc, [month, transactions]) => {
         const total = transactions.reduce(
-          (sum, transaction) => sum + transaction.amount,
+          (sum, transaction) =>
+            transaction.isHidden ? sum : sum + transaction.amount,
           0,
         )
         const paidTotal = transactions.reduce(
           (sum, transaction) =>
-            transaction.paid ? sum + transaction.amount : sum,
+            transaction.paid && !transaction.isHidden
+              ? sum + transaction.amount
+              : sum,
           0,
         )
 
@@ -233,12 +239,15 @@ export class SearchResultsUseCase {
         const monthBanks = Object.entries(banks).map(
           ([bankName, transactions]) => {
             const total = transactions.reduce(
-              (sum, transaction) => sum + transaction.amount,
+              (sum, transaction) =>
+                transaction.isHidden ? sum : sum + transaction.amount,
               0,
             )
             const paidTotal = transactions.reduce(
               (sum, transaction) =>
-                transaction.paid ? sum + transaction.amount : sum,
+                transaction.paid && !transaction.isHidden
+                  ? sum + transaction.amount
+                  : sum,
               0,
             )
 

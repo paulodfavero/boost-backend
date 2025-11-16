@@ -12,12 +12,13 @@ export async function update(request: FastifyRequest, reply: FastifyReply) {
 
   const updateBankBodySchema = z.object({
     nameAlias: z.string().optional(),
+    lastUpdatedAt: z.string().optional(),
   })
 
   const { bankId, organizationId } = updateBankParamsSchema.parse(
     request.params,
   )
-  const { nameAlias } = updateBankBodySchema.parse(request.body)
+  const { nameAlias, lastUpdatedAt } = updateBankBodySchema.parse(request.body)
 
   const updateBankUseCase = makeUpdateBankUseCase()
 
@@ -25,6 +26,7 @@ export async function update(request: FastifyRequest, reply: FastifyReply) {
     bankId,
     organizationId,
     nameAlias,
+    lastUpdatedAt,
   })
 
   // Invalidar cache de bancos após atualização

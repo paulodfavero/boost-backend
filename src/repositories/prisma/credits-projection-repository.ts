@@ -21,6 +21,7 @@ type CreditsProjectionWithBank = {
   installment_current: number | null
   installment_total_payment: number | null
   paid: boolean
+  isHidden: boolean
   group_installment_id: string | null
   organizationId: string
   bankId: string | null
@@ -41,6 +42,7 @@ interface CreditProjectionUpdateRepository {
   installmentCurrent?: number | null
   installmentTotalPayment?: number | null
   paid?: boolean
+  isHidden?: boolean
   organizationId: string
   bankId?: string
 }
@@ -121,12 +123,126 @@ export class PrismaCreditsProjectionRepository
     return creditProjection
   }
 
+  async findById(transactionId: string) {
+    const creditProjection = await prisma.creditsProjection.findUnique({
+      where: {
+        id: transactionId,
+      },
+    })
+
+    return creditProjection
+  }
+
   async update(data: CreditProjectionUpdateRepository) {
+    const {
+      id,
+      expirationDate,
+      typePayment,
+      installmentCurrent,
+      installmentTotalPayment,
+      isHidden,
+      ...updateData
+    } = data
+
+    // Converte string de data para Date se necessário
+    let expirationDateFormatted: Date | undefined
+    if (
+      expirationDate !== undefined &&
+      expirationDate !== null &&
+      expirationDate !== ''
+    ) {
+      if (typeof expirationDate === 'string') {
+        // Formato DD/MM/YYYY
+        if (expirationDate.includes('/')) {
+          const [day, month, year] = expirationDate.split('/')
+          expirationDateFormatted = new Date(
+            parseInt(year),
+            parseInt(month) - 1,
+            parseInt(day),
+          )
+        } else {
+          expirationDateFormatted = new Date(expirationDate)
+        }
+      } else if (expirationDate instanceof Date) {
+        expirationDateFormatted = expirationDate
+      }
+    }
+
+    const prismaData = {
+      ...updateData,
+      ...(expirationDateFormatted !== undefined && {
+        expiration_date: expirationDateFormatted,
+      }),
+      ...(typePayment !== undefined && { type_payment: typePayment }),
+      ...(installmentCurrent !== undefined && {
+        installment_current: installmentCurrent,
+      }),
+      ...(installmentTotalPayment !== undefined && {
+        installment_total_payment: installmentTotalPayment,
+      }),
+      ...(isHidden !== undefined && { isHidden }),
+    }
+
     const creditProjection = await prisma.creditsProjection.update({
       where: {
-        id: data.id,
+        id,
       },
-      data,
+      data: prismaData,
+    })
+
+    return creditProjection
+  }
+
+  async updateManyByGroupId(
+    groupInstallmentId: string,
+    data: {
+      description?: string | null
+      category?: string | null
+      amount?: number | null
+      paid?: boolean | null
+      isHidden?: boolean | null
+      company?: string | null
+      type_payment?: string | null
+      installment_total_payment?: number | null
+      organizationId?: string
+    },
+  ) {
+    // Map values for Prisma updateMany (only include defined, non-null values)
+    const prismaData: Prisma.CreditsProjectionUpdateManyMutationInput = {}
+
+    if (data.description !== undefined && data.description !== null) {
+      prismaData.description = data.description
+    }
+    if (data.category !== undefined && data.category !== null) {
+      prismaData.category = data.category
+    }
+    if (data.amount !== undefined && data.amount !== null) {
+      prismaData.amount = data.amount
+    }
+    if (data.paid !== undefined && data.paid !== null) {
+      prismaData.paid = data.paid
+    }
+    if (data.isHidden !== undefined && data.isHidden !== null) {
+      prismaData.isHidden = data.isHidden
+    }
+    if (data.company !== undefined && data.company !== null) {
+      prismaData.company = data.company
+    }
+    if (data.type_payment !== undefined && data.type_payment !== null) {
+      prismaData.type_payment = data.type_payment
+    }
+    if (
+      data.installment_total_payment !== undefined &&
+      data.installment_total_payment !== null
+    ) {
+      prismaData.installment_total_payment = data.installment_total_payment
+    }
+
+    const creditProjection = await prisma.creditsProjection.updateMany({
+      where: {
+        group_installment_id: groupInstallmentId,
+      },
+      data: prismaData,
     })
 
     return creditProjection
@@ -136,6 +252,20 @@ export class PrismaCreditsProjectionRepository
     const creditProjection = await prisma.creditsProjection.delete({
       where: {
         id: transactionId,
+      },
+    })
+
+    return creditProjection
+  }
+
+  async deleteManyByGroupId(
+    groupInstallmentId: string,
+    organizationId: string,
+  ) {
+    const creditProjection = await prisma.creditsProjection.deleteMany({
+      where: {
+        group_installment_id: groupInstallmentId,
+        organizationId,
       },
     })
 
@@ -162,8 +292,3 @@ export class PrismaCreditsProjectionRepository
     return creditProjection
   }
 }
-
-
-
-
-

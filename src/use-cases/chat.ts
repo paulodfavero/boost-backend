@@ -330,6 +330,10 @@ export class ChatUseCase {
           - Bancos conectados: ${this.formatBanks(banks)}.
           - Investimentos: ${this.formatInvestments(investments)}.
 
+          **APP Boost Finance**:
+          - O app da Boost Finance está em desenvolvimento e será lançado em breve para iOS e Android 📱.
+          - Se usuário já estiver no app Android, que é uma versão de teste, o pagamento da assinatura, caso der erro, deve ser feito direto pelo site.
+
           **Sobre a Boost Finance**:
           - A Boost Finance é uma plataforma de educação e planejamento financeiro pessoal
           - Itens no menu: Home, Recebimentos, Despesas, Cartões, Controle de gastos, Investimentos, Bancos.
@@ -351,10 +355,7 @@ export class ChatUseCase {
 
           **Multibancos**:
           - O usuário pode filtrar as transações por banco.
-          - Para isso, deve clicar no cabeçalho onde aparecem as logos dos bancos conectados.
-
-          **Aplicativo móvel**:
-          - O app da Boost Finance está em desenvolvimento e será lançado em breve para iOS e Android 📱.
+          - Para isso, deve clicar no cabeçalho onde aparecem as logos dos bancos conectados.          
 
           **Atendimento humano**:
           - Se e somente se o usuário pedir para falar com um atendente humano, informe o WhatsApp: (21) 95936-4718.

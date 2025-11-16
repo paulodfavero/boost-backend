@@ -95,6 +95,7 @@ export class SearchFinancialProjectionSummaryUseCase {
 
     // Aggregate expenses by month
     expenses.forEach((expense) => {
+      if (expense.isHidden) return
       const month = format(new Date(expense.expiration_date), 'y/MM')
       const monthData = monthlyMap.get(month)
       if (monthData) {
@@ -105,6 +106,7 @@ export class SearchFinancialProjectionSummaryUseCase {
 
     // Aggregate gains by month
     gains.forEach((gain) => {
+      if (gain.isHidden) return
       const month = format(new Date(gain.expiration_date), 'y/MM')
       const monthData = monthlyMap.get(month)
       if (monthData) {
@@ -115,6 +117,7 @@ export class SearchFinancialProjectionSummaryUseCase {
 
     // Aggregate credits by month
     credits.forEach((credit) => {
+      if (credit.isHidden) return
       const month = format(new Date(credit.expiration_date), 'y/MM')
       const monthData = monthlyMap.get(month)
       if (monthData) {

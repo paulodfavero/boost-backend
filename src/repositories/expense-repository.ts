@@ -13,6 +13,7 @@ interface ExpenseUpdateRepository {
   installmentTotalPayment?: number | null
   groupInstallmentId?: string
   paid?: boolean
+  isHidden?: boolean
   organizationId: string
   bankId?: string
 }

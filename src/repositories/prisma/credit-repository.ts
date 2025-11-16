@@ -19,6 +19,7 @@ interface CreditUpdateRepository {
   installmentCurrent?: number | null
   installmentTotalPayment?: number | null
   paid?: boolean
+  isHidden?: boolean
   organizationId: string
 }
 
@@ -75,11 +76,56 @@ export class PrismaCreditRepository implements CreditsRepository {
   }
 
   async update(data: CreditUpdateRepository) {
+    const {
+      id,
+      expirationDate,
+      typePayment,
+      installmentCurrent,
+      installmentTotalPayment,
+      isHidden,
+      ...updateData
+    } = data
+
+    // Converte string de data para Date se necessário
+    let expirationDateFormatted: Date | undefined
+    if (expirationDate !== undefined && expirationDate !== null) {
+      if (typeof expirationDate === 'string') {
+        // Formato DD/MM/YYYY
+        if (expirationDate.includes('/')) {
+          const [day, month, year] = expirationDate.split('/')
+          expirationDateFormatted = new Date(
+            parseInt(year),
+            parseInt(month) - 1,
+            parseInt(day),
+          )
+        } else {
+          expirationDateFormatted = new Date(expirationDate)
+        }
+      } else if (expirationDate instanceof Date) {
+        expirationDateFormatted = expirationDate
+      }
+    }
+
+    const prismaData = {
+      ...updateData,
+      ...(expirationDateFormatted !== undefined && {
+        expiration_date: expirationDateFormatted,
+      }),
+      ...(typePayment !== undefined && { type_payment: typePayment }),
+      ...(installmentCurrent !== undefined && {
+        installment_current: installmentCurrent,
+      }),
+      ...(installmentTotalPayment !== undefined && {
+        installment_total_payment: installmentTotalPayment,
+      }),
+      ...(isHidden !== undefined && { isHidden }),
+    }
+
     const credit = await prisma.credit.update({
       where: {
-        id: data.id,
+        id,
       },
-      data,
+      data: prismaData,
     })
 
     return credit

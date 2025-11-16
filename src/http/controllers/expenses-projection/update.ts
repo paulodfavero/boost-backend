@@ -18,9 +18,11 @@ export async function update(request: FastifyRequest, reply: FastifyReply) {
     amount: z.number().nullish(),
     typePayment: z.string().nullish(),
     paid: z.boolean().nullish(),
+    isHidden: z.boolean().nullish(),
     installmentCurrent: z.number().nullish(),
     installmentTotalPayment: z.number().nullish(),
     organizationId: z.string().nullish(),
+    updateAllInGroup: z.boolean().optional().default(false),
   })
 
   const { organizationId } = updateCheckInParamsSchema.parse(request.params)

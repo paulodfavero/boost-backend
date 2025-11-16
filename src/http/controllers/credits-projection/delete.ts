@@ -13,15 +13,19 @@ export async function deleteTransaction(
   })
   const deleteBodySchema = z.object({
     id: z.string(),
+    deleteAllInGroup: z.boolean().optional().default(false),
   })
 
   const { organizationId } = deleteCheckInParamsSchema.parse(request.params)
-  const { id: transactionId } = deleteBodySchema.parse(request.body)
+  const { id: transactionId, deleteAllInGroup } = deleteBodySchema.parse(
+    request.body,
+  )
 
   const deleteCreditsProjectionUseCase = makeDeleteCreditsProjectionUseCase()
   const data = await deleteCreditsProjectionUseCase.execute({
     organizationId,
     transactionId,
+    deleteAllInGroup,
   })
 
   // Invalidar cache de créditos após exclusão
