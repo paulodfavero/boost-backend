@@ -6,7 +6,7 @@ import { lastDayOfMonth } from 'date-fns'
 
 interface ExpenseProjectionUpdateRepository {
   id: string
-  expirationDate?: string | Date
+  expirationDate?: string | number | null // Apenas o dia (ex: "15" ou 15)
   description?: string
   company?: string
   category?: string
@@ -96,23 +96,33 @@ export class PrismaExpensesProjectionRepository
       ...updateData
     } = data
 
-    // Converte string de data para Date se necessário
+    // Busca a transação atual para pegar a data original
+    const currentTransaction = await prisma.expensesProjection.findUnique({
+      where: { id },
+      select: { expiration_date: true },
+    })
+
+    // Atualiza apenas o dia, mantendo mês e ano da data original
     let expirationDateFormatted: Date | undefined
     if (expirationDate !== undefined && expirationDate !== null) {
-      if (typeof expirationDate === 'string') {
-        // Formato DD/MM/YYYY
-        if (expirationDate.includes('/')) {
-          const [day, month, year] = expirationDate.split('/')
-          expirationDateFormatted = new Date(
-            parseInt(year),
-            parseInt(month) - 1,
-            parseInt(day),
-          )
-        } else {
-          expirationDateFormatted = new Date(expirationDate)
-        }
-      } else if (expirationDate instanceof Date) {
-        expirationDateFormatted = expirationDate
+      if (currentTransaction) {
+        const originalDate = new Date(currentTransaction.expiration_date)
+        // expirationDate agora é apenas o dia (string ou number)
+        const newDay =
+          typeof expirationDate === 'string'
+            ? parseInt(expirationDate, 10)
+            : expirationDate
+
+        // Mantém mês e ano da data original, altera apenas o dia
+        expirationDateFormatted = new Date(
+          originalDate.getFullYear(),
+          originalDate.getMonth(),
+          newDay,
+          originalDate.getHours(),
+          originalDate.getMinutes(),
+          originalDate.getSeconds(),
+          originalDate.getMilliseconds(),
+        )
       }
     }
 
@@ -144,6 +154,7 @@ export class PrismaExpensesProjectionRepository
   async updateManyByGroupId(
     groupInstallmentId: string,
     data: {
+      expirationDate?: string | number | null // Apenas o dia (ex: "15" ou 15)
       description?: string | null
       category?: string | null
       amount?: number | null
@@ -154,7 +165,50 @@ export class PrismaExpensesProjectionRepository
       installment_total_payment?: number | null
     },
   ) {
+    // expirationDate agora é apenas o dia (string ou number)
+    let newDay: number | undefined
+    if (data.expirationDate !== undefined && data.expirationDate !== null) {
+      newDay =
+        typeof data.expirationDate === 'string'
+          ? parseInt(data.expirationDate, 10)
+          : data.expirationDate
+    }
+
+    // Busca todas as transações do grupo para atualizar individualmente
+    // (necessário para manter mês e ano de cada uma, alterando apenas o dia)
+    if (newDay !== undefined) {
+      const transactions = await prisma.expensesProjection.findMany({
+        where: {
+          group_installment_id: groupInstallmentId,
+        },
+        select: {
+          id: true,
+          expiration_date: true,
+        },
+      })
+
+      // Atualiza cada transação individualmente mantendo mês e ano
+      for (const transaction of transactions) {
+        const originalDate = new Date(transaction.expiration_date)
+        const updatedDate = new Date(
+          originalDate.getFullYear(),
+          originalDate.getMonth(),
+          newDay,
+          originalDate.getHours(),
+          originalDate.getMinutes(),
+          originalDate.getSeconds(),
+          originalDate.getMilliseconds(),
+        )
+
+        await prisma.expensesProjection.update({
+          where: { id: transaction.id },
+          data: { expiration_date: updatedDate },
+        })
+      }
+    }
+
     // Map values for Prisma updateMany (only include defined, non-null values)
+    // Para outros campos que não são expirationDate, usa updateMany
     const prismaData: Prisma.ExpensesProjectionUpdateManyMutationInput = {}
 
     if (data.description !== undefined && data.description !== null) {
@@ -185,14 +239,24 @@ export class PrismaExpensesProjectionRepository
       prismaData.installment_total_payment = data.installment_total_payment
     }
 
-    const expenseProjection = await prisma.expensesProjection.updateMany({
+    // Só faz updateMany se houver outros campos além de expirationDate
+    if (Object.keys(prismaData).length > 0) {
+      await prisma.expensesProjection.updateMany({
+        where: {
+          group_installment_id: groupInstallmentId,
+        },
+        data: prismaData,
+      })
+    }
+
+    // Retorna o resultado (contagem de registros atualizados)
+    const expenseProjection = await prisma.expensesProjection.findMany({
       where: {
         group_installment_id: groupInstallmentId,
       },
-      data: prismaData,
     })
 
-    return expenseProjection
+    return { count: expenseProjection.length }
   }
 
   async delete(transactionId: string) {
