@@ -6,7 +6,7 @@ import { OrganizationNotFound } from './errors/organization-not-found-error'
 
 interface CreditProjectionRepository {
   id: string
-  expirationDate?: string | Date | null
+  expirationDate?: string | number | null // Apenas o dia (ex: "15" ou 15)
   description?: string | null
   company?: string | null
   category?: string | null
@@ -73,12 +73,8 @@ export class UpdateCreditsProjectionUseCase {
       organizationId,
     }
 
-    // Only include expirationDate if it was provided and not empty
-    if (
-      expirationDate !== undefined &&
-      expirationDate !== null &&
-      expirationDate !== ''
-    ) {
+    // Only include expirationDate if it was provided
+    if (expirationDate !== undefined && expirationDate !== null) {
       dataReturn.expirationDate = expirationDate
     }
 
@@ -97,12 +93,7 @@ export class UpdateCreditsProjectionUseCase {
       }
 
       // Update all transactions in the group (excluding item-specific fields)
-      const {
-        id: _,
-        expirationDate,
-        installmentCurrent,
-        ...groupData
-      } = dataReturn
+      const { id: _, installmentCurrent, ...groupData } = dataReturn
 
       return await this.creditsProjectionRepository.updateManyByGroupId(
         transaction.group_installment_id,

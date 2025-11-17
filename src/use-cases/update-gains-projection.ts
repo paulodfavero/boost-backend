@@ -6,20 +6,7 @@ import { OrganizationNotFound } from './errors/organization-not-found-error'
 
 interface GainProjectionRepository {
   id: string
-  expirationDate?: string | Date | null
-  description?: string | null
-  company?: string | null
-  category?: string | null
-  amount?: number | null
-  typePayment?: string | null
-  installmentCurrent?: number | null
-  installmentTotalPayment?: number | null
-  paid?: boolean | null
-}
-
-interface GainProjectionRepository {
-  id: string
-  expirationDate?: string | Date | null
+  expirationDate?: string | number | null // Apenas o dia (ex: "15" ou 15)
   description?: string | null
   company?: string | null
   category?: string | null
@@ -102,8 +89,7 @@ export class UpdateGainsProjectionUseCase {
       }
 
       // Update all transactions in the group (excluding item-specific fields)
-      const { id: _, expirationDate, installmentCurrent, ...groupData } =
-        dataReturn
+      const { id: _, installmentCurrent, ...groupData } = dataReturn
 
       return await this.gainsProjectionRepository.updateManyByGroupId(
         transaction.group_installment_id,

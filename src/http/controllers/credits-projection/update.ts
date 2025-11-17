@@ -11,7 +11,7 @@ export async function update(request: FastifyRequest, reply: FastifyReply) {
 
   const updateGymBodySchema = z.object({
     id: z.string(),
-    expirationDate: z.string().nullish(),
+    expirationDate: z.union([z.string(), z.number()]).nullish(), // Apenas o dia (ex: "15" ou 15)
     description: z.string().nullish(),
     company: z.string().nullish(),
     category: z.string().nullish(),

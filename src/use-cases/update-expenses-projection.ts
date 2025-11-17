@@ -6,7 +6,7 @@ import { OrganizationNotFound } from './errors/organization-not-found-error'
 
 interface ExpenseProjectionRepository {
   id: string
-  expirationDate?: string | Date | null
+  expirationDate?: string | number | null // Apenas o dia (ex: "15" ou 15)
   description?: string | null
   company?: string | null
   category?: string | null
@@ -37,7 +37,6 @@ export class UpdateExpensesProjectionUseCase {
       organizationId,
     )
     if (!organization) throw new OrganizationNotFound()
-
     const {
       id,
       description,
@@ -89,12 +88,7 @@ export class UpdateExpensesProjectionUseCase {
       }
 
       // Update all transactions in the group (excluding item-specific fields)
-      const {
-        id: _,
-        expirationDate,
-        installmentCurrent,
-        ...groupData
-      } = dataReturn
+      const { id: _, installmentCurrent, ...groupData } = dataReturn
 
       return await this.expensesProjectionRepository.updateManyByGroupId(
         transaction.group_installment_id,

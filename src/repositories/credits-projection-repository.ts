@@ -6,7 +6,7 @@ type CreditsProjectionWithBank = CreditsProjection & {
 
 interface CreditsProjectionUpdateRepository {
   id: string
-  expirationDate?: string | Date | null
+  expirationDate?: string | number | null // Apenas o dia (ex: "15" ou 15)
   description?: string | null
   company?: string | null
   category?: string | null
@@ -39,6 +39,7 @@ export interface CreditsProjectionRepository {
   updateManyByGroupId(
     groupInstallmentId: string,
     data: {
+      expirationDate?: string | number | null // Apenas o dia (ex: "15" ou 15)
       description?: string | null
       category?: string | null
       amount?: number | null
