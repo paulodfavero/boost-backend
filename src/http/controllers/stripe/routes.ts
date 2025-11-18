@@ -4,6 +4,7 @@ import { getCustomerSubscriptionsController } from './get-customer-subscriptions
 import { getActiveSubscriptionController } from './get-active-subscription'
 import { getUserPlan } from './get-user-plan'
 import { checkoutSession } from './checkout-session'
+import { createPortalSession } from './create-portal-session'
 
 export async function stripeRoutes(app: FastifyInstance) {
   // GET /stripe/customer/:customerId - Obtém informações do cliente
@@ -26,4 +27,7 @@ export async function stripeRoutes(app: FastifyInstance) {
 
   // POST /stripe/checkout-session - Verifica e retorna dados da sessão de checkout
   app.post('/stripe/checkout-session', checkoutSession)
+
+  // POST /stripe/create-portal-session - Cria uma sessão do portal de cobrança do Stripe
+  app.post('/stripe/create-portal-session', createPortalSession)
 }
