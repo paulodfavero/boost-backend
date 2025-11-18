@@ -138,6 +138,7 @@ export const getCustomerSubscriptions = async (
 
 /**
  * Obtém a assinatura ativa de um cliente da Stripe
+ * Implementação exata do frontend: busca a primeira assinatura onde sub.customer === customerId
  */
 export const getActiveSubscription = async (
   customerId: string,
@@ -145,7 +146,7 @@ export const getActiveSubscription = async (
   try {
     const subscriptions = await getCustomerSubscriptions(customerId)
     const activeSubscription = subscriptions.find(
-      (sub) => sub.status === 'active',
+      (sub) => sub.customer === customerId,
     )
     return activeSubscription || null
   } catch (error: any) {
@@ -156,6 +157,7 @@ export const getActiveSubscription = async (
 
 /**
  * Obtém o tipo de plano baseado na assinatura da Stripe
+ * Implementação exata do frontend: usa subscription.plan.id
  */
 export const getPlanTypeFromSubscription = (
   subscription: StripeSubscription,
@@ -172,6 +174,7 @@ export const getPlanTypeFromSubscription = (
   ) {
     return 'PRO'
   }
+
   if (
     planId === STRIPE_PLUS_PLAN_ID ||
     planId === STRIPE_PLUS_PLAN_ID_ANNUAL ||
@@ -179,6 +182,7 @@ export const getPlanTypeFromSubscription = (
   ) {
     return 'PLUS'
   }
+
   if (
     planId === STRIPE_ESSENCIAL_PLAN_ID ||
     planId === STRIPE_ESSENCIAL_PLAN_ID_ANNUAL
@@ -186,12 +190,12 @@ export const getPlanTypeFromSubscription = (
     return 'ESSENCIAL'
   }
 
-  // Adicione mais mapeamentos conforme necessário
   return 'TRIAL'
 }
 
 /**
  * Função principal para obter o tipo de plano do usuário pelo customer_id
+ * Implementação exata do frontend conforme documentação
  */
 export const getUserPlanByCustomerId = async (
   customerId: string,
@@ -199,20 +203,26 @@ export const getUserPlanByCustomerId = async (
   planType: string
   subscription: StripeSubscription | null
   customer: StripeCustomer | null
+  paymentFailedSubscription: boolean
 }> => {
   try {
-    // Obtém informações do cliente
     const customer = await getCustomerById(customerId)
-    // Obtém a assinatura ativa
     const subscription = await getActiveSubscription(customerId)
-    // Determina o tipo de plano
+
     const planType = subscription
       ? getPlanTypeFromSubscription(subscription)
       : 'TRIAL'
+
+    let paymentFailedSubscription = false
+    if (subscription?.status === 'past_due') {
+      paymentFailedSubscription = true
+    }
+
     return {
       planType,
       subscription,
       customer,
+      paymentFailedSubscription,
     }
   } catch (error: any) {
     console.error('ERROR TO GET USER PLAN BY CUSTOMER ID:', error)
