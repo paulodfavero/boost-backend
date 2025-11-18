@@ -20,15 +20,11 @@ export async function getUserPlan(
 
     const userPlan = await getUserPlanByCustomerId(customerId)
 
-    return reply.send({
-      success: true,
-      data: userPlan,
-    })
+    return reply.send(userPlan)
   } catch (error: any) {
     console.error('Erro ao obter plano do usuário:', error)
-    return reply.status(500).send({
-      error: 'Erro interno do servidor',
-      message: error.message,
+    return reply.status(400).send({
+      error: error.message || 'Erro ao obter plano do usuário',
     })
   }
 }
