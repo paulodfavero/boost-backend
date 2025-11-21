@@ -310,7 +310,8 @@ export class FinancialScoreUseCase {
     // Se existe registro e é do mês atual → retornar cache
     if (
       existingScore &&
-      this.isSameMonth(existingScore.created_at, currentDate)
+      existingScore.updated_at &&
+      this.isSameMonth(existingScore.updated_at, currentDate)
     ) {
       return {
         score: existingScore.score,
