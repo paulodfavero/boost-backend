@@ -396,12 +396,13 @@ export class ChatUseCase {
     }
 
     try {
-      const stream = await this.openai.chat.completions.create({
+      // 1) Streaming para o app (mesmo endpoint/sistema)
+      const stream = await this.openai.responses.create({
         model: 'gpt-4.1-mini',
+        input: [{ role: 'system', content: systemPrompt.content }, ...messages],
         store: true,
+        metadata: { allow_sensitive: 'true' },
         stream: true,
-        temperature: 0.2,
-        messages: [systemPrompt, ...messages],
       })
 
       return stream
