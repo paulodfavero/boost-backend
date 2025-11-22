@@ -30,7 +30,21 @@ export async function create(request: FastifyRequest, reply: FastifyReply) {
 
     // Enviar resposta como stream
     for await (const chunk of stream) {
-      const token = chunk.choices[0]?.delta?.content || ''
+      // O stream de responses.create() retorna ResponseStreamEvent
+      // Precisamos verificar o tipo do evento e extrair o delta corretamente
+      let token = ''
+
+      if (chunk && typeof chunk === 'object' && 'type' in chunk) {
+        // ResponseTextDeltaEvent tem a estrutura: { type: 'response.output_text.delta', delta: string }
+        if (chunk.type === 'response.output_text.delta' && 'delta' in chunk) {
+          token = (chunk as any).delta || ''
+        }
+        // Fallback: se for um evento de chat completion (estrutura antiga)
+        else if ('choices' in chunk && Array.isArray((chunk as any).choices)) {
+          token = (chunk as any).choices[0]?.delta?.content || ''
+        }
+      }
+
       if (token) {
         reply.raw.write(token)
       }
