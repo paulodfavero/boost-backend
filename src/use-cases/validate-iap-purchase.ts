@@ -47,19 +47,7 @@ export class ValidateIAPPurchaseUseCase {
       organizationId,
     } = data
 
-    console.log('=== VALIDATE IAP USE CASE - INÍCIO ===')
-    console.log('Dados recebidos no use case:', {
-      productId,
-      transactionId,
-      plan,
-      organizationId,
-      transactionReceiptLength: transactionReceipt?.length || 0,
-      transactionReceiptPreview: transactionReceipt?.substring(0, 50) + '...',
-    })
-
     try {
-      // 1. Verificar se a organização existe
-      console.log('1. Verificando se organização existe:', organizationId)
       const organization = await this.organizationsRepository.findById(
         organizationId,
       )
@@ -67,37 +55,20 @@ export class ValidateIAPPurchaseUseCase {
         console.error('Organização não encontrada:', organizationId)
         throw new OrganizationNotFound()
       }
-      console.log('Organização encontrada:', {
-        id: organization.id,
-        name: organization.name,
-        currentPlan: organization.plan,
-      })
 
-      // 2. Validar se o produto está no mapeamento
-      console.log('2. Validando mapeamento do produto:', productId)
-      console.log('Mapeamento disponível:', productToPlanMap)
       const mappedPlan = productToPlanMap[productId]
       if (!mappedPlan) {
         console.error(`Produto não encontrado no mapeamento: ${productId}`)
         return { success: false, error: 'Produto não encontrado no mapeamento' }
       }
-      console.log('Produto mapeado com sucesso:', { productId, mappedPlan })
 
-      // 3. Verificar se o plano enviado corresponde ao mapeamento
-      console.log('3. Verificando correspondência do plano:', {
-        mappedPlan,
-        receivedPlan: plan,
-      })
       if (mappedPlan !== plan) {
         console.error(
           `Plano não corresponde ao produto: ${productId} -> ${mappedPlan} vs ${plan}`,
         )
         return { success: false, error: 'Plano não corresponde ao produto' }
       }
-      console.log('Plano corresponde ao produto - OK')
 
-      // 4. Validar recibo com a Apple
-      console.log('4. Iniciando validação do recibo com Apple')
       const isValidReceipt = await this.validateReceiptWithApple(
         transactionReceipt,
         productId,
@@ -107,10 +78,7 @@ export class ValidateIAPPurchaseUseCase {
         console.error(`Recibo inválido para transação: ${transactionId}`)
         return { success: false, error: 'Recibo inválido ou expirado' }
       }
-      console.log('Recibo validado com sucesso com Apple')
 
-      // 5. Atualizar organização
-      console.log('5. Atualizando organização com novo plano')
       await this.organizationsRepository.update({
         organizationId,
         data: {
@@ -119,25 +87,12 @@ export class ValidateIAPPurchaseUseCase {
           updated_at: new Date(),
         },
       })
-      console.log('Organização atualizada com sucesso')
-
-      console.log(
-        `IAP validado com sucesso para organização ${organizationId}: ${productId} -> ${mappedPlan}`,
-      )
-      console.log('=== VALIDATE IAP USE CASE - SUCESSO ===')
 
       return {
         success: true,
         message: 'Plano ativado com sucesso',
       }
     } catch (error) {
-      console.error('=== VALIDATE IAP USE CASE - ERRO ===')
-      console.error('Erro ao validar IAP:', error)
-      console.error(
-        'Stack trace:',
-        error instanceof Error ? error.stack : 'No stack trace',
-      )
-
       if (error instanceof OrganizationNotFound) {
         return { success: false, error: 'Organização não encontrada' }
       }
@@ -151,35 +106,17 @@ export class ValidateIAPPurchaseUseCase {
     productId: string,
     transactionId: string,
   ): Promise<boolean> {
-    console.log('=== VALIDAÇÃO COM APPLE - INÍCIO ===')
-    console.log('Parâmetros:', {
-      productId,
-      transactionId,
-      receiptLength: receipt?.length,
-    })
-
     try {
       const appleSharedSecret = env.APPLE_SHARED_SECRET
       if (!appleSharedSecret) {
         console.error('APPLE_SHARED_SECRET não configurado')
         return false
       }
-      console.log(
-        'APPLE_SHARED_SECRET configurado:',
-        appleSharedSecret ? 'SIM' : 'NÃO',
-      )
-
       // URL da Apple para validação (sandbox para desenvolvimento, production para produção)
       const isProduction = env.NODE_ENV === 'production'
       const appleUrl = isProduction
         ? 'https://buy.itunes.apple.com/verifyReceipt'
         : 'https://sandbox.itunes.apple.com/verifyReceipt'
-
-      console.log('Ambiente:', {
-        isProduction,
-        appleUrl,
-        nodeEnv: env.NODE_ENV,
-      })
 
       const requestBody = {
         'receipt-data': receipt,
@@ -187,26 +124,12 @@ export class ValidateIAPPurchaseUseCase {
         'exclude-old-transactions': true,
       }
 
-      console.log('Request body preparado:', {
-        receiptDataLength: requestBody['receipt-data']?.length,
-        passwordLength: requestBody.password?.length,
-        excludeOldTransactions: requestBody['exclude-old-transactions'],
-      })
-
-      console.log('Enviando requisição para Apple...')
       const response = await fetch(appleUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(requestBody),
-      })
-
-      console.log('Resposta da Apple recebida:', {
-        status: response.status,
-        statusText: response.statusText,
-        ok: response.ok,
-        headers: Object.fromEntries(response.headers.entries()),
       })
 
       if (!response.ok) {
@@ -217,13 +140,7 @@ export class ValidateIAPPurchaseUseCase {
       }
 
       const appleResponse: AppleReceiptResponse = await response.json()
-      console.log('Resposta da Apple parseada:', appleResponse)
 
-      // Verificar status da resposta da Apple
-      console.log(
-        'Verificando status da resposta da Apple:',
-        appleResponse.status,
-      )
       if (appleResponse.status !== 0) {
         console.error(`Status inválido da Apple: ${appleResponse.status}`)
         console.error('Possíveis significados dos status codes:')
@@ -247,28 +164,11 @@ export class ValidateIAPPurchaseUseCase {
         )
         return false
       }
-      console.log('Status da Apple válido (0)')
-
-      // Verificar se o produto e transação estão no recibo
-      console.log('Verificando estrutura do recibo:', {
-        hasReceipt: !!appleResponse.receipt,
-        hasInApp: !!appleResponse.receipt?.in_app,
-        inAppLength: appleResponse.receipt?.in_app?.length || 0,
-      })
 
       if (!appleResponse.receipt?.in_app) {
         console.error('Nenhuma compra in-app encontrada no recibo')
         return false
       }
-
-      console.log(
-        'Transações encontradas no recibo:',
-        appleResponse.receipt.in_app.map((item) => ({
-          product_id: item.product_id,
-          transaction_id: item.transaction_id,
-          purchase_date_ms: item.purchase_date_ms,
-        })),
-      )
 
       const purchase = appleResponse.receipt.in_app.find(
         (item) =>
@@ -289,11 +189,6 @@ export class ValidateIAPPurchaseUseCase {
         return false
       }
 
-      console.log('Transação encontrada no recibo:', purchase)
-      console.log(
-        `Recibo validado com sucesso para produto: ${productId}, transação: ${transactionId}`,
-      )
-      console.log('=== VALIDAÇÃO COM APPLE - SUCESSO ===')
       return true
     } catch (error) {
       console.error('=== VALIDAÇÃO COM APPLE - ERRO ===')

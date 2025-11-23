@@ -39,6 +39,7 @@ model Organization {
   User                     User[]
   Wallet                   Wallet[]
   FinancialScore           FinancialScore[]
+  Bill                     Bill[]
 
   @@map("organizations")
 }
@@ -456,4 +457,23 @@ model CreditsProjection {
   organization              Organization     @relation(fields: [organizationId], references: [id])
 
   @@map("credits_projection")
+}
+
+model Bill {
+  id                    String       @id @default(dbgenerated("nanoid(11)"))
+  created_at            DateTime     @default(now())
+  updated_at            DateTime     @default(now())
+  description           String
+  company               String?
+  category              String?
+  amount                Int
+  expiration_date       DateTime
+  day_of_month          Int // Dia do mês em que a conta vence (1-31)
+  paid                  Boolean      @default(false)
+  active                Boolean      @default(true) // Se a conta está ativa (para criar mês a mês)
+  source_transaction_id String? // ID da transação original que gerou a sugestão
+  organizationId        String
+  organization          Organization @relation(fields: [organizationId], references: [id])
+
+  @@map("bills")
 }

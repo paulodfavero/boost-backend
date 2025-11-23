@@ -32,6 +32,8 @@ import { creditsRecurrentRoutes } from './http/controllers/credits-recurrent/rou
 import { gainsRecurrentRoutes } from './http/controllers/gains-recurrent/routes'
 import { financialProjectionRoutes } from './http/controllers/financial-projection/routes'
 import { stripeRoutes } from './http/controllers/stripe/routes'
+import { billsRoutes } from './http/controllers/bills/routes'
+import { billsRecurrentRoutes } from './http/controllers/bills-recurrent/routes'
 
 const isDevelopment = process.env.NODE_ENV === 'dev'
 
@@ -175,3 +177,5 @@ app.register(creditsRecurrentRoutes)
 app.register(gainsRecurrentRoutes)
 app.register(financialProjectionRoutes)
 app.register(stripeRoutes)
+app.register(billsRoutes)
+app.register(billsRecurrentRoutes)
