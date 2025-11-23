@@ -32,13 +32,6 @@ export async function deleteTransaction(
   const { organizationId } = deleteCheckInParamsSchema.parse(request.params)
   const { id: transactionId } = deleteBodySchema.parse(request.body)
 
-  console.log(
-    '%cdelete.ts line:32 object',
-    'color: #007acc;',
-    organizationId,
-    transactionId,
-  )
-
   const deleteGainUseCase = makeDeleteGainUseCase()
   const data = await deleteGainUseCase.execute({
     organizationId,
