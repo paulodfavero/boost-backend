@@ -9,6 +9,10 @@ export interface BillsRepository {
   ): Promise<Bill[]>
   create(data: Prisma.BillCreateInput): Promise<Bill>
   findById(billId: string): Promise<Bill | null>
+  findBySourceTransactionId(
+    sourceTransactionId: string,
+    organizationId: string,
+  ): Promise<Bill | null>
   update(billId: string, data: Prisma.BillUpdateInput): Promise<Bill>
   markAsPaid(billId: string, paid: boolean): Promise<Bill>
   delete(billId: string): Promise<void>

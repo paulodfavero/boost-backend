@@ -58,6 +58,20 @@ export class PrismaBillsRepository implements BillsRepository {
     return bill
   }
 
+  async findBySourceTransactionId(
+    sourceTransactionId: string,
+    organizationId: string,
+  ) {
+    const bill = await prisma.bill.findFirst({
+      where: {
+        source_transaction_id: sourceTransactionId,
+        organizationId,
+      },
+    })
+
+    return bill
+  }
+
   async update(billId: string, data: Prisma.BillUpdateInput) {
     const bill = await prisma.bill.update({
       where: {
