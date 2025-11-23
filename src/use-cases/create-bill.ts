@@ -2,6 +2,7 @@ import { BillsRepository } from '@/repositories/bills-repository'
 import { OrganizationsRepository } from '@/repositories/organization-repository'
 import { normalizeCategory } from '@/lib/category-translation'
 import { OrganizationNotFound } from './errors/organization-not-found-error'
+import { DuplicateBillTransactionError } from './errors/duplicate-bill-transaction-error'
 import { Prisma } from '@prisma/client'
 
 interface CreateBillRequest {
@@ -37,6 +38,18 @@ export class CreateBillUseCase {
       organizationId,
     )
     if (!organization) throw new OrganizationNotFound()
+
+    // Validar se já existe um bill com o mesmo source_transaction_id
+    if (sourceTransactionId) {
+      const existingBill =
+        await this.billsRepository.findBySourceTransactionId(
+          sourceTransactionId,
+          organizationId,
+        )
+      if (existingBill) {
+        throw new DuplicateBillTransactionError()
+      }
+    }
 
     const normalizedCategory = normalizeCategory(category || '')
     const startDate = new Date(expirationDate)

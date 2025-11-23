@@ -65,6 +65,8 @@ export class GenerateMonthlyBillsUseCase {
         // TODO: Remover workaround após aplicar migration 20251123160647_company_not_required
         // Por enquanto, passamos string vazia quando company é null/undefined
         // porque o banco ainda tem constraint NOT NULL até a migration ser aplicada
+        // Não copiamos source_transaction_id para bills mensais gerados automaticamente
+        // para evitar duplicação de transações
         const newBill = await this.billsRepository.create({
           description: bill.description,
           company: bill.company ?? '',
@@ -74,7 +76,7 @@ export class GenerateMonthlyBillsUseCase {
           day_of_month: bill.day_of_month,
           paid: false,
           active: bill.active,
-          source_transaction_id: bill.source_transaction_id,
+          source_transaction_id: null, // Bills mensais não devem ter source_transaction_id
           organization: {
             connect: {
               id: organizationId,
