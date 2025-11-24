@@ -26,6 +26,8 @@ export async function deleteTransaction(
 
   // Invalidar cache de créditos após exclusão
   invalidateCache('credits')
+  // Invalidar cache de results pois dependem de credits
+  invalidateCache('results')
 
   return reply.status(201).send(data)
 }

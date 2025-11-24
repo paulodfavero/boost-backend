@@ -50,6 +50,8 @@ export async function create(request: FastifyRequest, reply: FastifyReply) {
 
     // Invalidar cache de créditos após criação
     invalidateCache('credits')
+    // Invalidar cache de results pois dependem de credits
+    invalidateCache('results')
 
     return reply.status(201).send(data)
   } catch (err) {

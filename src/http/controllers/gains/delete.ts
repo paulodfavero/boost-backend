@@ -40,6 +40,8 @@ export async function deleteTransaction(
 
   // Invalidar cache de ganhos após exclusão
   invalidateCache('gains')
+  // Invalidar cache de results pois dependem de gains
+  invalidateCache('results')
 
   return reply.status(201).send(data)
 }

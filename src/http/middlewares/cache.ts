@@ -156,21 +156,64 @@ export function saveToCache(
 export function invalidateCache(pattern: string) {
   // Implementação granular - invalida apenas chaves que correspondem ao padrão
   const keysToDelete: string[] = []
+  const allKeys = cache.getKeys()
 
-  for (const key of cache.getKeys()) {
-    if (key.includes(pattern)) {
-      keysToDelete.push(key)
+  for (const key of allKeys) {
+    // Para padrões como "expenses", procurar por chaves que começam com "expenses:"
+    // Isso garante que chaves como "expenses:org123:..." sejam invalidadas
+    // mas não "expenses-projection:..." (a menos que o padrão seja "expenses-projection")
+    if (pattern.includes(':')) {
+      // Se o padrão contém ":", usar startsWith para correspondência exata do prefixo
+      if (key.startsWith(pattern)) {
+        keysToDelete.push(key)
+      }
+    } else {
+      // Para padrões sem ":", procurar por chaves que começam com "pattern:"
+      // Isso garante correspondência exata do tipo de cache (expenses, gains, etc)
+      // Também verificar se a chave é exatamente igual ao padrão
+      if (key.startsWith(`${pattern}:`) || key === pattern) {
+        keysToDelete.push(key)
+      }
+      // Também verificar chaves geradas pelo defaultKeyGenerator que podem conter o padrão na URL
+      // Ex: "GET:/expenses?..." deve ser invalidada quando pattern é "expenses"
+      if (
+        key.includes(`/${pattern}`) ||
+        key.includes(`/${pattern}?`) ||
+        key.includes(`/${pattern}&`)
+      ) {
+        keysToDelete.push(key)
+      }
     }
   }
 
-  keysToDelete.forEach((key) => cache.delete(key))
+  // Remover duplicatas
+  const uniqueKeysToDelete = Array.from(new Set(keysToDelete))
+
+  uniqueKeysToDelete.forEach((key) => cache.delete(key))
 
   // Log mais detalhado para produção
-  if (keysToDelete.length > 0) {
+  if (uniqueKeysToDelete.length > 0) {
     console.log(
-      `🗑️ Cache invalidated: ${keysToDelete.length} keys matching pattern "${pattern}"`,
+      `🗑️ Cache invalidated: ${uniqueKeysToDelete.length} keys matching pattern "${pattern}"`,
     )
-    console.log(`Keys: ${keysToDelete.join(', ')}`)
+    if (uniqueKeysToDelete.length <= 10) {
+      console.log(`Keys deleted: ${uniqueKeysToDelete.join(', ')}`)
+    } else {
+      console.log(
+        `First 10 keys deleted: ${uniqueKeysToDelete
+          .slice(0, 10)
+          .join(', ')}...`,
+      )
+    }
+  } else {
+    console.log(
+      `⚠️ No cache keys found matching pattern "${pattern}". Total cache keys: ${allKeys.length}`,
+    )
+    if (allKeys.length > 0 && allKeys.length <= 20) {
+      console.log(`Current cache keys: ${allKeys.join(', ')}`)
+    } else if (allKeys.length > 20) {
+      console.log(`First 20 cache keys: ${allKeys.slice(0, 20).join(', ')}...`)
+    }
   }
 }
 
@@ -248,9 +291,12 @@ export const cacheConfigs = {
         bankId?: string
         isSamePersonTransfer?: string
       }
-      return `expenses:${query.a}:${query.date}:${query.bankId || 'all'}:${
-        query.isSamePersonTransfer || 'false'
-      }`
+      // Garantir que valores undefined sejam tratados como string vazia ou valor padrão
+      const orgId = query.a || ''
+      const date = query.date || ''
+      const bankId = query.bankId || 'all'
+      const isSamePersonTransfer = query.isSamePersonTransfer || 'false'
+      return `expenses:${orgId}:${date}:${bankId}:${isSamePersonTransfer}`
     },
   },
 
@@ -265,9 +311,11 @@ export const cacheConfigs = {
         bankId?: string
         isSamePersonTransfer?: string
       }
-      return `gains:${query.a}:${query.date}:${query.bankId || 'all'}:${
-        query.isSamePersonTransfer || 'false'
-      }`
+      const orgId = query.a || ''
+      const date = query.date || ''
+      const bankId = query.bankId || 'all'
+      const isSamePersonTransfer = query.isSamePersonTransfer || 'false'
+      return `gains:${orgId}:${date}:${bankId}:${isSamePersonTransfer}`
     },
   },
 
@@ -282,9 +330,11 @@ export const cacheConfigs = {
         bankId?: string
         isSamePersonTransfer?: string
       }
-      return `credits:${query.a || 'all'}:${query.date || 'all'}:${
-        query.bankId || 'all'
-      }:${query.isSamePersonTransfer || 'false'}`
+      const orgId = query.a || ''
+      const date = query.date || ''
+      const bankId = query.bankId || 'all'
+      const isSamePersonTransfer = query.isSamePersonTransfer || 'false'
+      return `credits:${orgId}:${date}:${bankId}:${isSamePersonTransfer}`
     },
   },
 

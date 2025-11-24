@@ -36,6 +36,8 @@ export async function update(request: FastifyRequest, reply: FastifyReply) {
 
   // Invalidar cache de despesas após atualização
   invalidateCache('expenses')
+  // Invalidar cache de results também, pois são calculados com base em expenses
+  invalidateCache('results')
 
   return reply.status(201).send(data)
 }
