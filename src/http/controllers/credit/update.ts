@@ -2,7 +2,6 @@ import { FastifyReply, FastifyRequest } from 'fastify'
 import { z } from 'zod'
 
 import { makeUpdateCreditUseCase } from '@/use-cases/factories/make-update-credit-use-case'
-import { invalidateCache } from '@/http/middlewares/cache'
 
 export async function update(request: FastifyRequest, reply: FastifyReply) {
   const updateCheckInParamsSchema = z.object({
@@ -32,11 +31,6 @@ export async function update(request: FastifyRequest, reply: FastifyReply) {
     organizationId,
     reqBody,
   })
-
-  // Invalidar cache de créditos após atualização
-  invalidateCache('credits')
-  // Invalidar cache de results pois dependem de credits
-  invalidateCache('results')
 
   return reply.status(201).send(data)
 }

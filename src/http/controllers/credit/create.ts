@@ -2,7 +2,6 @@ import { FastifyReply, FastifyRequest } from 'fastify'
 import { z } from 'zod'
 
 import { makeCreateCreditUseCase } from '@/use-cases/factories/make-create-credit-use-case'
-import { invalidateCache } from '@/http/middlewares/cache'
 
 export async function create(request: FastifyRequest, reply: FastifyReply) {
   const createCheckInParamsSchema = z.object({
@@ -47,11 +46,6 @@ export async function create(request: FastifyRequest, reply: FastifyReply) {
       organizationId,
       reqBody,
     })
-
-    // Invalidar cache de créditos após criação
-    invalidateCache('credits')
-    // Invalidar cache de results pois dependem de credits
-    invalidateCache('results')
 
     return reply.status(201).send(data)
   } catch (err) {

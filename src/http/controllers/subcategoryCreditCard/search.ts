@@ -9,7 +9,10 @@ import {
 
 export async function searchMany(request: FastifyRequest, reply: FastifyReply) {
   // Aplicar middleware de cache
-  await cacheMiddleware(cacheConfigs.subcategories)(request, reply)
+  await cacheMiddleware('subcategories', cacheConfigs.subcategories)(
+    request,
+    reply,
+  )
 
   // Se o cache retornou dados, a função já foi finalizada
   if (reply.sent) {
@@ -21,7 +24,7 @@ export async function searchMany(request: FastifyRequest, reply: FastifyReply) {
   const data = await searchSubcategory.execute()
 
   // Salvar no cache
-  saveToCache(request, data, cacheConfigs.subcategories)
+  saveToCache('subcategories', request, data, cacheConfigs.subcategories)
 
   // Definir headers para controlar cache do navegador
   // Cache por 5 minutos no navegador, mas pode ser invalidado pelo servidor

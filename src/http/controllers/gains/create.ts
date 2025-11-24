@@ -2,7 +2,6 @@ import { FastifyReply, FastifyRequest } from 'fastify'
 import { z } from 'zod'
 
 import { makeCreateGainUseCase } from '@/use-cases/factories/make-create-gain-use-case'
-import { invalidateCache } from '@/http/middlewares/cache'
 
 export async function create(request: FastifyRequest, reply: FastifyReply) {
   const createCheckInParamsSchema = z.object({
@@ -47,11 +46,6 @@ export async function create(request: FastifyRequest, reply: FastifyReply) {
       organizationId,
       reqBody,
     })
-
-    // Invalidar cache de ganhos após criação
-    invalidateCache('gains')
-    // Invalidar cache de results pois dependem de gains e credits
-    invalidateCache('results')
 
     return reply.status(201).send(data)
   } catch (err) {

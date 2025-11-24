@@ -2,7 +2,6 @@ import { FastifyReply, FastifyRequest } from 'fastify'
 import { z } from 'zod'
 
 import { makeUpdateExpenseUseCase } from '@/use-cases/factories/make-update-expense-use-case'
-import { invalidateCache } from '@/http/middlewares/cache'
 
 export async function update(request: FastifyRequest, reply: FastifyReply) {
   const updateCheckInParamsSchema = z.object({
@@ -33,18 +32,6 @@ export async function update(request: FastifyRequest, reply: FastifyReply) {
     organizationId,
     reqBody,
   })
-
-  // Invalidar cache de despesas após atualização
-  console.log('🔄 Invalidating cache for expenses after update...')
-  invalidateCache('expenses')
-  // Invalidar cache de results também, pois são calculados com base em expenses
-  console.log('🔄 Invalidating cache for results after update...')
-  invalidateCache('results')
-
-  // Adicionar headers para evitar cache do navegador
-  reply.header('Cache-Control', 'no-cache, no-store, must-revalidate')
-  reply.header('Pragma', 'no-cache')
-  reply.header('Expires', '0')
 
   return reply.status(201).send(data)
 }

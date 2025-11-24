@@ -13,10 +13,10 @@ export async function monthDetails(
   reply: FastifyReply,
 ) {
   // Aplicar middleware de cache
-  await cacheMiddleware(cacheConfigs.financialProjectionMonthDetails)(
-    request,
-    reply,
-  )
+  await cacheMiddleware(
+    'financial-projection-month-details',
+    cacheConfigs.financialProjectionMonthDetails,
+  )(request, reply)
 
   // Se o cache retornou dados, a função já foi finalizada
   if (reply.sent) {
@@ -40,7 +40,12 @@ export async function monthDetails(
     })
 
     // Salvar no cache
-    saveToCache(request, data, cacheConfigs.financialProjectionMonthDetails)
+    saveToCache(
+      'financial-projection-month-details',
+      request,
+      data,
+      cacheConfigs.financialProjectionMonthDetails,
+    )
 
     return reply.status(200).send(data)
   } catch (err) {
