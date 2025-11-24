@@ -41,11 +41,10 @@ export class CreateBillUseCase {
 
     // Validar se já existe um bill com o mesmo source_transaction_id
     if (sourceTransactionId) {
-      const existingBill =
-        await this.billsRepository.findBySourceTransactionId(
-          sourceTransactionId,
-          organizationId,
-        )
+      const existingBill = await this.billsRepository.findBySourceTransactionId(
+        sourceTransactionId,
+        organizationId,
+      )
       if (existingBill) {
         throw new DuplicateBillTransactionError()
       }

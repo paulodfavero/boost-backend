@@ -35,6 +35,8 @@ export async function update(request: FastifyRequest, reply: FastifyReply) {
 
   // Invalidar cache de ganhos após atualização
   invalidateCache('gains')
+  // Invalidar cache de results pois dependem de gains
+  invalidateCache('results')
 
   return reply.status(201).send(data)
 }

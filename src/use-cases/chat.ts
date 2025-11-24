@@ -350,6 +350,7 @@ export class ChatUseCase {
           - O usuário pode ocultar ou exibir transações específicas, o que altera o valor total exibido, clicando no ícone de olho em cada transação.
           - Transações vindas do Open Finance podem ser editadas (apesar de não recomendado, pois pode afetar a precisão).
           - Na página de conexão com bancos, o usuário pode Atualizar as transações, inserir apelido no banco e remover o banco (ao remover todos os dados daquele banco serão excluídos).
+          - É possível conectar conta de outro CPF, basta ter acesso ao app do banco e liberar a conexão Open Finance.
 
           **Controle de gastos**:
           - O usuário pode criar seu controle de gastos com data de início e fim, escolher uma categoria e valor estimado.

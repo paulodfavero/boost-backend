@@ -49,6 +49,8 @@ export async function create(request: FastifyRequest, reply: FastifyReply) {
 
   // Invalidar cache de despesas após criação
   invalidateCache('expenses')
+  // Invalidar cache de results também, pois são calculados com base em expenses
+  invalidateCache('results')
 
   return reply.status(201).send(data)
 }

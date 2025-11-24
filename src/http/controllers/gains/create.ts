@@ -50,6 +50,8 @@ export async function create(request: FastifyRequest, reply: FastifyReply) {
 
     // Invalidar cache de ganhos após criação
     invalidateCache('gains')
+    // Invalidar cache de results pois dependem de gains e credits
+    invalidateCache('results')
 
     return reply.status(201).send(data)
   } catch (err) {

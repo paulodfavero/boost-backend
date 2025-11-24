@@ -35,6 +35,8 @@ export async function update(request: FastifyRequest, reply: FastifyReply) {
 
   // Invalidar cache de créditos após atualização
   invalidateCache('credits')
+  // Invalidar cache de results pois dependem de credits
+  invalidateCache('results')
 
   return reply.status(201).send(data)
 }
