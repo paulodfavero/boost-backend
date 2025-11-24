@@ -265,6 +265,12 @@ export function invalidateCache(resource: string) {
   }
 }
 
+// Função para invalidar cache por chave específica
+export function invalidateCacheByKey(key: string) {
+  cache.delete(key)
+  console.log(`🗑️ Cache invalidated for key: "${key}"`)
+}
+
 // Middleware automático para limpar cache em POST, PUT, PATCH e DELETE
 // Deve ser aplicado nas rotas de expenses, gains e credits
 export function invalidateCacheMiddleware(resource: CacheableResource) {
