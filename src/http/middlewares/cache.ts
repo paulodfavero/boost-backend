@@ -100,7 +100,9 @@ export function cacheMiddleware(options: CacheOptions = {}) {
       reply.header('X-Cache-Enabled', 'true')
 
       // Headers para controlar cache do navegador
-      reply.header('Cache-Control', 'public, max-age=300, must-revalidate')
+      // Usar no-cache para forçar revalidação com o servidor sempre
+      // Isso garante que quando o cache do servidor for invalidado, o navegador também busque novamente
+      reply.header('Cache-Control', 'no-cache, must-revalidate')
       reply.header('ETag', `"cached-${Date.now()}"`)
 
       return reply.send(cachedData)
@@ -110,6 +112,8 @@ export function cacheMiddleware(options: CacheOptions = {}) {
     reply.header('X-Cache', 'MISS')
     reply.header('X-Cache-Key', cacheKey)
     reply.header('X-Cache-Enabled', 'true')
+    // Também adicionar header para evitar cache do navegador quando não há cache no servidor
+    reply.header('Cache-Control', 'no-cache, must-revalidate')
   }
 }
 
