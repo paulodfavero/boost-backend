@@ -2,7 +2,6 @@ import { FastifyReply, FastifyRequest } from 'fastify'
 import { z } from 'zod'
 
 import { makeDeleteExpenseUseCase } from '@/use-cases/factories/make-delete-expense-use-case'
-import { invalidateCache } from '@/http/middlewares/cache'
 
 export async function deleteTransaction(
   request: FastifyRequest,
@@ -23,11 +22,6 @@ export async function deleteTransaction(
     organizationId,
     transactionId,
   })
-
-  // Invalidar cache de despesas após exclusão
-  invalidateCache('expenses')
-  // Invalidar cache de results também, pois são calculados com base em expenses
-  invalidateCache('results')
 
   return reply.status(201).send(data)
 }

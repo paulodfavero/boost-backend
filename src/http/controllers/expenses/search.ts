@@ -9,7 +9,7 @@ import {
 
 export async function search(request: FastifyRequest, reply: FastifyReply) {
   // Aplicar middleware de cache
-  await cacheMiddleware(cacheConfigs.expenses)(request, reply)
+  await cacheMiddleware('expenses', cacheConfigs.expenses)(request, reply)
 
   // Se o cache retornou dados, a função já foi finalizada
   if (reply.sent) {
@@ -38,12 +38,7 @@ export async function search(request: FastifyRequest, reply: FastifyReply) {
   })
 
   // Salvar no cache
-  saveToCache(request, data, cacheConfigs.expenses)
-
-  // Adicionar headers para controlar cache do navegador
-  // Permitir cache mas forçar revalidação quando necessário
-  reply.header('Cache-Control', 'no-cache, must-revalidate')
-  reply.header('X-Cache-Status', 'MISS')
+  saveToCache('expenses', request, data, cacheConfigs.expenses)
 
   return reply.status(200).send(data)
 }

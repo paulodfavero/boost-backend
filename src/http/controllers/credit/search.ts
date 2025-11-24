@@ -12,7 +12,7 @@ import {
 
 export async function search(request: FastifyRequest, reply: FastifyReply) {
   try {
-    await cacheMiddleware(cacheConfigs.credits)(request, reply)
+    await cacheMiddleware('credits', cacheConfigs.credits)(request, reply)
 
     if (reply.sent) {
       return
@@ -32,7 +32,7 @@ export async function search(request: FastifyRequest, reply: FastifyReply) {
       bankId: bankId || '',
     })
 
-    saveToCache(request, data, cacheConfigs.credits)
+    saveToCache('credits', request, data, cacheConfigs.credits)
 
     return reply.status(200).send(data)
   } catch (err) {

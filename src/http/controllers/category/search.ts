@@ -9,7 +9,7 @@ import {
 
 export async function search(request: FastifyRequest, reply: FastifyReply) {
   // Aplicar middleware de cache
-  await cacheMiddleware(cacheConfigs.categories)(request, reply)
+  await cacheMiddleware('categories', cacheConfigs.categories)(request, reply)
 
   // Se o cache retornou dados, a função já foi finalizada
   if (reply.sent) {
@@ -32,7 +32,7 @@ export async function search(request: FastifyRequest, reply: FastifyReply) {
   })
 
   // Salvar no cache
-  saveToCache(request, data, cacheConfigs.categories)
+  saveToCache('categories', request, data, cacheConfigs.categories)
 
   return reply.status(200).send(data)
 }

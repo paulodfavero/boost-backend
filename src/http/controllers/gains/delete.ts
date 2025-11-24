@@ -2,7 +2,6 @@ import { FastifyReply, FastifyRequest } from 'fastify'
 import { z } from 'zod'
 
 import { makeDeleteGainUseCase } from '@/use-cases/factories/make-delete-gain-use-case'
-import { invalidateCache } from '@/http/middlewares/cache'
 
 export async function deleteTransaction(
   request: FastifyRequest,
@@ -15,20 +14,6 @@ export async function deleteTransaction(
     id: z.string(),
   })
 
-  // const updateGymBodySchema = z.object({
-  //   id: z.string(),
-  //   expirationDate: z.string().nullish(),
-  //   description: z.string().nullish(),
-  //   company: z.string().nullish(),
-  //   category: z.string().nullish(),
-  //   amount: z.number().nullish(),
-  //   typePayment: z.string().nullish(),
-  //   paid: z.boolean().nullish(),
-  //   installmentCurrent: z.number().nullish(),
-  //   installmentTotalPayment: z.number().nullish(),
-  //   organizationId: z.string().nullish(),
-  // })
-
   const { organizationId } = deleteCheckInParamsSchema.parse(request.params)
   const { id: transactionId } = deleteBodySchema.parse(request.body)
 
@@ -37,11 +22,6 @@ export async function deleteTransaction(
     organizationId,
     transactionId,
   })
-
-  // Invalidar cache de ganhos após exclusão
-  invalidateCache('gains')
-  // Invalidar cache de results pois dependem de gains
-  invalidateCache('results')
 
   return reply.status(201).send(data)
 }

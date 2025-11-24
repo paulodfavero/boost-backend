@@ -6,26 +6,27 @@ const CACHE_FEATURE_FLAGS = {
   // Cache global
   ENABLE_CACHE: process.env.ENABLE_CACHE === 'true',
 
-  // Cache por endpoint
-  ENABLE_CACHE_CATEGORIES: process.env.ENABLE_CACHE_CATEGORIES === 'true',
-  ENABLE_CACHE_BANKS: process.env.ENABLE_CACHE_BANKS === 'true',
-  ENABLE_CACHE_COMPANIES: process.env.ENABLE_CACHE_COMPANIES === 'true',
-  ENABLE_CACHE_ORGANIZATIONS: process.env.ENABLE_CACHE_ORGANIZATIONS === 'true',
+  // Cache por endpoint - expenses, gains, credits, results, categories e subcategories
   ENABLE_CACHE_EXPENSES: process.env.ENABLE_CACHE_EXPENSES === 'true',
   ENABLE_CACHE_GAINS: process.env.ENABLE_CACHE_GAINS === 'true',
   ENABLE_CACHE_CREDITS: process.env.ENABLE_CACHE_CREDITS === 'true',
   ENABLE_CACHE_RESULTS: process.env.ENABLE_CACHE_RESULTS === 'true',
+  ENABLE_CACHE_CATEGORIES: process.env.ENABLE_CACHE_CATEGORIES === 'true',
   ENABLE_CACHE_SUBCATEGORIES: process.env.ENABLE_CACHE_SUBCATEGORIES === 'true',
-  ENABLE_CACHE_FINANCIAL_PROJECTION:
-    process.env.ENABLE_CACHE_FINANCIAL_PROJECTION === 'true',
-
-  // Cache de transações (mais crítico)
-  ENABLE_CACHE_TRANSACTIONS: process.env.ENABLE_CACHE_TRANSACTIONS === 'true',
+  ENABLE_CACHE_FINANCIAL_PROJECTION_MONTH_DETAILS:
+    process.env.ENABLE_CACHE_FINANCIAL_PROJECTION_MONTH_DETAILS === 'true',
 }
 
 // Função para verificar se cache está habilitado para um endpoint específico
 function isCacheEnabledForEndpoint(
-  endpoint: keyof typeof CACHE_FEATURE_FLAGS,
+  endpoint:
+    | 'ENABLE_CACHE_EXPENSES'
+    | 'ENABLE_CACHE_GAINS'
+    | 'ENABLE_CACHE_CREDITS'
+    | 'ENABLE_CACHE_RESULTS'
+    | 'ENABLE_CACHE_CATEGORIES'
+    | 'ENABLE_CACHE_SUBCATEGORIES'
+    | 'ENABLE_CACHE_FINANCIAL_PROJECTION_MONTH_DETAILS',
 ): boolean {
   return CACHE_FEATURE_FLAGS.ENABLE_CACHE && CACHE_FEATURE_FLAGS[endpoint]
 }
@@ -34,46 +35,119 @@ interface CacheOptions {
   ttl?: number // Time to live em millisegundos
   keyGenerator?: (request: FastifyRequest) => string
   skipCache?: (request: FastifyRequest) => boolean
-  enabled?: boolean | (() => boolean) // Se o cache está habilitado para este endpoint (pode ser função para verificar em runtime)
-  endpointFlag?: keyof typeof CACHE_FEATURE_FLAGS // Flag do endpoint para verificação em runtime
+  endpointFlag?:
+    | 'ENABLE_CACHE_EXPENSES'
+    | 'ENABLE_CACHE_GAINS'
+    | 'ENABLE_CACHE_CREDITS'
+    | 'ENABLE_CACHE_RESULTS'
+    | 'ENABLE_CACHE_CATEGORIES'
+    | 'ENABLE_CACHE_SUBCATEGORIES'
+    | 'ENABLE_CACHE_FINANCIAL_PROJECTION_MONTH_DETAILS'
 }
 
-// Gerador de chave padrão baseado na URL e query params
-function defaultKeyGenerator(request: FastifyRequest): string {
-  const url = request.url
-  const method = request.method
-  const query = request.query ? JSON.stringify(request.query) : ''
-  const params = request.params ? JSON.stringify(request.params) : ''
+// Tipos de recursos que podem ter cache
+type CacheableResource =
+  | 'expenses'
+  | 'gains'
+  | 'credits'
+  | 'results'
+  | 'categories'
+  | 'subcategories'
+  | 'financial-projection-month-details'
 
-  return `${method}:${url}:${query}:${params}`
+// Função para converter nome do recurso para o formato do flag
+function resourceToFlag(resource: CacheableResource): string {
+  // Caso especial: financial-projection-month-details usa underscores no flag
+  if (resource === 'financial-projection-month-details') {
+    return 'ENABLE_CACHE_FINANCIAL_PROJECTION_MONTH_DETAILS'
+  }
+  // Para outros recursos, apenas converte para uppercase
+  return `ENABLE_CACHE_${resource.toUpperCase().replace(/-/g, '_')}`
 }
 
-// Middleware de cache para requisições GET
-export function cacheMiddleware(options: CacheOptions = {}) {
-  const {
-    keyGenerator = defaultKeyGenerator,
-    skipCache = () => false,
-    enabled = true,
-    endpointFlag,
-  } = options
+// Gerador de chave para diferentes recursos
+function generateCacheKey(
+  resource: CacheableResource,
+  request: FastifyRequest,
+): string {
+  // Para expenses, gains, credits e results
+  if (['expenses', 'gains', 'credits', 'results'].includes(resource)) {
+    const query = request.query as {
+      a?: string
+      date?: string
+      bankId?: string
+      isSamePersonTransfer?: string
+    }
+
+    const orgId = query.a || ''
+    const date = query.date || ''
+    const bankId = query.bankId || 'all'
+    const isSamePersonTransfer = query.isSamePersonTransfer || 'false'
+
+    return `${resource}:${orgId}:${date}:${bankId}:${isSamePersonTransfer}`
+  }
+
+  // Para categories
+  if (resource === 'categories') {
+    const query = request.query as {
+      organizationId?: string
+      query?: string
+    }
+
+    const organizationId = query.organizationId || ''
+    const searchQuery = query.query || ''
+
+    return `${resource}:${organizationId}:${searchQuery}`
+  }
+
+  // Para subcategories (não tem parâmetros)
+  if (resource === 'subcategories') {
+    return `${resource}:all`
+  }
+
+  // Para financial-projection-month-details
+  if (resource === 'financial-projection-month-details') {
+    const query = request.query as {
+      organizationId?: string
+      month?: string
+    }
+
+    const organizationId = query.organizationId || ''
+    const month = query.month || ''
+
+    return `${resource}:${organizationId}:${month}`
+  }
+
+  // Fallback
+  return `${resource}:${JSON.stringify(request.query)}`
+}
+
+// Middleware de cache para requisições GET de expenses, gains e credits
+export function cacheMiddleware(
+  resource: CacheableResource,
+  options: CacheOptions = {},
+) {
+  const { skipCache = () => false, endpointFlag } = options
 
   return async (request: FastifyRequest, reply: FastifyReply) => {
-    // Verificar se cache global está habilitado (em runtime)
+    // Verificar se cache global está habilitado
     if (process.env.ENABLE_CACHE !== 'true') {
       reply.header('X-Cache-Enabled', 'false')
       return
     }
 
-    // Verificar se cache está habilitado para este endpoint específico (em runtime)
-    let isEnabled = enabled
-    if (typeof enabled === 'function') {
-      isEnabled = enabled()
-    } else if (endpointFlag) {
-      // Se endpointFlag foi fornecido, verificar em runtime
-      isEnabled = isCacheEnabledForEndpoint(endpointFlag)
-    }
-
-    if (!isEnabled) {
+    // Verificar se cache está habilitado para este recurso específico
+    const flag =
+      endpointFlag ||
+      (resourceToFlag(resource) as
+        | 'ENABLE_CACHE_EXPENSES'
+        | 'ENABLE_CACHE_GAINS'
+        | 'ENABLE_CACHE_CREDITS'
+        | 'ENABLE_CACHE_RESULTS'
+        | 'ENABLE_CACHE_CATEGORIES'
+        | 'ENABLE_CACHE_SUBCATEGORIES'
+        | 'ENABLE_CACHE_FINANCIAL_PROJECTION_MONTH_DETAILS')
+    if (!isCacheEnabledForEndpoint(flag)) {
       reply.header('X-Cache-Enabled', 'false')
       return
     }
@@ -88,7 +162,7 @@ export function cacheMiddleware(options: CacheOptions = {}) {
       return
     }
 
-    const cacheKey = keyGenerator(request)
+    const cacheKey = generateCacheKey(resource, request)
 
     // Tentar buscar no cache
     const cachedData = cache.get(cacheKey)
@@ -98,12 +172,7 @@ export function cacheMiddleware(options: CacheOptions = {}) {
       reply.header('X-Cache', 'HIT')
       reply.header('X-Cache-Key', cacheKey)
       reply.header('X-Cache-Enabled', 'true')
-
-      // Headers para controlar cache do navegador
-      // Usar no-cache para forçar revalidação com o servidor sempre
-      // Isso garante que quando o cache do servidor for invalidado, o navegador também busque novamente
       reply.header('Cache-Control', 'no-cache, must-revalidate')
-      reply.header('ETag', `"cached-${Date.now()}"`)
 
       return reply.send(cachedData)
     }
@@ -112,274 +181,135 @@ export function cacheMiddleware(options: CacheOptions = {}) {
     reply.header('X-Cache', 'MISS')
     reply.header('X-Cache-Key', cacheKey)
     reply.header('X-Cache-Enabled', 'true')
-    // Também adicionar header para evitar cache do navegador quando não há cache no servidor
     reply.header('Cache-Control', 'no-cache, must-revalidate')
   }
 }
 
-// Função para salvar resposta no cache
+// Função para salvar resposta no cache (apenas para GET de expenses, gains e credits)
 export function saveToCache(
+  resource: CacheableResource,
   request: FastifyRequest,
   data: any,
   options: CacheOptions = {},
 ) {
-  // Verificar se cache global está habilitado (em runtime)
+  // Verificar se cache global está habilitado
   if (process.env.ENABLE_CACHE !== 'true') {
     return
   }
 
-  const {
-    ttl = 5 * 60 * 1000,
-    keyGenerator = defaultKeyGenerator,
-    skipCache = () => false,
-    enabled = true,
-    endpointFlag,
-  } = options
+  const { ttl = 5 * 60 * 1000, skipCache = () => false, endpointFlag } = options
 
-  // Verificar se cache está habilitado para este endpoint específico (em runtime)
-  let isEnabled = enabled
-  if (typeof enabled === 'function') {
-    isEnabled = enabled()
-  } else if (endpointFlag) {
-    // Se endpointFlag foi fornecido, verificar em runtime
-    isEnabled = isCacheEnabledForEndpoint(endpointFlag)
-  }
-
-  if (!isEnabled) {
+  // Verificar se cache está habilitado para este recurso específico
+  const flag =
+    endpointFlag ||
+    (resourceToFlag(resource) as
+      | 'ENABLE_CACHE_EXPENSES'
+      | 'ENABLE_CACHE_GAINS'
+      | 'ENABLE_CACHE_CREDITS'
+      | 'ENABLE_CACHE_RESULTS'
+      | 'ENABLE_CACHE_CATEGORIES'
+      | 'ENABLE_CACHE_SUBCATEGORIES'
+      | 'ENABLE_CACHE_FINANCIAL_PROJECTION_MONTH_DETAILS')
+  if (!isCacheEnabledForEndpoint(flag)) {
     return
   }
 
   // Só salvar se for GET e não deve pular cache
   if (request.method === 'GET' && !skipCache(request)) {
-    const cacheKey = keyGenerator(request)
+    const cacheKey = generateCacheKey(resource, request)
     cache.set(cacheKey, data, ttl)
   }
 }
 
-// Função para invalidar cache por padrão
-export function invalidateCache(pattern: string) {
-  // Implementação granular - invalida apenas chaves que correspondem ao padrão
-  const keysToDelete: string[] = []
+// Função para invalidar cache de um recurso específico
+// Aceita qualquer string, mas só invalida cache de expenses, gains ou credits
+export function invalidateCache(resource: string) {
+  // Só invalidar cache de expenses, gains, credits, results, categories, subcategories e financial-projection-month-details
+  const cacheableResources: CacheableResource[] = [
+    'expenses',
+    'gains',
+    'credits',
+    'results',
+    'categories',
+    'subcategories',
+    'financial-projection-month-details',
+  ]
+
+  if (!cacheableResources.includes(resource as CacheableResource)) {
+    // Se não for um recurso cacheável, não fazer nada (mantém compatibilidade com código antigo)
+    return
+  }
+
   const allKeys = cache.getKeys()
+  const keysToDelete: string[] = []
+
+  // Buscar todas as chaves que começam com o padrão do recurso
+  // Ex: "expenses:", "gains:", "credits:"
+  const prefix = `${resource}:`
 
   for (const key of allKeys) {
-    // Para padrões como "expenses", procurar por chaves que começam com "expenses:"
-    // Isso garante que chaves como "expenses:org123:..." sejam invalidadas
-    // mas não "expenses-projection:..." (a menos que o padrão seja "expenses-projection")
-    if (pattern.includes(':')) {
-      // Se o padrão contém ":", usar startsWith para correspondência exata do prefixo
-      if (key.startsWith(pattern)) {
-        keysToDelete.push(key)
-      }
-    } else {
-      // Para padrões sem ":", procurar por chaves que começam com "pattern:"
-      // Isso garante correspondência exata do tipo de cache (expenses, gains, etc)
-      // Também verificar se a chave é exatamente igual ao padrão
-      if (key.startsWith(`${pattern}:`) || key === pattern) {
-        keysToDelete.push(key)
-      }
-      // Também verificar chaves geradas pelo defaultKeyGenerator que podem conter o padrão na URL
-      // Ex: "GET:/expenses?..." deve ser invalidada quando pattern é "expenses"
-      if (
-        key.includes(`/${pattern}`) ||
-        key.includes(`/${pattern}?`) ||
-        key.includes(`/${pattern}&`)
-      ) {
-        keysToDelete.push(key)
-      }
+    if (key.startsWith(prefix)) {
+      keysToDelete.push(key)
     }
   }
 
-  // Remover duplicatas
+  // Remover duplicatas e deletar
   const uniqueKeysToDelete = Array.from(new Set(keysToDelete))
-
   uniqueKeysToDelete.forEach((key) => cache.delete(key))
 
-  // Log mais detalhado para produção
+  // Log para debug
   if (uniqueKeysToDelete.length > 0) {
     console.log(
-      `🗑️ Cache invalidated: ${uniqueKeysToDelete.length} keys matching pattern "${pattern}"`,
+      `🗑️ Cache invalidated: ${uniqueKeysToDelete.length} keys for "${resource}"`,
     )
-    if (uniqueKeysToDelete.length <= 10) {
-      console.log(`Keys deleted: ${uniqueKeysToDelete.join(', ')}`)
-    } else {
-      console.log(
-        `First 10 keys deleted: ${uniqueKeysToDelete
-          .slice(0, 10)
-          .join(', ')}...`,
-      )
-    }
-  } else {
-    console.log(
-      `⚠️ No cache keys found matching pattern "${pattern}". Total cache keys: ${allKeys.length}`,
-    )
-    if (allKeys.length > 0 && allKeys.length <= 20) {
-      console.log(`Current cache keys: ${allKeys.join(', ')}`)
-    } else if (allKeys.length > 20) {
-      console.log(`First 20 cache keys: ${allKeys.slice(0, 20).join(', ')}...`)
+  }
+}
+
+// Middleware automático para limpar cache em POST, PUT, PATCH e DELETE
+// Deve ser aplicado nas rotas de expenses, gains e credits
+export function invalidateCacheMiddleware(resource: CacheableResource) {
+  return async (request: FastifyRequest, reply: FastifyReply) => {
+    // Só invalidar cache em POST, PUT, PATCH e DELETE
+    if (['POST', 'PUT', 'PATCH', 'DELETE'].includes(request.method)) {
+      invalidateCache(resource)
+
+      // Também invalidar cache de results quando expenses, gains ou credits são modificados
+      // pois o endpoint /results agrega dados desses recursos
+      if (['expenses', 'gains', 'credits'].includes(resource)) {
+        invalidateCache('results')
+      }
     }
   }
 }
 
-// Função para invalidar cache específico
-export function invalidateCacheByKey(key: string) {
-  cache.delete(key)
-}
-
-// Função para invalidar múltiplas chaves
-export function invalidateMultipleKeys(keys: string[]) {
-  keys.forEach((key) => cache.delete(key))
-}
-
-// Função para invalidar cache relacionado (quando uma operação afeta múltiplos tipos)
-export function invalidateRelatedCache(patterns: string[]) {
-  patterns.forEach((pattern) => invalidateCache(pattern))
-}
-
-// Função para invalidar cache de transações (afeta expenses, gains, credits e results)
-export function invalidateTransactionCache() {
-  invalidateRelatedCache(['expenses', 'gains', 'credits', 'results'])
-}
-
-// Middleware para endpoints específicos com configurações customizadas
+// Configurações de cache para expenses, gains, credits, results, categories e subcategories
 export const cacheConfigs = {
-  // Cache para categorias - 10 minutos
-  categories: {
-    ttl: 15 * 60 * 1000,
-    enabled: isCacheEnabledForEndpoint('ENABLE_CACHE_CATEGORIES'),
-    keyGenerator: (request: FastifyRequest) => {
-      const query = request.query as { a?: string }
-      return `categories:${query.a || 'all'}`
-    },
-  },
-
-  // Cache para bancos - 15 minutos
-  banks: {
-    ttl: 15 * 60 * 1000,
-    enabled: isCacheEnabledForEndpoint('ENABLE_CACHE_BANKS'),
-    keyGenerator: (request: FastifyRequest) => {
-      const query = request.query as { a?: string }
-      return `banks:${query.a || 'all'}`
-    },
-  },
-
-  // Cache para empresas - 5 minutos
-  companies: {
-    ttl: 5 * 60 * 1000,
-    enabled: isCacheEnabledForEndpoint('ENABLE_CACHE_COMPANIES'),
-    keyGenerator: (request: FastifyRequest) => {
-      const query = request.query as { a?: string }
-      return `companies:${query.a || 'all'}`
-    },
-  },
-
-  // Cache para organizações - 2 minutos (dados mais dinâmicos)
-  organizations: {
-    ttl: 2 * 60 * 1000,
-    enabled: isCacheEnabledForEndpoint('ENABLE_CACHE_ORGANIZATIONS'),
-    keyGenerator: (request: FastifyRequest) => {
-      const params = request.params as { id?: string }
-      return `organization:${params.id}`
-    },
-  },
-
-  // Cache para despesas - 3 minutos (dados semi-dinâmicos)
   expenses: {
-    ttl: 5 * 60 * 1000,
-    enabled: true, // Será verificado em runtime via endpointFlag
-    endpointFlag: 'ENABLE_CACHE_EXPENSES',
-    keyGenerator: (request: FastifyRequest) => {
-      const query = request.query as {
-        a?: string
-        date?: string
-        bankId?: string
-        isSamePersonTransfer?: string
-      }
-      // Garantir que valores undefined sejam tratados como string vazia ou valor padrão
-      const orgId = query.a || ''
-      const date = query.date || ''
-      const bankId = query.bankId || 'all'
-      const isSamePersonTransfer = query.isSamePersonTransfer || 'false'
-      return `expenses:${orgId}:${date}:${bankId}:${isSamePersonTransfer}`
-    },
+    ttl: 5 * 60 * 1000, // 5 minutos
+    endpointFlag: 'ENABLE_CACHE_EXPENSES' as const,
   },
-
-  // Cache para ganhos - 3 minutos (dados semi-dinâmicos)
   gains: {
-    ttl: 5 * 60 * 1000,
-    enabled: isCacheEnabledForEndpoint('ENABLE_CACHE_GAINS'),
-    keyGenerator: (request: FastifyRequest) => {
-      const query = request.query as {
-        a?: string
-        date?: string
-        bankId?: string
-        isSamePersonTransfer?: string
-      }
-      const orgId = query.a || ''
-      const date = query.date || ''
-      const bankId = query.bankId || 'all'
-      const isSamePersonTransfer = query.isSamePersonTransfer || 'false'
-      return `gains:${orgId}:${date}:${bankId}:${isSamePersonTransfer}`
-    },
+    ttl: 5 * 60 * 1000, // 5 minutos
+    endpointFlag: 'ENABLE_CACHE_GAINS' as const,
   },
-
-  // Cache para créditos - 5 minutos
   credits: {
-    ttl: 5 * 60 * 1000,
-    enabled: isCacheEnabledForEndpoint('ENABLE_CACHE_CREDITS'),
-    keyGenerator: (request: FastifyRequest) => {
-      const query = request.query as {
-        a?: string
-        date?: string
-        bankId?: string
-        isSamePersonTransfer?: string
-      }
-      const orgId = query.a || ''
-      const date = query.date || ''
-      const bankId = query.bankId || 'all'
-      const isSamePersonTransfer = query.isSamePersonTransfer || 'false'
-      return `credits:${orgId}:${date}:${bankId}:${isSamePersonTransfer}`
-    },
+    ttl: 5 * 60 * 1000, // 5 minutos
+    endpointFlag: 'ENABLE_CACHE_CREDITS' as const,
   },
-
   results: {
-    ttl: 5 * 60 * 1000,
-    enabled: isCacheEnabledForEndpoint('ENABLE_CACHE_RESULTS'),
-    keyGenerator: (request: FastifyRequest) => {
-      const query = request.query as {
-        a?: string
-        date?: string
-        bankId?: string
-        isSamePersonTransfer?: string
-      }
-      return `results:${query.a || 'all'}:${query.date || 'all'}:${
-        query.bankId || 'all'
-      }:${query.isSamePersonTransfer || 'false'}`
-    },
+    ttl: 5 * 60 * 1000, // 5 minutos
+    endpointFlag: 'ENABLE_CACHE_RESULTS' as const,
   },
-
-  // Cache para subcategorias - 15 minutos (dados relativamente estáticos)
+  categories: {
+    ttl: 5 * 60 * 1000, // 5 minutos
+    endpointFlag: 'ENABLE_CACHE_CATEGORIES' as const,
+  },
   subcategories: {
-    ttl: 15 * 60 * 1000,
-    enabled: isCacheEnabledForEndpoint('ENABLE_CACHE_SUBCATEGORIES'),
-    keyGenerator: (request: FastifyRequest) => {
-      const query = request.query as { a?: string }
-      return `subcategories:${query.a || 'all'}`
-    },
+    ttl: 5 * 60 * 1000, // 5 minutos
+    endpointFlag: 'ENABLE_CACHE_SUBCATEGORIES' as const,
   },
-
-  // Cache para financial projection month details - 5 minutos (dados semi-dinâmicos)
   financialProjectionMonthDetails: {
-    ttl: 5 * 60 * 1000,
-    enabled: isCacheEnabledForEndpoint('ENABLE_CACHE_FINANCIAL_PROJECTION'),
-    keyGenerator: (request: FastifyRequest) => {
-      const query = request.query as {
-        organizationId?: string
-        month?: string
-      }
-      return `financial-projection-month-details:${
-        query.organizationId || 'all'
-      }:${query.month || 'all'}`
-    },
+    ttl: 5 * 60 * 1000, // 5 minutos
+    endpointFlag: 'ENABLE_CACHE_FINANCIAL_PROJECTION_MONTH_DETAILS' as const,
   },
 }
