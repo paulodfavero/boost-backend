@@ -5,6 +5,8 @@ import { PrismaCreditRepository } from '@/repositories/prisma/credit-repository'
 import { PrismaGoalsRepository } from '@/repositories/prisma/prisma-goals-repository'
 import { PrismaBanksRepository } from '@/repositories/prisma/bank-repository'
 import { PrismaInvestmentRepository } from '@/repositories/prisma/investment-repository'
+import { PrismaBillsRepository } from '@/repositories/prisma/bills-repository'
+import { makeSearchFinancialProjectionSummaryUseCase } from './make-search-financial-projection-summary-use-case'
 import { ChatUseCase } from '../chat'
 import { prisma } from '@/lib/prisma'
 
@@ -16,6 +18,9 @@ export function makeChatUseCase() {
   const goalsRepository = new PrismaGoalsRepository(prisma)
   const banksRepository = new PrismaBanksRepository()
   const investmentRepository = new PrismaInvestmentRepository()
+  const billsRepository = new PrismaBillsRepository()
+  const searchFinancialProjectionSummaryUseCase =
+    makeSearchFinancialProjectionSummaryUseCase()
 
   const useCase = new ChatUseCase(
     organizationsRepository,
@@ -25,6 +30,8 @@ export function makeChatUseCase() {
     goalsRepository,
     banksRepository,
     investmentRepository,
+    billsRepository,
+    searchFinancialProjectionSummaryUseCase,
   )
 
   return useCase
