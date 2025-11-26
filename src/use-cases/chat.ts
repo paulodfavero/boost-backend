@@ -1,6 +1,4 @@
-import { OpenAI } from 'openai'
 import { format } from 'date-fns'
-import { categories } from '@/data/categories'
 import { OrganizationsRepository } from '@/repositories/organization-repository'
 import { ExpensesRepository } from '@/repositories/expense-repository'
 import { GainsRepository } from '@/repositories/gain-repository'
@@ -8,7 +6,8 @@ import { CreditsRepository } from '@/repositories/credit-repository'
 import { GoalsRepository } from '@/repositories/goals-repository'
 import { BanksRepository } from '@/repositories/bank-repository'
 import { InvestmentRepository } from '@/repositories/investment-repository'
-// import { cache } from '@/lib/cache' // Temporariamente desabilitado para debug
+import { BillsRepository } from '@/repositories/bills-repository'
+import { SearchFinancialProjectionSummaryUseCase } from './search-financial-projection-summary'
 
 interface ChatMessage {
   role: 'system' | 'user' | 'assistant'
@@ -20,9 +19,12 @@ interface ChatUseCaseRequest {
   organizationId: string
 }
 
-export class ChatUseCase {
-  private openai: OpenAI
+interface ChatUseCaseResponse {
+  systemPrompt: string
+  messages: ChatMessage[]
+}
 
+export class ChatUseCase {
   constructor(
     private organizationsRepository: OrganizationsRepository,
     private expensesRepository: ExpensesRepository,
@@ -31,27 +33,58 @@ export class ChatUseCase {
     private goalsRepository: GoalsRepository,
     private banksRepository: BanksRepository,
     private investmentRepository: InvestmentRepository,
-  ) {
-    this.openai = new OpenAI({
-      apiKey: process.env.OPENAI_API_KEY,
-    })
-  }
+    private billsRepository: BillsRepository,
+    private searchFinancialProjectionSummaryUseCase: SearchFinancialProjectionSummaryUseCase,
+  ) {}
 
-  private priceFormatter(amount: number): string {
-    return new Intl.NumberFormat('pt-BR', {
-      style: 'currency',
-      currency: 'BRL',
-    }).format(amount / 100)
-  }
-
-  private formatCreditCards(creditCardList?: any[]): string {
-    if (!creditCardList || creditCardList.length === 0) {
-      return 'Nenhum cartão de crédito cadastrado'
+  private formatTransactionsCompact(transactions?: any[]): string {
+    if (!transactions || transactions.length === 0) {
+      return '[]'
     }
 
-    return creditCardList
+    const formatted = transactions
+      .map((transaction) => {
+        const date = transaction.purchase_date || transaction.expiration_date
+        const dateStr = date ? format(new Date(date), 'dd/MM/yyyy') : ''
+        const amount = transaction.amount / 100 // Converter de centavos
+        const category = transaction.category || ''
+        const description = transaction.description || ''
+
+        return `{data:'${dateStr}',valor:${amount},categoria:'${category}',nome:'${description}'}`
+      })
+      .join(',')
+
+    return `[${formatted}]`
+  }
+
+  private formatGoalsCompact(goals?: any[]): string {
+    if (!goals || goals.length === 0) {
+      return '{}'
+    }
+
+    const formatted = goals
+      .map((goal) => {
+        const limit = goal.amount / 100
+        const current = goal.currentAmount / 100
+        const category = goal.description || ''
+        const name = goal.name || ''
+
+        return `meta_${category
+          .replace(/\s+/g, '_')
+          .toLowerCase()}:{limite:${limit},atual:${current},nome:'${name}'}`
+      })
+      .join('\n')
+
+    return formatted
+  }
+
+  private formatCreditCardsCompact(creditCardList?: any[]): string {
+    if (!creditCardList || creditCardList.length === 0) {
+      return '[]'
+    }
+
+    const formatted = creditCardList
       .map((creditCard) => {
-        // Parse do credit_data se for string JSON
         let creditData = null
         try {
           creditData = creditCard.credit_data
@@ -61,107 +94,167 @@ export class ChatUseCase {
           creditData = null
         }
 
+        const bankName = creditCard.bank?.name || 'N/A'
+        const level = creditData?.level || 'N/A'
+        const dueDate = creditData?.balanceDueDate
+          ? format(new Date(creditData.balanceDueDate), 'dd/MM/yyyy')
+          : 'N/A'
+        const totalLimit = creditData?.creditLimit
+          ? creditData.creditLimit / 100
+          : 0
         const availableLimit =
           creditData?.disaggregatedCreditLimits &&
           creditData.disaggregatedCreditLimits.length > 0
-            ? `limite de crédito disponível: ${this.priceFormatter(
-                creditData.disaggregatedCreditLimits[0]?.availableAmount || 0,
-              )}`
-            : ''
+            ? creditData.disaggregatedCreditLimits[0]?.availableAmount / 100 ||
+              0
+            : 0
 
-        return `nome banco: ${creditCard.bank?.name || 'N/A'}, 
-        nível: ${creditData?.level || 'N/A'}, 
-        vencimento: ${
-          creditData?.balanceDueDate
-            ? format(new Date(creditData.balanceDueDate), 'dd/MM/yyyy')
-            : 'N/A'
-        }, 
-        limite de crédito total: ${
-          creditData?.creditLimit
-            ? this.priceFormatter(creditData.creditLimit)
-            : 'N/A'
-        }, 
-        ${availableLimit}`
+        return `{banco:'${bankName}',nivel:'${level}',vencimento:'${dueDate}',limite_total:${totalLimit},limite_disponivel:${availableLimit}}`
       })
-      .join('\n')
+      .join(',')
+
+    return `[${formatted}]`
   }
 
-  private formatTransactions(transactions?: any[]): string {
-    if (!transactions || transactions.length === 0) {
-      return 'Nenhuma transação encontrada'
-    }
-
-    const total = transactions.reduce(
-      (sum, transaction) => sum + transaction.amount,
-      0,
-    )
-
-    const formattedTransactions = transactions
-      .map((transaction) => {
-        const date = transaction.purchase_date || transaction.expiration_date
-        return `data compra: ${
-          date ? format(new Date(date), 'dd/MM/yyyy') : 'N/A'
-        }, valor: ${this.priceFormatter(transaction.amount)}, categoria: ${
-          transaction.category || 'N/A'
-        }, nome da transação: ${transaction.description};`
-      })
-      .join('\n')
-
-    return `${formattedTransactions}\nTotal: ${this.priceFormatter(total)}`
-  }
-
-  private formatGoals(goals?: any[]): string {
-    if (!goals || goals.length === 0) {
-      return 'Nenhum controle de gastos cadastrado'
-    }
-
-    return goals
-      .map((goal) => {
-        return `meta de gasto: ${this.priceFormatter(
-          goal.amount,
-        )}; categoria: ${goal.description}; nome da meta: ${
-          goal.name
-        }; valor atual: ${this.priceFormatter(
-          goal.currentAmount,
-        )}; data vencimento: ${format(
-          new Date(goal.expiration_date),
-          'dd/MM/yyyy',
-        )}`
-      })
-      .join('\n')
-  }
-
-  private formatInvestments(investments?: any[]): string {
-    if (!investments || investments.length === 0) {
-      return 'Nenhum investimento cadastrado'
-    }
-
-    return investments
-      .map((investment) => {
-        try {
-          const investmentData = JSON.parse(investment.investments)
-          return `banco: ${
-            investment.bank?.name || 'N/A'
-          }, investimentos: ${JSON.stringify(investmentData)}`
-        } catch (error) {
-          return `banco: ${investment.bank?.name || 'N/A'}, investimentos: ${
-            investment.investments
-          }`
-        }
-      })
-      .join('\n')
-  }
-
-  private formatBanks(banks?: any[]): string {
+  private formatBanksCompact(banks?: any[]): string {
     if (!banks || banks.length === 0) {
-      return 'Nenhum banco conectado'
+      return '[]'
     }
 
-    return banks
-      .map((bank) => {
-        return `${bank.name}`
+    const formatted = banks.map((bank) => `'${bank.name}'`).join(',')
+    return `[${formatted}]`
+  }
+
+  private formatInvestmentsCompact(investments?: any[]): string {
+    if (!investments || investments.length === 0) {
+      return '[]'
+    }
+
+    const formatted = investments
+      .map((investment) => {
+        const bankName = investment.bank?.name || 'N/A'
+        let investmentData = '{}'
+        try {
+          investmentData = investment.investments
+            ? JSON.stringify(JSON.parse(investment.investments))
+            : '{}'
+        } catch (error) {
+          investmentData = '{}'
+        }
+
+        return `{banco:'${bankName}',investimentos:${investmentData}}`
       })
-      .join('\n')
+      .join(',')
+
+    return `[${formatted}]`
+  }
+
+  private formatBillsCompact(bills?: any[]): string {
+    if (!bills || bills.length === 0) {
+      return '[]'
+    }
+
+    const formatted = bills
+      .map((bill) => {
+        const expirationDate = bill.expiration_date
+          ? format(new Date(bill.expiration_date), 'dd/MM/yyyy')
+          : ''
+        const amount = bill.amount / 100 // Converter de centavos
+        const description = bill.description || ''
+        const company = bill.company || ''
+        const category = bill.category || ''
+        const paid = !!bill.paid
+        const active = !!bill.active
+        const dayOfMonth = bill.day_of_month || 0
+
+        return `{data_vencimento:'${expirationDate}',valor:${amount},descricao:'${description}',empresa:'${company}',categoria:'${category}',pago:${paid},ativo:${active},dia_mes:${dayOfMonth}}`
+      })
+      .join(',')
+
+    return `[${formatted}]`
+  }
+
+  private formatFinancialProjectionCompact(projection?: any): string {
+    if (!projection) {
+      return '{}'
+    }
+
+    const { summary, monthlyData } = projection
+
+    const summaryStr = `{total_ganhos:${
+      summary.totalGains / 100
+    },total_despesas:${summary.totalExpenses / 100},total_creditos:${
+      summary.totalCredits / 100
+    },saldo_total:${summary.totalBalance / 100},periodo_inicio:'${
+      summary.period.startMonth
+    }',periodo_fim:'${summary.period.endMonth}',meses:${
+      summary.period.monthsCount
+    }}`
+
+    if (!monthlyData || monthlyData.length === 0) {
+      return `{resumo:${summaryStr},mensais:[]}`
+    }
+
+    const monthlyStr = monthlyData
+      .map((month: any) => {
+        return `{mes:'${month.month}',ganhos:${month.gains / 100},despesas:${
+          month.expenses / 100
+        },creditos:${month.credits / 100},saldo:${
+          month.balance / 100
+        },transacoes:{g:${month.transactionCount.gains},e:${
+          month.transactionCount.expenses
+        },c:${month.transactionCount.credits}}}`
+      })
+      .join(',')
+
+    return `{resumo:${summaryStr},mensais:[${monthlyStr}]}`
+  }
+
+  private getFeatureDocumentation(): string {
+    return `INFORMAÇÕES SOBRE FUNCIONALIDADES:
+
+📋 CONTAS A PAGAR (Bills):
+O que é: Sistema de alertas para contas recorrentes que funciona como lembretes/notificações.
+
+Como funciona:
+1. Você cria contas recorrentes (ex: Aluguel, Internet) que serão exibidas mensalmente
+2. O sistema gera alertas de contas a vencer automaticamente
+3. Quando você marca uma conta como paga, o alerta desaparece
+4. Contas ativas são geradas automaticamente para o próximo mês baseado em contas ativas
+5. Você pode desativar uma conta para que ela não seja mais gerada mensalmente
+
+Características:
+- Cada conta tem: descrição, empresa, categoria, valor, data de vencimento, dia do mês
+- Contas podem estar ativas (geradas mensalmente) ou inativas
+- Contas podem estar pagas (não aparecem nos alertas) ou não pagas (aparecem como alerta)
+- Valores são sempre em centavos (ex: 150000 = R$ 1.500,00)
+
+Diferença importante:
+- Bills (Contas a Pagar): São ALERTAS/LEMBRETES de contas a vencer
+- Expenses Projection: São PROJEÇÕES financeiras para planejamento futuro
+
+📊 PROJEÇÃO FINANCEIRA:
+O que é: Visualização híbrida de projeções financeiras futuras para planejamento.
+
+Como funciona:
+1. O sistema agrega todas as projeções de ganhos, despesas e créditos futuros
+2. Mostra um resumo consolidado com totais do período
+3. Exibe dados mensais detalhados com ganhos, despesas, créditos e saldo por mês
+4. Permite visualizar o fluxo de caixa futuro para os próximos meses
+5. Útil para planejamento financeiro e tomada de decisões
+
+Características:
+- Retorna resumo com: total de ganhos, total de despesas, total de créditos, saldo total
+- Dados mensais incluem: ganhos, despesas, créditos, saldo e contagem de transações
+- Período padrão: 12 meses a partir do próximo mês
+- Valores são sempre em centavos
+- Mostra apenas projeções futuras (não inclui transações já passadas)
+
+Uso:
+- Planejamento financeiro de médio e longo prazo
+- Visualização de fluxo de caixa futuro
+- Análise de saldo projetado por mês
+- Identificação de meses com saldo negativo projetado`
   }
 
   private analyzeMessageContext(messages: ChatMessage[]): {
@@ -172,6 +265,8 @@ export class ChatUseCase {
     needsCreditCards: boolean
     needsInvestments: boolean
     needsBanks: boolean
+    needsBills: boolean
+    needsFinancialProjection: boolean
     period: 'current_month' | 'all' | 'specific'
     monthStart?: string
     monthEnd?: string
@@ -189,6 +284,8 @@ export class ChatUseCase {
         needsCreditCards: true,
         needsInvestments: true,
         needsBanks: true,
+        needsBills: true,
+        needsFinancialProjection: true,
         period: 'all',
       }
     }
@@ -247,6 +344,50 @@ export class ChatUseCase {
       'bank',
       'banks',
       'account',
+    ]
+    const billsKeywords = [
+      'conta a pagar',
+      'contas a pagar',
+      'conta a vencer',
+      'contas a vencer',
+      'conta recorrente',
+      'contas recorrentes',
+      'alerta',
+      'alertas',
+      'bill',
+      'bills',
+      'vencimento',
+      'vencimentos',
+      'pagar',
+      'pagamento recorrente',
+      'pagamentos recorrentes',
+      'como funciona contas a pagar',
+      'funcionamento contas a pagar',
+      'o que é contas a pagar',
+      'explicar contas a pagar',
+    ]
+    const financialProjectionKeywords = [
+      'projeção',
+      'projeções',
+      'projeção financeira',
+      'projeções financeiras',
+      'projection',
+      'projections',
+      'financial projection',
+      'futuro',
+      'futuros',
+      'próximos meses',
+      'próximo mês',
+      'planejamento',
+      'planejar',
+      'previsão',
+      'previsões',
+      'forecast',
+      'forecasting',
+      'como funciona',
+      'funcionamento',
+      'o que é',
+      'explicar',
     ]
 
     // Check for period indicators
@@ -352,6 +493,12 @@ export class ChatUseCase {
       message.includes(keyword),
     )
     const needsBanks = bankKeywords.some((keyword) => message.includes(keyword))
+    const needsBills = billsKeywords.some((keyword) =>
+      message.includes(keyword),
+    )
+    const needsFinancialProjection = financialProjectionKeywords.some(
+      (keyword) => message.includes(keyword),
+    )
 
     // If no specific data type is detected, return all (fallback)
     const hasSpecificDataRequest =
@@ -361,7 +508,9 @@ export class ChatUseCase {
       needsCreditCards ||
       needsGoals ||
       needsInvestments ||
-      needsBanks
+      needsBanks ||
+      needsBills ||
+      needsFinancialProjection
 
     if (!hasSpecificDataRequest) {
       return {
@@ -372,6 +521,8 @@ export class ChatUseCase {
         needsCreditCards: true,
         needsInvestments: true,
         needsBanks: true,
+        needsBills: true,
+        needsFinancialProjection: true,
         period: 'all',
       }
     }
@@ -384,18 +535,20 @@ export class ChatUseCase {
       needsCreditCards,
       needsInvestments,
       needsBanks,
+      needsBills,
+      needsFinancialProjection,
       period,
       monthStart,
       monthEnd,
     }
   }
 
-  async execute({ messages, organizationId }: ChatUseCaseRequest) {
+  async execute({
+    messages,
+    organizationId,
+  }: ChatUseCaseRequest): Promise<ChatUseCaseResponse> {
     // Analisar contexto da mensagem para otimizar consultas
     const context = this.analyzeMessageContext(messages)
-
-    // Temporariamente desabilitar cache para debug
-    // Sempre buscar dados frescos do banco
 
     // Buscar apenas dados necessários baseado no contexto
     const promises: Array<{ key: string; promise: Promise<any> }> = [
@@ -494,6 +647,33 @@ export class ChatUseCase {
       })
     }
 
+    if (context.needsBills) {
+      const { monthStart } = getDateRange()
+      // Extrair mês e ano para buscar bills
+      const month = monthStart ? monthStart.split('/')[1] : undefined
+      const year = monthStart ? monthStart.split('/')[0] : undefined
+      promises.push({
+        key: 'bills',
+        promise: this.billsRepository.searchMany(
+          organizationId,
+          month,
+          year,
+          false, // Apenas contas não pagas por padrão
+        ),
+      })
+    }
+
+    if (context.needsFinancialProjection) {
+      promises.push({
+        key: 'financialProjection',
+        promise: this.searchFinancialProjectionSummaryUseCase.execute({
+          organizationId,
+          months: 12, // Padrão de 12 meses
+          startMonth: context.monthStart, // Usar o mês do contexto se disponível
+        }),
+      })
+    }
+
     const results = await Promise.all(promises.map((p) => p.promise))
     const resultsMap = new Map(
       promises.map((p, index) => [p.key, results[index]]),
@@ -507,191 +687,156 @@ export class ChatUseCase {
     const creditTransactions = resultsMap.get('credits')
     const creditCardList = resultsMap.get('creditCards')
     const investments = resultsMap.get('investments')
+    const bills = resultsMap.get('bills')
+    const financialProjection = resultsMap.get('financialProjection')
 
     if (!organization) {
       throw new Error('Organização não encontrada')
     }
 
+    // System prompt ultra curto
     const systemPrompt: ChatMessage = {
       role: 'system',
-      content: `${organization.name} ${organization.email} plano: ${
-        organization.plan
-      } esses são dados do usuário. Não fazer nada com o nome ou email do usuário. Isso é só para controle interno.
-      
-      Você é um assistente especializado da Boost Finance. Sua função é responder perguntas exclusivamente com base nas informações oficiais e disponíveis da Boost Finance. Com linguajar descontraído.
-      Sua função é objetiva e matemática.
-      Não dê opiniões.
-      Não crie explicações.
-      Não justifique comportamentos.
-      Não tente ser simpático.
-      Somente responda com dados e lógica.
-          
-      Regras:
-
-          1. Só responda perguntas relacionadas à Boost Finance.
-          2. Se a pergunta estiver fora do escopo da empresa (por exemplo, política, esportes, outras fintechs), responda educadamente que só pode responder sobre a Boost Finance.
-          3. Suas respostas devem ser claras, objetivas e adequadas para clientes ou interessados na empresa.
-          4. Você NUNCA deve inventar motivos, emoções ou justificativas. Se não tiver certeza, responda exatamente: "Não tenho dados suficientes para responder isso."
-          5. Nunca invente dados. Se não souber a resposta, diga que a informação não está disponível.
-          6. Sempre responda em português do Brasil e com markdown.
-          7. Não responder como tabela.          
-          8. As categorias vêm do banco central. Agora é possível inserir novas categorias que desejar. Na lista de categorias, preencha o nome da categoria e clique em "Adicionar".
-          9. Muito importante: Você não cria nada na Boost Finance. Você é um assistente que responde perguntas sobre a Boost Finance.
-          10. Sempre que for falar sobre planos, use o link: https://www.boostfinance.com.br/plans
-          11. O assistente nunca deve fazer perguntas ao usuário, nunca deve pedir confirmação e nunca deve oferecer explicações adicionais ou conteúdos extras.
-          12. O assistente apenas responde de forma direta e objetiva ao que o usuário pediu, sem adicionar convites como “posso explicar mais?”, “quer detalhes?”, “precisa de ajuda?”, “posso sugerir algo?” ou qualquer variação semelhante.
-          13. O assistente não deve iniciar novos tópicos, não deve estender a conversa e não deve sugerir ações adicionais. Apenas responde exatamente o que foi solicitado.
-          14. Seu nome é Boost IA.
-          
-          **Categorias disponíveis para transações**:
-          ${categories.map((cat: any) => `- ${cat.categoryName}`).join('\n')}
-
-          **Dados do usuário**:
-          - Nome do usuário: ${organization.name}.
-          - Dia atual: ${format(new Date(), 'dd/MM/yyyy')}.
-          ${
-            context.needsExpenses
-              ? `- Despesas: ${this.formatTransactions(expensesTransactions)}.`
-              : ''
-          }
-          ${
-            context.needsGains
-              ? `- Recebimentos: ${this.formatTransactions(gainsTransactions)}.`
-              : ''
-          }
-          ${
-            context.needsCreditCards
-              ? `- Cartão de Crédito do usuário: ${this.formatCreditCards(
-                  creditCardList,
-                )}`
-              : ''
-          }
-          ${
-            context.needsCredits
-              ? `- Gastos no cartão de crédito: ${this.formatTransactions(
-                  creditTransactions,
-                )}.`
-              : ''
-          }
-          ${
-            context.needsGoals
-              ? `- Controle de gastos: ${this.formatGoals(goals)}.`
-              : ''
-          }
-          ${
-            context.needsBanks
-              ? `- Bancos conectados: ${this.formatBanks(banks)}.`
-              : ''
-          }
-          ${
-            context.needsInvestments
-              ? `- Investimentos: ${this.formatInvestments(investments)}.`
-              : ''
-          }
-
-          **APP Boost Finance**:
-          - O app da Boost Finance está em desenvolvimento e será lançado em breve para iOS e Android 📱.
-          - Se usuário já estiver no app Android, que é uma versão de teste, o pagamento da assinatura, caso der erro, deve ser feito direto pelo site.
-
-          **Sobre a Boost Finance**:
-          - A Boost Finance é uma plataforma de educação e planejamento financeiro pessoal
-          - Itens no menu: Home, Recebimentos, Despesas, Cartões, Bancos, Controle de gastos, Investimentos, Ver Planos. Esses itens a seguir só existem no APP (BoostScore, Projeção Financeira e Contas a Pagar).
-          - Para visualizar as despesas, recebimentos e gastos no cartão de crédito é só conectar o banco que aparece automaticamente.
-          - Cartão de crédito, investimentos, extratos de conta corrente e conta poupança são exibidos automaticamente após conectar o banco.
-          - A conexão com os bancos é feita de forma segura usando o sistema Open Finance - regulamentado pelo Banco Central. Os dados sensíveis são criptografados e ninguém tem acesso.
-          - Se for perguntado sobre o campo "Mesma titularidade?": esse campo exibe ou oculta as transações entre bancos do mesmo titular. Exemplo: se usuário tem uma conta no banco Itau e transfere dinheiro para ele mesmo em uma outra conta (Santander por exemplo), essa transação caracteriza-se como sendo da mesma titularidade.          
-          
-          **Bancos**:
-          - O usuário pode conectar seus bancos para que as transações sejam exibidas automaticamente.
-          - O usuário pode ocultar ou exibir transações específicas, o que altera o valor total exibido, clicando no ícone de olho em cada transação.
-          - Transações vindas do Open Finance podem ser editadas (apesar de não recomendado, pois pode afetar a precisão).
-          - Na página de conexão com bancos, o usuário pode Atualizar as transações, inserir apelido no banco e remover o banco (ao remover todos os dados daquele banco serão excluídos).
-          - É possível conectar conta de outro CPF, basta ter acesso ao app do banco e liberar a conexão Open Finance.
-
-          **Controle de gastos**:
-          - O usuário pode criar seu controle de gastos com data de início e fim, escolher uma categoria e valor estimado.
-          - O sistema mostra visualmente quanto tempo falta e quanto já foi gasto na categoria durante o período planejado.
-          - Alerta de vencimento da fatura do cartão de crédito é exibido automaticamente 3 dias antes do vencimento.
-
-          **Projeção Financeira ou planejamento financeiro**:
-          - A Boost IA identifica automaticamente padrões financeiros — como gastos ou recebimentos recorrentes — e apresenta sugestões de projeção que o usuário pode revisar. Antes de confirmar, o usuário pode ajustar valores, categorias e selecionar os meses em que deseja projetar cada item.
-          - As projeções têm apenas finalidade informativa e não modificam os dados reais obtidos pelo Open Finance. No gráfico, os valores projetados são exibidos em linha pontilhada, enquanto os valores reais aparecem em linha contínua, facilitando a distinção.
-          - O objetivo desse recurso é oferecer ao usuário uma visão antecipada do fluxo financeiro, ajudando no planejamento e tomada de decisões sem impactar seus dados reais.
-          
-          **BoostScore**:
-          - O BoostScore é o indicador de saúde financeira do usuário dentro do app Boost Finance. Ele resume, em uma única pontuação de 0 a 1000, como está o equilíbrio entre ganhos e gastos ao longo do tempo — quanto mais alta a pontuação, mais saudável está o controle financeiro.
-          - O cálculo é totalmente automático: a Boost analisa entradas, saídas e a evolução desses valores mês a mês para medir estabilidade, consistência e organização financeira. O usuário não precisa configurar nada.
-          - O BoostScore serve como um termômetro financeiro, ajudando o usuário a entender sua situação atual e visualizar como pequenos ajustes no dia a dia podem melhorar sua pontuação e seu progresso financeiro de forma contínua.
-
-          **Contas a Pagar**:
-          - Contas a Pagar serve somente para lembrar ao usuário de contas a pagar, não para planejar.
-          - O usuário pode cadastrar contas a pagar para que o sistema possa ajudar a planejar melhor suas finanças.
-          - Alerta de vencimento da conta a pagar é exibido automaticamente 5 dias antes do vencimento.
-          - O usuário pode marcar como pago a conta a pagar clicando no botão "Já resolvi" diretamente no alerta.
-          - O Alerta não some sozinho, é preciso marcar como pago para que ele suma.
-          - Usuário só cria uma vez e a conta é gerada automaticamente a cada mês.
-
-          **Multibancos**:
-          - O usuário pode filtrar as transações por banco.
-          - Para isso, deve clicar no cabeçalho onde aparecem as logos dos bancos conectados.   
-          
-          **Cadastro transações manual**:
-          - O usuário pode cadastrar transações manuais para adicionar ou ajustar dados que não foram obtidos pelo Open Finance.
-          - Para isso, deve clicar no botão "Adicionar transação" na tela de transações.
-          - Se você tem alguma conexão com bancos, cuidado ao cadastrar transação para não haver duplicidade de dados.
-
-          **Atendimento humano**:
-          - Se e somente se o usuário pedir para falar com um atendente humano, informe o WhatsApp: (21) 95936-4718.
-          - Nunca exiba esse número sem ser solicitado diretamente.
-
-          **Planos assinatura Boost Finance**:
-            - Boost - Essencial
-              - Pra você que ta começando a controlar sua grana
-              - R$ 14,90 / mês
-              - Conexão com 1 banco - Open Finance
-              - Gerenciamento de Receitas e Despesas
-              - Alertas de vencimento de contas
-              - Relatório de gastos por categoria
-              - Comparação mês a mês no período de 12 meses
-            
-            - Boost IA - Plus
-              - Pra você que precisa entender onde seu dinheiro está
-              - R$ 24,90 / mês
-              - Conexão com 3 banco - Open Finance
-              - Boost IA - Dicas para economizar
-              - Gerenciamento de Receitas e Despesas
-              - Alertas de vencimento de contas
-              - Relatório de gastos por categoria
-              - Comparação mês a mês no período de 12 meses
-         
-          - Boost IA - Pro
-            - Pra você que tem muitos bancos e quer ajuda personalizada
-            - R$ 34,90 / mês
-            - Conexão ilimitada de bancos - Open Finance
-            - Chat Boost IA - Respostas rápidas sobre sua vida financeira
-            - Boost IA - Dicas para economizar
-            - Relatórios mensais com insights de IA
-            - Gerenciamento de Receitas e Despesas
-            - Alertas de vencimento de contas
-            - Relatório de gastos por categoria
-            - Comparação mês a mês no período de 12 meses        
-        `,
+      content:
+        'Você é a Boost IA. Responda de forma objetiva e consistente, apenas com base nos dados enviados pelo usuário. Não peça permissões, não ofereça explicações adicionais, não mude de opinião entre respostas. Escreva em português do Brasil usando markdown simples.\n\nIMPORTANTE: Você NUNCA deve inventar motivos, emoções ou justificativas. Se não tiver certeza, responda exatamente: "Não consegui entender muito bem. Consegue me explicar melhor?"',
     }
 
-    try {
-      // 1) Streaming para o app (mesmo endpoint/sistema)
-      const stream = await this.openai.responses.create({
-        model: 'gpt-4.1-mini',
-        input: [{ role: 'system', content: systemPrompt.content }, ...messages],
-        store: true,
-        metadata: { allow_sensitive: 'true' },
-        stream: true,
-      })
+    // Pegar a última mensagem do usuário
+    const lastUserMessage = messages.filter((msg) => msg.role === 'user').pop()
+    const userQuestion = lastUserMessage?.content || ''
 
-      return stream
-    } catch (error) {
-      console.error('Erro ao criar chat completion:', error)
-      throw new Error('Erro interno do servidor')
+    // Construir dados compactos em formato [dados]...[/dados]
+    const dataParts: string[] = []
+
+    // Data atual
+    dataParts.push(`data_atual:'${format(new Date(), 'dd/MM/yyyy')}'`)
+
+    // Despesas
+    if (context.needsExpenses && expensesTransactions) {
+      dataParts.push(
+        `despesas=${this.formatTransactionsCompact(expensesTransactions)}`,
+      )
+    }
+
+    // Recebimentos
+    if (context.needsGains && gainsTransactions) {
+      dataParts.push(
+        `recebimentos=${this.formatTransactionsCompact(gainsTransactions)}`,
+      )
+    }
+
+    // Gastos no cartão de crédito
+    if (context.needsCredits && creditTransactions) {
+      dataParts.push(
+        `gastos_cartao=${this.formatTransactionsCompact(creditTransactions)}`,
+      )
+    }
+
+    // Cartões de crédito
+    if (context.needsCreditCards && creditCardList) {
+      dataParts.push(`cartoes=${this.formatCreditCardsCompact(creditCardList)}`)
+    }
+
+    // Metas/Controle de gastos
+    if (context.needsGoals && goals) {
+      const goalsCompact = this.formatGoalsCompact(goals)
+      if (goalsCompact !== '{}') {
+        dataParts.push(goalsCompact)
+      }
+    }
+
+    // Bancos
+    if (context.needsBanks && banks) {
+      dataParts.push(`bancos=${this.formatBanksCompact(banks)}`)
+    }
+
+    // Investimentos
+    if (context.needsInvestments && investments) {
+      dataParts.push(
+        `investimentos=${this.formatInvestmentsCompact(investments)}`,
+      )
+    }
+
+    // Contas a Pagar
+    if (context.needsBills && bills) {
+      dataParts.push(`contas_pagar=${this.formatBillsCompact(bills)}`)
+    }
+
+    // Projeção Financeira
+    if (context.needsFinancialProjection && financialProjection) {
+      dataParts.push(
+        `projecao_financeira=${this.formatFinancialProjectionCompact(
+          financialProjection,
+        )}`,
+      )
+    }
+
+    // Adicionar documentação das funcionalidades se necessário
+    if (context.needsBills || context.needsFinancialProjection) {
+      const documentation = this.getFeatureDocumentation()
+      dataParts.push(
+        `documentacao_funcionalidades='${documentation.replace(/'/g, "\\'")}'`,
+      )
+    }
+
+    // Adicionar instrução importante sobre não inventar dados
+    dataParts.push(
+      `instrucao_importante='Você NUNCA deve inventar motivos, emoções ou justificativas. Se não tiver certeza, responda exatamente: "Não consegui entender muito bem. Consegue me explicar melhor?"'`,
+    )
+
+    // Adicionar a pergunta do usuário
+    dataParts.push(`pergunta='${userQuestion.replace(/'/g, "\\'")}'`)
+
+    // Criar mensagem user com dados compactos
+    const dataMessage: ChatMessage = {
+      role: 'user',
+      content: `[dados]\n${dataParts.join('\n')}\n[/dados]`,
+    }
+
+    // Filtrar mensagens: remover mensagens de assistant de onboarding
+    // Regra: remover qualquer assistant que venha ANTES da primeira mensagem de user
+    const filteredMessages: ChatMessage[] = []
+    let foundFirstUser = false
+
+    for (const msg of messages) {
+      // Se for mensagem de user, marcar que encontramos a primeira
+      if (msg.role === 'user') {
+        foundFirstUser = true
+        // Substituir a última mensagem user pela versão com dados
+        if (msg === lastUserMessage) {
+          filteredMessages.push(dataMessage)
+        } else {
+          filteredMessages.push(msg)
+        }
+        continue
+      }
+
+      // Se for mensagem de assistant ANTES da primeira mensagem de user, é onboarding → REMOVER
+      if (msg.role === 'assistant' && !foundFirstUser) {
+        continue // Ignorar mensagens de onboarding
+      }
+
+      // Mensagens de assistant DEPOIS da primeira mensagem de user são respostas reais → MANTER
+      if (msg.role === 'assistant' && foundFirstUser) {
+        filteredMessages.push(msg)
+        continue
+      }
+
+      // Mensagens de system não devem vir do frontend, mas se vierem, manter
+      if (msg.role === 'system') {
+        filteredMessages.push(msg)
+      }
+    }
+
+    // Se não encontrou nenhuma mensagem user no histórico, adicionar a mensagem com dados
+    if (!foundFirstUser) {
+      filteredMessages.push(dataMessage)
+    }
+
+    // Retornar o prompt montado para o frontend chamar a OpenAI
+    return {
+      systemPrompt: systemPrompt.content,
+      messages: filteredMessages,
     }
   }
 }
