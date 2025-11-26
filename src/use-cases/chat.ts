@@ -172,17 +172,221 @@ export class ChatUseCase {
     needsCreditCards: boolean
     needsInvestments: boolean
     needsBanks: boolean
+    period: 'current_month' | 'all' | 'specific'
+    monthStart?: string
+    monthEnd?: string
   } {
-    // Always fetch all user data to provide comprehensive context
-    // This ensures the AI has access to all user information regardless of the question
+    // Get the last user message to analyze
+    const lastUserMessage = messages.filter((msg) => msg.role === 'user').pop()
+
+    if (!lastUserMessage) {
+      // Default: return all data if no user message
+      return {
+        needsExpenses: true,
+        needsGains: true,
+        needsGoals: true,
+        needsCredits: true,
+        needsCreditCards: true,
+        needsInvestments: true,
+        needsBanks: true,
+        period: 'all',
+      }
+    }
+
+    const message = lastUserMessage.content.toLowerCase()
+
+    // Keywords for different data types
+    const expenseKeywords = [
+      'despesa',
+      'despesas',
+      'gasto',
+      'gastos',
+      'retirada',
+      'retiradas',
+      'saída',
+      'saídas',
+      'pagamento',
+      'pagamentos',
+      'paguei',
+      'gastei',
+      'expense',
+      'expenses',
+      'spent',
+    ]
+    const gainKeywords = [
+      'recebimento',
+      'recebimentos',
+      'recebi',
+      'entrada',
+      'entradas',
+      'ganho',
+      'ganhos',
+      'boleto',
+      'boletos',
+      'salário',
+      'salarios',
+      'receita',
+      'receitas',
+      'gain',
+      'gains',
+      'received',
+      'income',
+    ]
+    const creditKeywords = ['cartão', 'crédito', 'fatura', 'credit', 'card']
+    const goalKeywords = ['meta', 'controle', 'gastos', 'goal', 'target']
+    const investmentKeywords = [
+      'investimento',
+      'investimentos',
+      'investment',
+      'investments',
+    ]
+    const bankKeywords = [
+      'banco',
+      'bancos',
+      'conta',
+      'bank',
+      'banks',
+      'account',
+    ]
+
+    // Check for period indicators
+    const currentMonthKeywords = [
+      'mês atual',
+      'mes atual',
+      'este mês',
+      'esse mês',
+      'mês corrente',
+      'mes corrente',
+      'current month',
+      'this month',
+    ]
+    const specificMonthKeywords = [
+      'janeiro',
+      'fevereiro',
+      'março',
+      'abril',
+      'maio',
+      'junho',
+      'julho',
+      'agosto',
+      'setembro',
+      'outubro',
+      'novembro',
+      'dezembro',
+      'january',
+      'february',
+      'march',
+      'april',
+      'may',
+      'june',
+      'july',
+      'august',
+      'september',
+      'october',
+      'november',
+      'december',
+    ]
+
+    // Determine period
+    let period: 'current_month' | 'all' | 'specific' = 'all'
+    let monthStart: string | undefined
+    let monthEnd: string | undefined
+
+    if (currentMonthKeywords.some((keyword) => message.includes(keyword))) {
+      period = 'current_month'
+      const currentDate = new Date()
+      monthStart = format(currentDate, 'yyyy/MM')
+      monthEnd = format(currentDate, 'yyyy/MM')
+    } else if (
+      specificMonthKeywords.some((keyword) => message.includes(keyword))
+    ) {
+      // Could implement specific month parsing here if needed
+      period = 'all'
+    } else {
+      // Infer current month for specific questions about recent transactions
+      // If asking about a specific person, amount, or transaction type without mentioning a period,
+      // assume they mean current month
+      const hasSpecificQuestion =
+        message.includes('qual') ||
+        message.includes('quanto') ||
+        message.includes('quais') ||
+        message.includes('what') ||
+        message.includes('how much') ||
+        message.includes('which')
+
+      const hasPersonName = /(do|da|de)\s+\w+/i.test(message)
+      const hasSpecificType =
+        expenseKeywords.some((k) => message.includes(k)) ||
+        gainKeywords.some((k) => message.includes(k)) ||
+        message.includes('tiago') ||
+        message.includes('boleto')
+
+      if (hasSpecificQuestion && (hasPersonName || hasSpecificType)) {
+        period = 'current_month'
+        const currentDate = new Date()
+        monthStart = format(currentDate, 'yyyy/MM')
+        monthEnd = format(currentDate, 'yyyy/MM')
+      }
+    }
+
+    // Determine which data types are needed
+    const hasExpenseKeywords = expenseKeywords.some((keyword) =>
+      message.includes(keyword),
+    )
+    const hasCreditKeywords = creditKeywords.some((keyword) =>
+      message.includes(keyword),
+    )
+
+    // Expenses: detect when asking about expenses or credits
+    const needsExpenses = hasExpenseKeywords || hasCreditKeywords
+
+    // Credits: detect when asking about credits, OR when asking about expenses in current month
+    // (because "retirada" could be either expense or credit transaction)
+    const needsCredits =
+      hasCreditKeywords || (hasExpenseKeywords && period === 'current_month')
+
+    const needsGains = gainKeywords.some((keyword) => message.includes(keyword))
+    const needsCreditCards = hasCreditKeywords
+    const needsGoals = goalKeywords.some((keyword) => message.includes(keyword))
+    const needsInvestments = investmentKeywords.some((keyword) =>
+      message.includes(keyword),
+    )
+    const needsBanks = bankKeywords.some((keyword) => message.includes(keyword))
+
+    // If no specific data type is detected, return all (fallback)
+    const hasSpecificDataRequest =
+      needsExpenses ||
+      needsGains ||
+      needsCredits ||
+      needsCreditCards ||
+      needsGoals ||
+      needsInvestments ||
+      needsBanks
+
+    if (!hasSpecificDataRequest) {
+      return {
+        needsExpenses: true,
+        needsGains: true,
+        needsGoals: true,
+        needsCredits: true,
+        needsCreditCards: true,
+        needsInvestments: true,
+        needsBanks: true,
+        period: 'all',
+      }
+    }
+
     return {
-      needsExpenses: true,
-      needsGains: true,
-      needsGoals: true,
-      needsCredits: true,
-      needsCreditCards: true,
-      needsInvestments: true,
-      needsBanks: true,
+      needsExpenses,
+      needsGains,
+      needsGoals,
+      needsCredits,
+      needsCreditCards,
+      needsInvestments,
+      needsBanks,
+      period,
+      monthStart,
+      monthEnd,
     }
   }
 
@@ -194,97 +398,115 @@ export class ChatUseCase {
     // Sempre buscar dados frescos do banco
 
     // Buscar apenas dados necessários baseado no contexto
-    const promises: Promise<any>[] = [
-      this.organizationsRepository.findById(organizationId), // Sempre necessário
+    const promises: Array<{ key: string; promise: Promise<any> }> = [
+      {
+        key: 'organization',
+        promise: this.organizationsRepository.findById(organizationId),
+      },
     ]
 
+    // Helper function to get date range
+    const getDateRange = () => {
+      if (
+        context.period === 'current_month' &&
+        context.monthStart &&
+        context.monthEnd
+      ) {
+        return { monthStart: context.monthStart, monthEnd: context.monthEnd }
+      } else {
+        const twoYearsAgo = new Date()
+        twoYearsAgo.setFullYear(twoYearsAgo.getFullYear() - 2)
+        const currentDate = new Date()
+        return {
+          monthStart: format(twoYearsAgo, 'yyyy/MM'),
+          monthEnd: format(currentDate, 'yyyy/MM'),
+        }
+      }
+    }
+
     if (context.needsExpenses) {
-      // Get expenses from the last 2 years to provide comprehensive context
-      const twoYearsAgo = new Date()
-      twoYearsAgo.setFullYear(twoYearsAgo.getFullYear() - 2)
-      const currentDate = new Date()
-
-      const monthStart = format(twoYearsAgo, 'yyyy/MM')
-      const monthEnd = format(currentDate, 'yyyy/MM')
-
-      promises.push(
-        this.expensesRepository.searchMany(
+      const { monthStart, monthEnd } = getDateRange()
+      promises.push({
+        key: 'expenses',
+        promise: this.expensesRepository.searchMany(
           organizationId,
           undefined, // date
           undefined, // bankId
           monthStart,
           monthEnd,
         ),
-      )
+      })
     }
 
     if (context.needsGains) {
-      // Get gains from the last 2 years to provide comprehensive context
-      const twoYearsAgo = new Date()
-      twoYearsAgo.setFullYear(twoYearsAgo.getFullYear() - 2)
-      const currentDate = new Date()
-
-      const monthStart = format(twoYearsAgo, 'yyyy/MM')
-      const monthEnd = format(currentDate, 'yyyy/MM')
-
-      promises.push(
-        this.gainsRepository.searchMany(
+      const { monthStart, monthEnd } = getDateRange()
+      promises.push({
+        key: 'gains',
+        promise: this.gainsRepository.searchMany(
           organizationId,
           undefined, // date
           undefined, // bankId
           monthStart,
           monthEnd,
         ),
-      )
+      })
     }
+
     if (context.needsBanks) {
-      promises.push(this.banksRepository.findByOrganizationId(organizationId))
+      promises.push({
+        key: 'banks',
+        promise: this.banksRepository.findByOrganizationId(organizationId),
+      })
     }
 
     if (context.needsGoals) {
-      promises.push(this.goalsRepository.findByOrganizationId(organizationId))
+      promises.push({
+        key: 'goals',
+        promise: this.goalsRepository.findByOrganizationId(organizationId),
+      })
     }
 
     if (context.needsCredits) {
-      // Get credit transactions from the last 2 years to provide comprehensive context
-      const twoYearsAgo = new Date()
-      twoYearsAgo.setFullYear(twoYearsAgo.getFullYear() - 2)
-      const currentDate = new Date()
-
-      const monthStart = format(twoYearsAgo, 'yyyy/MM')
-      const monthEnd = format(currentDate, 'yyyy/MM')
-
-      promises.push(
-        this.creditsRepository.searchMany(
+      const { monthStart, monthEnd } = getDateRange()
+      promises.push({
+        key: 'credits',
+        promise: this.creditsRepository.searchMany(
           organizationId,
           undefined, // date
           undefined, // bankId
           monthStart,
           monthEnd,
         ),
-      )
+      })
     }
 
     if (context.needsCreditCards) {
-      promises.push(this.creditsRepository.searchCardList(organizationId))
+      promises.push({
+        key: 'creditCards',
+        promise: this.creditsRepository.searchCardList(organizationId),
+      })
     }
 
     if (context.needsInvestments) {
-      promises.push(
-        this.investmentRepository.findByOrganizationId(organizationId),
-      )
+      promises.push({
+        key: 'investments',
+        promise: this.investmentRepository.findByOrganizationId(organizationId),
+      })
     }
 
-    const results = await Promise.all(promises)
+    const results = await Promise.all(promises.map((p) => p.promise))
+    const resultsMap = new Map(
+      promises.map((p, index) => [p.key, results[index]]),
+    )
 
-    const organization = results[0]
-    const expensesTransactions = results[1]
-    const gainsTransactions = results[2]
-    const banks = results[3]
-    const goals = results[4]
-    const creditTransactions = results[5]
-    const creditCardList = results[6]
-    const investments = results[7]
+    const organization = resultsMap.get('organization')
+    const expensesTransactions = resultsMap.get('expenses')
+    const gainsTransactions = resultsMap.get('gains')
+    const banks = resultsMap.get('banks')
+    const goals = resultsMap.get('goals')
+    const creditTransactions = resultsMap.get('credits')
+    const creditCardList = resultsMap.get('creditCards')
+    const investments = resultsMap.get('investments')
 
     if (!organization) {
       throw new Error('Organização não encontrada')
@@ -327,19 +549,45 @@ export class ChatUseCase {
           **Dados do usuário**:
           - Nome do usuário: ${organization.name}.
           - Dia atual: ${format(new Date(), 'dd/MM/yyyy')}.
-          - Despesas: ${this.formatTransactions(expensesTransactions)}.
-          - Recebimentos: ${this.formatTransactions(
-            gainsTransactions,
-          )}.          
-          - Cartão de Crédito do usuário: ${this.formatCreditCards(
-            creditCardList,
-          )}
-          - Gastos no cartão de crédito: ${this.formatTransactions(
-            creditTransactions,
-          )}.
-          - Controle de gastos: ${this.formatGoals(goals)}.
-          - Bancos conectados: ${this.formatBanks(banks)}.
-          - Investimentos: ${this.formatInvestments(investments)}.
+          ${
+            context.needsExpenses
+              ? `- Despesas: ${this.formatTransactions(expensesTransactions)}.`
+              : ''
+          }
+          ${
+            context.needsGains
+              ? `- Recebimentos: ${this.formatTransactions(gainsTransactions)}.`
+              : ''
+          }
+          ${
+            context.needsCreditCards
+              ? `- Cartão de Crédito do usuário: ${this.formatCreditCards(
+                  creditCardList,
+                )}`
+              : ''
+          }
+          ${
+            context.needsCredits
+              ? `- Gastos no cartão de crédito: ${this.formatTransactions(
+                  creditTransactions,
+                )}.`
+              : ''
+          }
+          ${
+            context.needsGoals
+              ? `- Controle de gastos: ${this.formatGoals(goals)}.`
+              : ''
+          }
+          ${
+            context.needsBanks
+              ? `- Bancos conectados: ${this.formatBanks(banks)}.`
+              : ''
+          }
+          ${
+            context.needsInvestments
+              ? `- Investimentos: ${this.formatInvestments(investments)}.`
+              : ''
+          }
 
           **APP Boost Finance**:
           - O app da Boost Finance está em desenvolvimento e será lançado em breve para iOS e Android 📱.
@@ -433,7 +681,7 @@ export class ChatUseCase {
     try {
       // 1) Streaming para o app (mesmo endpoint/sistema)
       const stream = await this.openai.responses.create({
-        model: 'gpt-5-mini',
+        model: 'gpt-4.1-mini',
         input: [{ role: 'system', content: systemPrompt.content }, ...messages],
         store: true,
         metadata: { allow_sensitive: 'true' },
