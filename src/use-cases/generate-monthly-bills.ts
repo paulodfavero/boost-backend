@@ -1,9 +1,9 @@
-import { addMonths, startOfMonth } from 'date-fns'
+import { startOfMonth } from 'date-fns'
 import { BillsRepository } from '@/repositories/bills-repository'
 
 interface GenerateMonthlyBillsRequest {
   organizationId: string
-  targetMonth?: string // Formato: 'YYYY-MM' (opcional, padrão: próximo mês)
+  targetMonth?: string // Formato: 'YYYY-MM' (opcional, padrão: mês atual)
 }
 
 export class GenerateMonthlyBillsUseCase {
@@ -23,8 +23,9 @@ export class GenerateMonthlyBillsUseCase {
       const [year, month] = targetMonth.split('-').map(Number)
       targetDate = new Date(year, month - 1, 1)
     } else {
-      // Próximo mês
-      targetDate = startOfMonth(addMonths(new Date(), 1))
+      // Quando não especificado, gerar para o mês atual
+      // A verificação de duplicatas previne criar bills que já existem
+      targetDate = startOfMonth(new Date())
     }
 
     const generatedBills = []
