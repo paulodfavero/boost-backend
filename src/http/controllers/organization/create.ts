@@ -6,7 +6,7 @@ import { makeCreateUserUseCase } from '@/use-cases/factories/make-create-user-us
 import { makeCreateAccessLogUseCase } from '@/use-cases/factories/make-create-access-log-use-case'
 import { parseUserAgent, getClientIp } from '@/lib/device-info'
 import { invalidateCache } from '@/http/middlewares/cache'
-// import { OrganizationAlreadyExistsError } from '@/use-cases/errors/organization-already-exist'
+import { OrganizationAlreadyExistsError } from '@/use-cases/errors/organization-already-exist'
 
 export async function create(request: FastifyRequest, reply: FastifyReply) {
   const createOrganizationBodySchema = z.object({
@@ -79,11 +79,11 @@ export async function create(request: FastifyRequest, reply: FastifyReply) {
     invalidateCache('organizations')
     return reply.status(201).send(data)
   } catch (err) {
-    // if (err instanceof OrganizationAlreadyExistsError) {
-    return reply.status(501).send({
-      message: err,
-    })
-    // }
-    // throw err
+    if (err instanceof OrganizationAlreadyExistsError) {
+      return reply.status(409).send({
+        message: err.message,
+      })
+    }
+    throw err
   }
 }
