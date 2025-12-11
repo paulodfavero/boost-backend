@@ -6,46 +6,9 @@ import {
   translateCategory,
   normalizeCategory,
 } from '@/lib/category-translation'
+import { applyCategoryRules } from '@/lib/category-rules'
 
 import { OrganizationNotFound } from './errors/organization-not-found-error'
-
-// Helper function to validate investment category based on description
-function validateInvestmentCategory(
-  description: string,
-  category: string,
-): string {
-  const desc = description.toLowerCase()
-
-  // If description contains credit card related terms, change to credit card payment
-  if (desc.includes('pix')) {
-    return 'Transferência - PIX'
-  }
-  if (
-    desc.includes('fatura') ||
-    desc.includes('cartao') ||
-    desc.includes('pag boleto') ||
-    desc.includes('cartão') ||
-    desc.includes('pagamento efetuado')
-  ) {
-    return 'Pagamento de cartão de crédito'
-  }
-
-  // If description contains investment related terms, keep as investment
-  if (
-    desc.includes('aplic') ||
-    desc.includes('invest') ||
-    desc.includes('tesouro') ||
-    desc.includes('cdb') ||
-    desc.includes('lci') ||
-    desc.includes('fundo')
-  ) {
-    return category
-  }
-
-  // If it's an investment category but doesn't match investment keywords,
-  // and doesn't match credit card keywords, keep the original category
-  return category
-}
 
 type MerchantType = {
   businessName?: string | undefined
@@ -114,14 +77,11 @@ export class CreateExpenseUseCase {
         bankId,
       } = transaction
 
-      // Validate and potentially adjust category based on description
-      const validatedCategory = validateInvestmentCategory(
-        description,
-        category,
-      )
+      // Apply domain rules to adjust category based on description
+      const adjustedCategory = applyCategoryRules(description, category)
 
       // Translate category from English to Portuguese
-      const translatedCategory = translateCategory(validatedCategory)
+      const translatedCategory = translateCategory(adjustedCategory)
 
       // Normalize category to ensure it's never null or empty
       const normalizedCategory = normalizeCategory(translatedCategory)

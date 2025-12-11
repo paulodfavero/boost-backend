@@ -6,6 +6,7 @@ import {
   translateCategory,
   normalizeCategory,
 } from '@/lib/category-translation'
+import { applyCategoryRules } from '@/lib/category-rules'
 
 import { OrganizationNotFound } from './errors/organization-not-found-error'
 
@@ -76,8 +77,11 @@ export class CreateCreditUseCase {
         bankId,
       } = transaction
 
+      // Apply domain rules to adjust category based on description
+      const adjustedCategory = applyCategoryRules(description, category)
+
       // Translate category from English to Portuguese
-      const translatedCategory = translateCategory(category)
+      const translatedCategory = translateCategory(adjustedCategory)
 
       // Normalize category to ensure it's never null or empty
       const normalizedCategory = normalizeCategory(translatedCategory)
