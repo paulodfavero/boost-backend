@@ -14,6 +14,10 @@ export class DeleteBillUseCase {
     const bill = await this.billsRepository.findById(billId)
     if (!bill) throw new BillNotFoundError()
 
-    await this.billsRepository.delete(billId)
+    // Ao invés de excluir, desativar a conta (active: false)
+    // Isso evita que a conta seja gerada novamente nos meses seguintes
+    await this.billsRepository.update(billId, {
+      active: false,
+    })
   }
 }
