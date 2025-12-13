@@ -779,11 +779,6 @@ Uso:
       )
     }
 
-    // Adicionar instrução importante sobre não inventar dados
-    dataParts.push(
-      `instrucao_importante='Você NUNCA deve inventar motivos, emoções ou justificativas. Se não tiver certeza, responda exatamente: "Não consegui entender muito bem. Consegue me explicar melhor?"'`,
-    )
-
     // Adicionar a pergunta do usuário
     dataParts.push(`pergunta='${userQuestion.replace(/'/g, "\\'")}'`)
 
